@@ -1,6 +1,6 @@
 ---
 title: "02_datawrangling"
-author: "Laura Botzet"
+author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
 date: "20 April 2018"
 output: html_document
 ---
