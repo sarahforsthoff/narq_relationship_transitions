@@ -6,7 +6,7 @@ output: html_document
 
 # Working directory festlegen, später entsprechend anpassen
 ```{r}
-setwd("/Users/tgerlac/ownCloud/DB_Sicherung/__BAs/__BAs 2017/Sarah Forsthoff")
+
 ```
 
 # Libraries laden (ggf. vorher installieren mit install.packages)
