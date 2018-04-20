@@ -1,5 +1,6 @@
 ---
 title: "01_datawrangling"
+author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
 output: html_document
 ---
 
