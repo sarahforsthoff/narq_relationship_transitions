@@ -4,6 +4,8 @@ author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
 output: html_document
 ---
 
+##Data Import 
+
 # Working directory festlegen, später entsprechend anpassen
 ```{r}
 setwd("/Users/tgerlac/ownCloud/DB_Sicherung/__BAs/__BAs 2017/Sarah Forsthoff")
