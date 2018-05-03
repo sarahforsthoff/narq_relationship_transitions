@@ -18,20 +18,58 @@ library(dplyr)
 ```{r}
 setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions") # set workingdirectory
 
-pw2015_demographie_select =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
-pw2015_items_select = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
-pw2015_t2_select = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
-pw2015_t2_frauen_select = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
-pw2015_t2_ende_select = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
-pw2015_t3_start_select = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
-pw2015_t3_singles_select = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
-pw2015_t3_relationship_number_select = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
-pw2015_t3_partners_select = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
-pw2015_t3_mainrelation_select =
+pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
+pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
+pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
+pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
+pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
+pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
+pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
+pw2015_t3_mainrelation =
   read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
-pw2015_t3_ende_select = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
 
 ```
+
+## Create new data sheet
+```{r}
+#NARQ
+pw2015_demographie[11:28] <-lapply(pw2015_demographie[11:28], as.numeric)
+pw2015_demographie <- pw2015_demographie %>% rowwise () %>%  
+  mutate("NARQ_ADM" = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3), na.rm = TRUE)) %>% 
+  mutate("NARQ_RIV" = mean(c(NARQ_17, NARQ_11, NARQ_13, NARQ_6, NARQ_14, NARQ_9, NARQ_10, NARQ_12, NARQ_4), na.rm = TRUE)) %>%
+  mutate("NARQ_GESAMT" = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3, NARQ_17, NARQ_11,
+                              NARQ_13,  NARQ_6, NARQ_14, NARQ_9, NARQ_10, NARQ_12, NARQ_4 ), na.rm = TRUE)) 
+
+#SOI_R
+#SOI_R-Skalenwerte erstellen
+pw2015_items[,c(7:15)] <- lapply(pw2015_items[,c(7:15)], as.numeric)
+pw2015_items$SOI_R_6 <- recode(pw2015_items$SOI_R_6R, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1") #Item SOI_R_6R umpolen
+pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
+  mutate("z_SOI_R_5" = scale(SOI_R_5, center = TRUE, scale = TRUE),"z_SOI_R_6" = scale(SOI_R_6, center = TRUE, scale = TRUE),
+         "z_SOI_R_4" = scale(SOI_R_4, center = TRUE, scale = TRUE),"z_SOI_R_1" = scale(SOI_R_1, center = TRUE, scale = TRUE),
+         "z_SOI_R_2" = scale(SOI_R_2, center = TRUE, scale = TRUE),"z_SOI_R_3" = scale(SOI_R_3, center = TRUE, scale = TRUE),
+         "z_SOI_R_7" = scale(SOI_R_7, center = TRUE, scale = TRUE),"z_SOI_R_8" = scale(SOI_R_8, center = TRUE, scale = TRUE),
+         "z_SOI_R_8" = scale(SOI_R_8, center = TRUE, scale = TRUE),"z_SOI_R_9" = scale(SOI_R_9, center = TRUE, scale = TRUE))
+pw2015_items <- pw2015_items %>% 
+  rowwise() %>% mutate("SOI_R_GESAMT" = mean(c(z_SOI_R_5, z_SOI_R_6, z_SOI_R_4, z_SOI_R_1, z_SOI_R_2, z_SOI_R_3, z_SOI_R_7,
+                                               z_SOI_R_8, z_SOI_R_9), na.rm = TRUE))
+
+#longterm items: scale
+pw2015_items[,c(16:25)] <- lapply(pw2015_items[,c(16:25)], as.numeric)
+pw2015_items$longterm_2 <- recode(pw2015_items$longterm_2_R, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
+pw2015_items$longterm_4_M <- recode(pw2015_items$longterm_4_R_M, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
+pw2015_items$longterm_4_F <- recode(pw2015_items$longterm_4_R_F, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
+pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
+  mutate("z_longterm_1" = scale(longterm_1, center = TRUE, scale = TRUE),"z_longterm_2" = scale(longterm_2, center = TRUE, scale = TRUE),
+         "z_longterm_3_M" = scale(longterm_3_M, center = TRUE, scale = TRUE),"z_longterm_3_F" = scale(longterm_3_F, center = TRUE, scale = TRUE),
+         "z_longterm_4_M" = scale(longterm_4_M, center = TRUE, scale = TRUE),"z_longterm_4_F" = scale(longterm_4_F, center = TRUE, scale = TRUE),
+         "z_longterm_5_M" = scale(longterm_5_M, center = TRUE, scale = TRUE),"z_longterm_5_F" = scale(longterm_5_F, center = TRUE, scale = TRUE),
+         "z_longterm_6_M" = scale(longterm_6_M, center = TRUE, scale = TRUE),"z_longterm_7_F" = scale(longterm_7_F, center = TRUE, scale = TRUE))
+```
+
 
 ## Relationships
 
