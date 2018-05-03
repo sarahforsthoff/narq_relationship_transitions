@@ -4,27 +4,232 @@ author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
 date: "20 April 2018"
 output: html_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Library
+```{r}
+# library(jsonlite)
+# library(formr)
+# library(psych)
+# library(stringr)
+library(tidyr)
+library(dplyr)
 ```
 
-## R Markdown
+## Data Import
+```{r}
+setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions") # set workingdirectory
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+pw2015_demographie_select =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
+pw2015_items_select = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
+pw2015_t2_select = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
+pw2015_t2_frauen_select = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
+pw2015_t2_ende_select = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
+pw2015_t3_start_select = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_singles_select = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_relationship_number_select = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
+pw2015_t3_partners_select = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
+pw2015_t3_mainrelation_select =
+  read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
+pw2015_t3_ende_select = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+## Relationships
 
-You can also embed plots, for example:
+### Goal of Data Merging
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+* Include Information about sex, age, and length of this partner. (df partners)
+* Include Information about sex, age, and narcissism of target. (df start)
+
+# Mainrelationship:
+Create columns includion relationship name and relationship type
+Exclude targets without a current solid relationship
+```{r}
+# For the main relationship there is the code for the target (session), the type of relationship (F_t3_mainrelation_type), the sex of the partner (F_t3_mainrelation_sex), the age of the partner (F_t3_mainrelation_age) and the name of the partner (F_t3_mainrelation_name) and Information about the Rusbult IMS Model (F_self_t3_IMS_*). Information about the name of the partner and the type of relationship are stored in a variable called F_t3_mainrelation_description. Before starting extract the information out of this variable
+
+pw2015_t3_mainrelation_select = pw2015_t3_mainrelation_select %>%
+# Name:
+  separate(F_t3_mainrelation_description,
+           into = c("F_t3_mainrelation_name"),
+           sep = " ",
+           remove = FALSE,
+           extra = "drop") %>%
+# Type (with an ugly but working workaround)
+  # First: get rid of everything at the beginning
+  separate(F_t3_mainrelation_description,
+           into = c("F_t3_mainrelation_rest1", "F_t3_mainrelation_rest2",
+                    "F_t3_mainrelation_type"),
+           sep = "; ",
+           remove = FALSE) %>%
+  # Second: Remove the ) at the end
+  mutate(F_t3_mainrelation_type = str_sub(F_t3_mainrelation_type, 1,
+                                          str_length(F_t3_mainrelation_type)-1),
+  # Third: Sometimes its " Feste Partnerschaft", sometimes its "Feste Partnerschaft"
+         F_t3_mainrelation_type = ifelse(F_t3_mainrelation_type == " Feste Partnerschaft",
+                                         "Feste Partnerschaft", F_t3_mainrelation_type)) %>%
+# Form Variable that includes all information (session_F_t3_mainrelation_name_) to match individuals_relationships later
+  mutate(match = paste0(session, "_", F_t3_mainrelation_name))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Partners:
+The goal is to match information from the partners file to the pw2015_t3_mainrelation_select file to include length of relationship and wether the partner is still the same as at t2
+First calculate length of relationship, then create a matching variable similar to mainrelation$match
+```{r}
+partners = partners %>%
+# Duration
+  # Calculating backwards from the time somebody finished the questionaire
+  separate(ended,
+           into = c("F_t3_current"),
+           sep = " ",
+           remove = FALSE,
+           extra = "drop") %>%
+  # For relationships that broke up, calculate back from the end date (F_t3_end), for still ongoing relationships calculate backwards from the moment of finishing the questionnaire (F_t3_current)
+  mutate(F_t3_relation_duration = ifelse(is.na(F_t3_end),
+                                         as.Date(F_t3_current) - as.Date(F_t3_start),
+                                         as.Date(F_t3_end) - as.Date(F_t3_start)),
+         # 41 people report a starting point before the end point -> duration is negative
+         # exclude these people
+         F_t3_relation_duration = ifelse(F_t3_relation_duration < 0,
+                                         NA, F_t3_relation_duration)) %>%
+# For some weird reason one descrition looks akward
+  mutate(F_t3_description = ifelse(F_t3_description == "M26;NA; Feste Partnerschaft)",
+                                   "M (26; NA; Feste Partnerschaft)", F_t3_description)) %>%
+# Name
+  separate(F_t3_description,
+           into = c("F_t3_relationship_name"),
+           sep = " ",
+           remove = FALSE,
+           extra = "drop") %>%
+# Type (with an ugly but working workaround)
+  # First: get rid of everything at the beginning
+  separate(F_t3_description,
+           into = c("F_t3_description_rest1", "F_t3_description_rest2",
+                    "F_t3_relation_type"),
+           sep = "; ",
+           remove = FALSE) %>%
+  # Second: Remove the ) at the end
+  mutate(F_t3_relation_type = str_sub(F_t3_relation_type, 1,
+                                          str_length(F_t3_relation_type)-1),
+  # Third: Sometimes its " Feste Partnerschaft", sometimes its "Feste Partnerschaft"
+         F_t3_relation_type = ifelse(F_t3_relation_type == " Feste Partnerschaft",
+                                         "Feste Partnerschaft", F_t3_relation_type)) %>%
+# Still the same partner as t2?
+  mutate(F_t3_relation_sameast2 = ifelse(F_t3_name == "Kommt nicht in dieser Liste vor",
+                                   "changed", "same")) %>%
+# Select the Information we need
+  select(session, F_t3_description, F_t3_relation_type, F_t3_relationship_name, 
+         F_t3_relation_duration, F_t3_end, F_t3_relation_sameast2) %>%
+# Include only people who characterize their relationship as solid and not ended
+  filter(F_t3_relation_type == "Feste Partnerschaft", is.na(F_t3_end)) %>%
+# Form Variable that includes all information (session_F_t3_mainrelation_name_) to match individuals_relationships later
+  mutate(match = paste0(session, "_", F_t3_relationship_name)) %>%
+# rename the session variable to avoide trouble when matching
+  rename(session1 = session)
+```
+
+# Merge Relationshipinformation
+```{r}
+# Check for duplicats
+# Mainrelation
+table(duplicated(mainrelation$match))
+investigate = pw2015_t3_mainrelation_select %>% filter(duplicated(match)) #these are all test persons, we have to get rid of them later anyway, so lets just remove them now
+pw2015_t3_mainrelation_select = pw2015_t3_mainrelation_select %>% distinct(match, .keep_all = TRUE)
+
+# partners
+table(duplicated(partners$match))
+investigate = partners %>% filter(duplicated(match)) 
+# weird things happen here:
+# one person reports the same parnter over and over again and notes that she cant finish the questionaire
+# the second person reports one and the same partner because they first had an affaire and then a relationship
+# the third person just reports one person twice without any reason
+# get rid of them
+partners = partners %>% distinct(match, .keep_all = TRUE)
+
+# Matching partner information on mainrelationship dataframe
+relationship = left_join(mainrelation, partners, by = "match")
+# Check if everybody in the mainrelationship recieved a matching partner
+table(is.na(relationship$session1)) # Everything is fine, all reported main relations are in the partners file
+```
+
+# Target Information
+Information about sex, age, and narcissism of target
+```{r}
+# Select information that is needed
+start = start %>%
+  select(session, F_self_t3_sex,	F_self_t3_age, F_self_t3_NARQ_17,
+         starts_with("F_self_t3_NARQ_")) # if further information about the target is neede, specify here
+```
+
+# Merge Main Relationship and target information
+```{r}
+# Check for duplicats
+# Mainrelation
+table(duplicated(mainrelation$session)) # no duplicats
+
+# start
+table(duplicated(start$session))
+investigate = start %>% filter(duplicated(session)) 
+# better get rid of duplicates here, too
+start = start %>% distinct(session, .keep_all = TRUE)
+alldata = left_join(relationship, start, by = "session")
+```
+
+# Saving Data
+```{r}
+# Before saving the data, lets remove the last test person still left, change the sex format and remove participants younger than 18 (since participants had to be 18 or older to participate) and all participants with unknow relationship duration (these are due to negative values based on wrong starting dates)
+alldata = alldata %>%
+  filter(session != "motionlessCaterpillarXXXvjVLKWYWl0GvSmnNkj600t92nfzUOTmsiRrioj62",
+         F_self_t3_age >= 18) %>%
+  mutate(F_self_t3_sex = ifelse(F_self_t3_sex == 1, 0, 1),
+         F_self_t3_age = ifelse(F_self_t3_age == 0, NA, F_self_t3_age)) # 0 = female, 1 = male
+write.csv(alldata, file = "alldata.csv")
+
+# To hand the data to other ppl, rename the dataset and columns
+partnerwahlstudie = alldata %>%
+  select(Individual = session, relation_description = F_t3_mainrelation_description,
+         relation_type = F_t3_mainrelation_type,  partner_sex = F_t3_mainrelation_sex,
+         partner_age = F_t3_mainrelation_age, partner_name = F_t3_mainrelation_name,
+         sex = F_self_t3_sex, age = F_self_t3_age, NARQ_17 = F_self_t3_NARQ_17,
+         NARQ_7 = F_self_t3_NARQ_7, NARQ_8 = F_self_t3_NARQ_8, NARQ_11 = F_self_t3_NARQ_11,
+         NARQ_13 = F_self_t3_NARQ_13, NARQ_6 = F_self_t3_NARQ_6, NARQ_1 = F_self_t3_NARQ_1,
+         NARQ_18 = F_self_t3_NARQ_18, NARQ_15 = F_self_t3_NARQ_15, NARQ_16 =F_self_t3_NARQ_16,
+         NARQ_14 = F_self_t3_NARQ_14, NARQ_9 = F_self_t3_NARQ_9, NARQ_2 = F_self_t3_NARQ_2,
+         NARQ_10 = F_self_t3_NARQ_10 , NARQ_5 = F_self_t3_NARQ_5, NARQ_12 = F_self_t3_NARQ_12,
+         NARQ_3 = F_self_t3_NARQ_3, NARQ_4 = F_self_t3_NARQ_4, duration = F_t3_relation_duration,
+         same_as_t2 = F_t3_relation_sameast2, IMS_satisfaction1 = F_self_t3_IMS_satisfaction1,
+         IMS_sexsatisfaction3 = F_self_t3_IMS_sexsatisfaction3, 
+         IMS_satisfaction2 = F_self_t3_IMS_satisfaction2, 
+         IMS_alternaavailab2 = F_self_t3_IMS_alternaavailab2, 
+         IMS_sexsatisfaction1 = F_self_t3_IMS_sexsatisfaction1,
+         IMS_satisfaction3 = F_self_t3_IMS_satisfaction3, IMS_commit3 = F_self_t3_IMS_commit3,
+         IMS_sexsatisfaction2 = F_self_t3_IMS_sexsatisfaction2,
+         IMS_alternaavailab3 = F_self_t3_IMS_alternaavailab3,
+         IMS_jealous1 = F_self_t3_IMS_jealous1, IMS_jealous3 = F_self_t3_IMS_jealous3,
+         IMS_commit1 = F_self_t3_IMS_commit1, IMS_commit2 = F_self_t3_IMS_commit2,
+         IMS_alternainterest1 = F_self_t3_IMS_alternainterest1)
+
+write.csv(partnerwahlstudie, file = "partnerwahlstudie.csv")
+```
+
+# Summary
+```{r}
+# Number of participants with a current solid relationship
+length(partnerwahlstudie$Individual)
+
+# Number of participants who are still in the same relationship than at t2
+table(partnerwahlstudie$same_as_t2)
+
+# Sex Participant
+summary(partnerwahlstudie$sex)
+# Age Participant
+summary(partnerwahlstudie$age)
+
+# Sex Partner
+summary(partnerwahlstudie$partner_sex)
+# Age Partner
+summary(partnerwahlstudie$partner_age)
+
+# Duration
+summary(partnerwahlstudie$duration)
+sd(partnerwahlstudie$duration, na.rm=T)
+```
+
