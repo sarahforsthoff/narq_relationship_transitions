@@ -5,6 +5,11 @@ date: "20 April 2018"
 output: html_document
 ---
 
+## Library
+```{r}
+library(survival)
+```
+
 
 create sum scales
 ```{r}
@@ -60,4 +65,28 @@ m2 <- coxph(Surv(time1, time2, mortality) ~ age + sex + transplant + cluster(ID)
 summary(m2)
 ```
 
+
+## test data
+
+```{r}
+testdata <- read.csv("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions/testdata.csv")
+
+
+########## basic models ########## simple model
+m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + NARQ_Adm, data = testdata)
+## summary of the model
+summary(m)
+plot.coxph(m)
+
+####model with robust SE via clustering
+ 
+m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + NARQ_Adm + cluster(Session_Code),
+           data = testdata)
+## summary of the model
+
+
+survfit.coxph(m)
+summary(m)
+plot(m)
+```
 
