@@ -16,7 +16,9 @@ library(dplyr)
 
 ## Data Import
 ```{r}
-setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions") # set workingdirectory
+#setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+#setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
+# set workingdirectory
 
 pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
 pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
@@ -45,8 +47,9 @@ pw2015_demographie <- pw2015_demographie %>% rowwise () %>%
 
 #SOI_R
 #SOI_R-Skalenwerte erstellen
+pw2015_items$SOI_R_6 <- dplyr::recode(pw2015_items$SOI_R_6R, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1") #Item SOI_R_6R umpolen
 pw2015_items[,c(7:15)] <- lapply(pw2015_items[,c(7:15)], as.numeric)
-pw2015_items$SOI_R_6 <- recode(pw2015_items$SOI_R_6R, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1") #Item SOI_R_6R umpolen
+pw2015_items[,c("SOI_R_6")] <- lapply(pw2015_items[,c("SOI_R_6")], as.numeric)
 pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
   mutate("z_SOI_R_5" = scale(SOI_R_5, center = TRUE, scale = TRUE),"z_SOI_R_6" = scale(SOI_R_6, center = TRUE, scale = TRUE),
          "z_SOI_R_4" = scale(SOI_R_4, center = TRUE, scale = TRUE),"z_SOI_R_1" = scale(SOI_R_1, center = TRUE, scale = TRUE),
@@ -58,16 +61,59 @@ pw2015_items <- pw2015_items %>%
                                                z_SOI_R_8, z_SOI_R_9), na.rm = TRUE))
 
 #longterm items: scale
+pw2015_items$longterm_2 <- recode(pw2015_items$longterm_2_R, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1")
+pw2015_items$longterm_4_M <- recode(pw2015_items$longterm_4_R_M, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1")
+pw2015_items$longterm_4_F <- recode(pw2015_items$longterm_4_R_F, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1")
 pw2015_items[,c(16:25)] <- lapply(pw2015_items[,c(16:25)], as.numeric)
-pw2015_items$longterm_2 <- recode(pw2015_items$longterm_2_R, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
-pw2015_items$longterm_4_M <- recode(pw2015_items$longterm_4_R_M, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
-pw2015_items$longterm_4_F <- recode(pw2015_items$longterm_4_R_F, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
-pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
-  mutate("z_longterm_1" = scale(longterm_1, center = TRUE, scale = TRUE),"z_longterm_2" = scale(longterm_2, center = TRUE, scale = TRUE),
-         "z_longterm_3_M" = scale(longterm_3_M, center = TRUE, scale = TRUE),"z_longterm_3_F" = scale(longterm_3_F, center = TRUE, scale = TRUE),
-         "z_longterm_4_M" = scale(longterm_4_M, center = TRUE, scale = TRUE),"z_longterm_4_F" = scale(longterm_4_F, center = TRUE, scale = TRUE),
-         "z_longterm_5_M" = scale(longterm_5_M, center = TRUE, scale = TRUE),"z_longterm_5_F" = scale(longterm_5_F, center = TRUE, scale = TRUE),
-         "z_longterm_6_M" = scale(longterm_6_M, center = TRUE, scale = TRUE),"z_longterm_7_F" = scale(longterm_7_F, center = TRUE, scale = TRUE))
+pw2015_items[,c("longterm_2","longterm_4_M","longterm_4_F")] <- lapply(pw2015_items[,c("longterm_2","longterm_4_M","longterm_4_F")], as.numeric)
+ pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
+   mutate("z_longterm_1" = scale(longterm_1, center = TRUE, scale = TRUE),"z_longterm_2" = scale(longterm_2, center = TRUE, scale = TRUE),
+          "z_longterm_3_M" = scale(longterm_3_M, center = TRUE, scale = TRUE),"z_longterm_3_F" = scale(longterm_3_F, center = TRUE, scale = TRUE),
+          "z_longterm_4_M" = scale(longterm_4_R_M, center = TRUE, scale = TRUE),"z_longterm_4_F" = scale(longterm_4_R_F, center = TRUE, scale = TRUE),
+          "z_longterm_5_M" = scale(longterm_5_M, center = TRUE, scale = TRUE),"z_longterm_5_F" = scale(longterm_5_F, center = TRUE, scale = TRUE),
+          "z_longterm_6_M" = scale(longterm_6_M, center = TRUE, scale = TRUE),"z_longterm_7_F" = scale(longterm_7_F, center = TRUE, scale = TRUE))
+ 
+ #Skalenwert Long-Term Orientation
+#define items
+longterm_items_f <- c("z_longterm_3_F", "z_longterm_4_F", "z_longterm_5_F", "z_longterm_7_F", "z_longterm_1", "z_longterm_2")
+longterm_items_m <- c("z_longterm_3_M", "z_longterm_4_M", "z_longterm_5_M", "z_longterm_6_M", "z_longterm_1", "z_longterm_2")
+#aggregate to scale
+pw2015_items["longterm_f"] <- rowMeans(pw2015_items[,longterm_items_f], na.rm = T)
+pw2015_items["longterm_m"] <- rowMeans(pw2015_items[,longterm_items_m], na.rm = T)
+
+
+#BFI items: scale
+###add BFI items to raw data
+
+###long term oriantion (dependent on sex)
+
+```
+
+```{r}
+#create selected data sheets
+
+#pw2015_demographie
+pw2015_demographie_select <- dplyr::select(pw2015_demographie, session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,sex_orientation, NARQ_GESAMT, NARQ_ADM, NARQ_RIV) 
+
+#pw2015_items
+pw2015_items_select <- dplyr:: select(pw2015_items, session, short_session, 
+          #number_relationships, end_relationship_years, end_relationship_months, end_relationship_weeks,
+          SOI_R_GESAMT, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
+
+ 
+Data <- left_join(pw2015_demographie_select, pw2015_items_select, by=c("session","short_session"))
+
+Data <- filter(!is.na(global_interest_ST))
+
+
+## one longterm variable for "focal" preferred sex,
+## based on own sex
+Data$longterm_GESAMT <- NA
+Data$longterm_GESAMT[Data$sex==1] <- Data$longterm_m[Data$sex==1]
+Data$longterm_GESAMT[Data$sex==2] <- Data$longterm_f[Data$sex==2]
+
+t1_Gesamt_neu <- t1_Gesamt_neu %>% filter(!is.na(longterm_Maenner)) %>% filter(!is.na(longterm_Frauen)) %>%
+                               filter(!is.na(longterm_GESAMT))
 ```
 
 
