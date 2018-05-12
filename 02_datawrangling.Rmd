@@ -61,15 +61,16 @@ pw2015_items <- pw2015_items %>%
                                                z_SOI_R_8, z_SOI_R_9), na.rm = TRUE))
 
 #longterm items: scale
-pw2015_items$longterm_2 <- recode(pw2015_items$longterm_2_R, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1")
-pw2015_items$longterm_4_M <- recode(pw2015_items$longterm_4_R_M, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1")
-pw2015_items$longterm_4_F <- recode(pw2015_items$longterm_4_R_F, "1"= "7", "2"="6", "3"="5", "4"="4", "5"="3", "6"="2", "7"="1")
-pw2015_items[,c(16:25)] <- lapply(pw2015_items[,c(16:25)], as.numeric)
-pw2015_items[,c("longterm_2","longterm_4_M","longterm_4_F")] <- lapply(pw2015_items[,c("longterm_2","longterm_4_M","longterm_4_F")], as.numeric)
- pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
+
+   pw2015_items[,c(16:25)] <- lapply(pw2015_items[,c(16:25)], as.numeric)
+  pw2015_items$longterm_2 <- recode(pw2015_items$longterm_2_R, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
+  pw2015_items$longterm_4_M <- recode(pw2015_items$longterm_4_R_M, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
+  pw2015_items$longterm_4_F <- recode(pw2015_items$longterm_4_R_F, "1=7; 2=6; 3=5; 4=4; 5=3; 6=2; 7=1")
+  pw2015_items[,c("longterm_2", "longterm_4_M", "longterm_4_F")] <- lapply(pw2015_items[,c("longterm_2", "longterm_4_M", "longterm_4_F")], as.numeric)
+  pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
    mutate("z_longterm_1" = scale(longterm_1, center = TRUE, scale = TRUE),"z_longterm_2" = scale(longterm_2, center = TRUE, scale = TRUE),
           "z_longterm_3_M" = scale(longterm_3_M, center = TRUE, scale = TRUE),"z_longterm_3_F" = scale(longterm_3_F, center = TRUE, scale = TRUE),
-          "z_longterm_4_M" = scale(longterm_4_R_M, center = TRUE, scale = TRUE),"z_longterm_4_F" = scale(longterm_4_R_F, center = TRUE, scale = TRUE),
+          "z_longterm_4_M" = scale(longterm_4_M, center = TRUE, scale = TRUE),"z_longterm_4_F" = scale(longterm_4_F, center = TRUE, scale = TRUE),
           "z_longterm_5_M" = scale(longterm_5_M, center = TRUE, scale = TRUE),"z_longterm_5_F" = scale(longterm_5_F, center = TRUE, scale = TRUE),
           "z_longterm_6_M" = scale(longterm_6_M, center = TRUE, scale = TRUE),"z_longterm_7_F" = scale(longterm_7_F, center = TRUE, scale = TRUE))
  
@@ -100,10 +101,38 @@ pw2015_items_select <- dplyr:: select(pw2015_items, session, short_session,
           #number_relationships, end_relationship_years, end_relationship_months, end_relationship_weeks,
           SOI_R_GESAMT, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
 
+#pw2015_t2_relationships
+pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session","short_session"))
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "t2_relationship" = derivedVariable(
+             "0" = (relationship_f == 1 & relationship_m == 1) | (relationship_f == 1 & is.na(relationship_m) |  
+                          (is.na(relationship_f) & relationship_m == 1)),
+              "1" = (relationship_f == 2 | relationship_m == 2), .method = "first", .default = 0))
+
+#create relationship duration (unfinished)
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1_start_days_m" = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7
+  )
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7
+  )
+
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7
+  )
+
+#convert wide to long format (unfinished)
+
+pw2015_t2_relationship_long <- gather(pw2015_t2_relationship, relationship_count ,relationship_kind, relationship1_kind_m, relationship2_kind_m, relationship3_kind_m, relationship1_kind_f, relationship3_kind_f, relationship3_kind_f)
+
+pw2015_t2_relationship_long <- gather(pw2015_t2_relationship_long, relationship_count ,relationship_start_months, relationship1_start_months_m, relationship2_start_months_m, relationship3_start_months_m, relationship1_start_months_f, relationship2_start_months_f, relationship3_start_months_f)
+
  
 Data <- left_join(pw2015_demographie_select, pw2015_items_select, by=c("session","short_session"))
-
-Data <- filter(!is.na(global_interest_ST))
 
 
 ## one longterm variable for "focal" preferred sex,
@@ -112,8 +141,7 @@ Data$longterm_GESAMT <- NA
 Data$longterm_GESAMT[Data$sex==1] <- Data$longterm_m[Data$sex==1]
 Data$longterm_GESAMT[Data$sex==2] <- Data$longterm_f[Data$sex==2]
 
-t1_Gesamt_neu <- t1_Gesamt_neu %>% filter(!is.na(longterm_Maenner)) %>% filter(!is.na(longterm_Frauen)) %>%
-                               filter(!is.na(longterm_GESAMT))
+
 ```
 
 

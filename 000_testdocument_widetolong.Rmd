@@ -1,0 +1,37 @@
+---
+title: "000_testdocument_widetolong"
+output: html_document
+---
+
+## Library
+```{r}
+# library(jsonlite)
+# library(formr)
+# library(psych)
+# library(stringr)
+library(tidyr)
+library(dplyr)
+```
+
+
+```{r}
+pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
+pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
+```
+
+```{r}
+#pw2015_t2_relationships
+pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session","short_session"))
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "t2_relationship" = derivedVariable(
+             "0" = (relationship_f == 1 & relationship_m == 1) | (relationship_f == 1 & is.na(relationship_m) |  
+                          (is.na(relationship_f) & relationship_m == 1)),
+              "1" = (relationship_f == 2 | relationship_m == 2), .method = "first", .default = 0))
+
+   
+   
+```
+
+
+
