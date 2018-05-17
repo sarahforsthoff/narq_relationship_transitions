@@ -58,11 +58,12 @@ Die System- bzw. neu gebildeten Variablen Variablen "session", "short_session" u
 ```{r}
 pw2015_demographie_select = pw2015_demographie %>%
   select(session, short_session, ended, sex, age, occupation, education, sex_orientation, attracted_to,
-         starts_with("NARQ_"))
+         starts_with("NARQ_"), starts_with("BFI_K"))
 
 
 pw2015_items_select = pw2015_items %>%
   select(session, short_session, ended,
+         number_relationships, end_relationship_weeks, end_relationship_months, end_relationship_years,
          starts_with("global_interest_"),
          starts_with("SOI_R"),
          starts_with("longterm_"),
@@ -115,7 +116,6 @@ pw2015_t3_mainrelation_select = pw2015_t3_mainrelation %>%
          starts_with("F_self_t3_transgreact"), 
          F_t3_mainrelation_sex, F_t3_mainrelation_age, 
          F_t3_mainrelation_description)
-)
 
 pw2015_t3_ende_select = pw2015_t3_ende %>%
   select(session, short_session, ended, F_t3_honesty_check, F_t3_dishonest_answers, F_t3_notes_to_us)

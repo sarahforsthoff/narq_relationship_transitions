@@ -81,6 +81,7 @@ head(dat)
 m <- coxph(Surv(time1, time2, mortality) ~ age + sex + transplant, data = dat)
 ## summary of the model
 summary(m)
+plot(survfit(m))
 ```
 
 
@@ -90,6 +91,7 @@ m2 <- coxph(Surv(time1, time2, mortality) ~ age + sex + transplant + cluster(ID)
     data = dat)
 ## summary of the model
 summary(m2)
+plot(survfit(m2))
 ```
 
 
@@ -103,7 +105,7 @@ testdata <- read.csv("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/
 m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + NARQ_Adm, data = testdata)
 ## summary of the model
 summary(m)
-plot.coxph(m)
+plot(survfit(m))
 
 ####model with robust SE via clustering
  
@@ -112,7 +114,6 @@ m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + N
 ## summary of the model
 
 
-survfit.coxph(m)
 summary(m)
 plot(m)
 ```
