@@ -7,7 +7,7 @@ output: html_document
 
 ## What to do:
 Relationships:
-- für t2: zurückrechnen vom Datum des Ausfüllens zum Beginn der Beziehung --> Tage aus Wochen und Monaten bestimmen und dann über as.Date zurückrechnen auf Datum des Beziehungsbeginn
+FERTIG  (- für t2: zurückrechnen vom Datum des Ausfüllens zum Beginn der Beziehung --> Tage aus Wochen und Monaten            bestimmen und dann über as.Date zurückrechnen auf Datum des Beziehungsbeginn )
 - t2: longformat
 - für t2, t3: past relationships und current relationships
 - t3: longformat
@@ -123,17 +123,36 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
 
 #create relationship duration (unfinished)
 
+pw2015_t2_relationship$ended.x <- as.Date(pw2015_t2_relationship$ended.x)
+
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship1_start_days_m" = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7
+  "relationship1_start_days_m" = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7,
+  "relationship1_start_m" = ended.x - relationship1_start_days_m
   )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7
+  "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7,
+  "relationship1_start_f" = ended.y - relationship1_start_days_f
   )
 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship2_start_days_m" = relationship2_start_months_m * 30 + relationship2_start_weeks_m * 7,
+  "relationship2_start_m" = ended.x - relationship2_start_days_m
+  )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7
+  "relationship2_start_days_f" = relationship2_start_months_f * 30 + relationship2_start_weeks_f * 7,
+  "relationship2_start_f" = ended.y - relationship2_start_days_f
+  )
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship3_start_days_m" = relationship3_start_months_m * 30 + relationship3_start_weeks_m * 7,
+  "relationship3_start_m" = ended.x - relationship3_start_days_m
+  )
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship3_start_days_f" = relationship3_start_months_f * 30 + relationship3_start_weeks_f * 7,
+  "relationship3_start_f" = ended.y - relationship3_start_days_f
   )
 
 #convert wide to long format (unfinished)
