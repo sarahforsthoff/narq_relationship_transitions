@@ -124,13 +124,8 @@ $(document).ready(function () {
 </div>
 
 
-<div id="data-import" class="section level2">
-<h2>Data Import</h2>
-<p>Working directory festlegen, später entsprechend anpassen</p>
-<pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)</code></pre>
-</div>
-<div id="libraries-ggf.-vorher-installieren-mit-install.packages" class="section level2">
-<h2>Libraries (ggf. vorher installieren mit install.packages)</h2>
+<div id="library" class="section level2">
+<h2>Library</h2>
 <pre class="r"><code>library(jsonlite)
 library(formr)
 library(psych)
@@ -151,7 +146,9 @@ library(stringr)</code></pre>
 </div>
 <div id="daten-importieren" class="section level2">
 <h2>Daten importieren</h2>
-<pre class="r"><code>pw2015_demographie = as.data.frame(fromJSON(&quot;Data/pw2015_demographie.json&quot;))
+<pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;) # set workingdirectory
+
+pw2015_demographie = as.data.frame(fromJSON(&quot;Data/pw2015_demographie.json&quot;))
 pw2015_items = as.data.frame(fromJSON(&quot;Data/pw2015_items.json&quot;))
 pw2015_t2 = as.data.frame(fromJSON(&quot;Data/pw2015_t2.json&quot;))
 pw2015_t2_frauen = as.data.frame(fromJSON(&quot;Data/pw2015_t2_frauen.json&quot;))
@@ -188,11 +185,12 @@ pw2015_t3_ende$short_session = str_sub(pw2015_t3_ende$session,1,10)</code></pre>
 <h3>t1</h3>
 <pre class="r"><code>pw2015_demographie_select = pw2015_demographie %&gt;%
   select(session, short_session, ended, sex, age, occupation, education, sex_orientation, attracted_to,
-         starts_with(&quot;NARQ_&quot;))
+         starts_with(&quot;NARQ_&quot;), starts_with(&quot;BFI_K&quot;))
 
 
 pw2015_items_select = pw2015_items %&gt;%
   select(session, short_session, ended,
+         number_relationships, end_relationship_weeks, end_relationship_months, end_relationship_years,
          starts_with(&quot;global_interest_&quot;),
          starts_with(&quot;SOI_R&quot;),
          starts_with(&quot;longterm_&quot;),
@@ -237,7 +235,9 @@ pw2015_t3_partners_select = pw2015_t3_partners %&gt;%
 pw2015_t3_mainrelation_select = pw2015_t3_mainrelation %&gt;%
   select(session, short_session, ended,
          starts_with(&quot;F_self_t3_IMS&quot;), F_mate_t3_IMS_alternaavailab,
-         starts_with(&quot;F_self_t3_transgreact&quot;))
+         starts_with(&quot;F_self_t3_transgreact&quot;), 
+         F_t3_mainrelation_sex, F_t3_mainrelation_age, 
+         F_t3_mainrelation_description)
 
 pw2015_t3_ende_select = pw2015_t3_ende %&gt;%
   select(session, short_session, ended, F_t3_honesty_check, F_t3_dishonest_answers, F_t3_notes_to_us)</code></pre>
@@ -245,12 +245,15 @@ pw2015_t3_ende_select = pw2015_t3_ende %&gt;%
 </div>
 <div id="abspeichern-von-datenfiles" class="section level2">
 <h2>Abspeichern von Datenfiles</h2>
-<pre class="r"><code>write.csv2(pw2015_demographie_select, file = &quot;pw2015_demographie_select.csv&quot;)
+<pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions/ImportedData&quot;)
+
+
+write.csv2(pw2015_demographie_select, file = &quot;pw2015_demographie_select.csv&quot;)
 write.csv2(pw2015_items_select, file = &quot;pw2015_items_select.csv&quot;)
 write.csv2(pw2015_t2_select, file = &quot;pw2015_t2_select.csv&quot;)
 write.csv2(pw2015_t2_frauen_select, file = &quot;pw2015_t2_frauen_select.csv&quot;)
 write.csv2(pw2015_t2_ende_select, file = &quot;pw2015_t2_ende_select.csv&quot;)
-write.csv2(pw2015_t3_start_select, file = &quot;pw2015_t3_start _select.csv&quot;)
+write.csv2(pw2015_t3_start_select, file = &quot;pw2015_t3_start_select.csv&quot;)
 write.csv2(pw2015_t3_singles_select, file = &quot;pw2015_t3_singles_select.csv&quot;)
 write.csv2(pw2015_t3_relationship_number_select, file = &quot;pw2015_t3_relationship_number_select.csv&quot;)
 write.csv2(pw2015_t3_partners_select, file = &quot;pw2015_t3_partners_select.csv&quot;)
