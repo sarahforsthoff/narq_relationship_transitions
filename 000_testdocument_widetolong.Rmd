@@ -140,20 +140,33 @@ t2_test <- t2_test %>% group_by(grepl('_', relationship2_start_weeks)) %>% separ
 Arrange variables in proper order
 ```{r}
 t2_test <- t2_test %>% dplyr::select( -starts_with("grepl"))
-  
-t2_test <- t2_test %>% dplyr::select(short_session, relationship1_kind, relationship1_start_months, relationship1_start_weeks, relationship2_kind, relationship2_start_months, relationship2_start_weeks, relationship3_kind, relationship3_start_months, relationship3_start_weeks, relationship4_kind, relationship4_start_months, relationship4_start_weeks)
+ 
+t2_test <- t2_test %>% dplyr::mutate(
+    relationship1.kind = relationship1_kind, relationship2.kind = relationship2_kind, relationship3.kind = relationship3_kind,
+    relationship4.kind = relationship4_kind,
+    
+    relationship1.start_months = relationship1_start_months, relationship2.start_months = relationship2_start_months,   
+    relationship3.start_months = relationship3_start_months, relationship4.start_months = relationship4_start_months, 
+    
+    relationship1.start_weeks = relationship1_start_weeks,relationship2.start_weeks = relationship2_start_weeks,
+    relationship3.start_weeks = relationship3_start_weeks,relationship4.start_weeks = relationship4_start_weeks
+)
+ 
+t2_test <- t2_test %>% dplyr::select(short_session, relationship1.kind, relationship1.start_months, relationship1.start_weeks, relationship2.kind, relationship2.start_months, relationship2.start_weeks, relationship3.kind, relationship3.start_months, relationship3.start_weeks, relationship4.kind, relationship4.start_months, relationship4.start_weeks)
 
 ```
 
 Change format from wide to long
 ```{r}
-as.data.frame(t2_test)
 
-t2_testx <- reshape(t2_test, direction='long', 
-        varying=c('relationship1_kind', 'relationship1_start_months', 'relationship1_start_weeks', 
-        'relationship2_kind', 'relationship2_start_months', 'relationship2_start_weeks', 'relationship3_kind',        
-        'relationship3_start_months', 'relationship3_start_weeks', 'relationship4_kind', 'relationship4_start_months',
-        'relationship4_start_weeks'), 
+t2_test <- subset(t2_test, !duplicated(short_session))
+
+t2_test <- as.data.frame(t2_test)
+t2_test <- reshape(t2_test, direction='long', 
+        varying=c('relationship1.kind', 'relationship1.start_months', 'relationship1.start_weeks', 
+        'relationship2.kind', 'relationship2.start_months', 'relationship2.start_weeks', 'relationship3.kind',        
+        'relationship3.start_months', 'relationship3.start_weeks', 'relationship4.kind', 'relationship4.start_months',
+        'relationship4.start_weeks'), 
         timevar='var',
         times=c('relationship1', 'relationship2', 'relationship3', 'relationship4'),
         v.names=c('kind', 'start_months', 'start_weeks'),
