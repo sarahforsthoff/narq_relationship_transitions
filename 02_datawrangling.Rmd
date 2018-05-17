@@ -127,7 +127,7 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
 
 #convert wide to long format (unfinished)
 
-pw2015_t2_relationship_long <- gather(pw2015_t2_relationship, relationship_count ,relationship_kind, relationship1_kind_m, relationship2_kind_m, relationship3_kind_m, relationship1_kind_f, relationship3_kind_f, relationship3_kind_f)
+pw2015_t2_relationship_long <- gather(pw2015_t2_relationship, relationship_count , relationship1:relationship3)
 
 pw2015_t2_relationship_long <- gather(pw2015_t2_relationship_long, relationship_count ,relationship_start_months, relationship1_start_months_m, relationship2_start_months_m, relationship3_start_months_m, relationship1_start_months_f, relationship2_start_months_f, relationship3_start_months_f)
 
