@@ -112,6 +112,7 @@ pw2015_items_select <- dplyr:: select(pw2015_items, session, short_session,
           #number_relationships, end_relationship_years, end_relationship_months, end_relationship_weeks,
           SOI_R_GESAMT, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
 
+
 #pw2015_t2_relationships
 pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session","short_session"))
 
@@ -124,6 +125,7 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
 #create relationship duration (unfinished)
 
 pw2015_t2_relationship$ended.x <- as.Date(pw2015_t2_relationship$ended.x)
+pw2015_t2_relationship$ended.y <- as.Date(pw2015_t2_relationship$ended.y)
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship1_start_days_m" = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7,
@@ -155,6 +157,253 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship3_start_f" = ended.y - relationship3_start_days_f
   )
 
+#filter unnecessary start variables
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::select(-relationship1_start_months_m, -relationship2_start_months_m,
+                       -relationship3_start_months_m, -relationship1_start_weeks_m, -relationship2_start_weeks_m,    
+                       -relationship3_start_weeks_m, -relationship1_start_days_m, -relationship2_start_days_m,
+                       -relationship3_start_days_m, -relationship1_start_months_f, -relationship2_start_months_f,
+                       -relationship3_start_months_f, -relationship1_start_weeks_f, -relationship2_start_weeks_f,    
+                       -relationship3_start_weeks_f, -relationship1_start_days_f, -relationship2_start_days_f,
+                       -relationship3_start_days_f)
+```
+
+##Divide relationships depending on sex 
+
+Relationship 1
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_kind" = derivedVariable(
+     "1" = (!is.na(relationship1_kind_m) & !is.na(relationship1_kind_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_kind[pw2015_t2_relationship$relationship4_kind == 1] <- pw2015_t2_relationship$relationship1_kind_f[pw2015_t2_relationship$relationship4_kind == 1]
+pw2015_t2_relationship$relationship4_kind[pw2015_t2_relationship$relationship4_kind == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_start" = derivedVariable(
+     "1" = (!is.na(relationship1_start_m) & !is.na(relationship1_start_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_start[pw2015_t2_relationship$relationship4_start == 1] <- pw2015_t2_relationship$relationship1_start_f[pw2015_t2_relationship$relationship4_start == 1]
+pw2015_t2_relationship$relationship4_start[pw2015_t2_relationship$relationship4_start == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_name" = derivedVariable(
+     "1" = (!is.na(relationship1_m_name) & !is.na(relationship1_f_name)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_name[pw2015_t2_relationship$relationship4_name == 1] <- pw2015_t2_relationship$relationship1_f_name[pw2015_t2_relationship$relationship4_name == 1]
+pw2015_t2_relationship$relationship4_name[pw2015_t2_relationship$relationship4_name == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_name_new" = derivedVariable(
+     "1" = (!is.na(relationship1_name_m_new) & !is.na(relationship1_name_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_name_new[pw2015_t2_relationship$relationship4_name_new == 1] <- pw2015_t2_relationship$relationship1_name_f_new[pw2015_t2_relationship$relationship4_name_new == 1]
+pw2015_t2_relationship$relationship4_name_new[pw2015_t2_relationship$relationship4_name_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_age_new" = derivedVariable(
+     "1" = (!is.na(relationship1_age_m_new) & !is.na(relationship1_age_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_age_new[pw2015_t2_relationship$relationship4_age_new == 1] <- pw2015_t2_relationship$relationship1_age_f_new[pw2015_t2_relationship$relationship4_age_new == 1]
+pw2015_t2_relationship$relationship4_age_new[pw2015_t2_relationship$relationship4_age_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_height_new" = derivedVariable(
+     "1" = (!is.na(relationship1_height_m_new) & !is.na(relationship1_height_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_height_new[pw2015_t2_relationship$relationship4_height_new == 1] <- pw2015_t2_relationship$relationship1_height_f_new[pw2015_t2_relationship$relationship4_height_new == 1]
+pw2015_t2_relationship$relationship4_height_new[pw2015_t2_relationship$relationship4_height_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_relationship_new" = derivedVariable(
+     "1" = (!is.na(relationship1_relationship_m_new) & !is.na(relationship1_relationship_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_relationship_new[pw2015_t2_relationship$relationship4_relationship_new == 1] <- pw2015_t2_relationship$relationship1_relationship_f_new[pw2015_t2_relationship$relationship4_relationship_new == 1]
+pw2015_t2_relationship$relationship4_relationship_new[pw2015_t2_relationship$relationship4_relationship_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship4_duration_new" = derivedVariable(
+     "1" = (!is.na(relationship1_duration_m_new) & !is.na(relationship1_duration_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_duration_new[pw2015_t2_relationship$relationship4_duration_new == 1] <- pw2015_t2_relationship$relationship1_duration_f_new[pw2015_t2_relationship$relationship4_duration_new == 1]
+pw2015_t2_relationship$relationship4_duration_new[pw2015_t2_relationship$relationship4_duration_new == 0] <- NA
+
+##not necessary? -> created additional start variable
+#pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+ # "relationship4_start_months" = derivedVariable(
+  #   "1" = (!is.na(relationship1_start_months_m) & !is.na(relationship1_start_months_f)) ,.method = "first", .default = 0))
+#pw2015_t2_relationship$relationship4_start_months[pw2015_t2_relationship$relationship4_start_months == 1] <- #pw2015_t2_relationship$relationship1_start_months_f[pw2015_t2_relationship$relationship4_start_months == 1]
+#pw2015_t2_relationship$relationship4_start_months[pw2015_t2_relationship$relationship4_start_months == 0] <- NA
+
+##not necessary? -> created additional start variable
+#pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+ # "relationship4_start_weeks" = derivedVariable(
+  #   "1" = (!is.na(relationship1_start_weeks_m) & !is.na(relationship1_start_weeks_f)),.method = "first", .default = 0))
+#pw2015_t2_relationship$relationship4_start_weeks[pw2015_t2_relationship$relationship4_start_weeks == 1] <- #pw2015_t2_relationship$relationship1_start_weeks_f[pw2015_t2_relationship$relationship4_start_weeks == 1]
+#pw2015_t2_relationship$relationship4_start_weeks[pw2015_t2_relationship$relationship4_start_weeks == 0] <- NA
+```
+
+Relationship 2
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_kind" = derivedVariable(
+     "1" = (!is.na(relationship2_kind_m) & !is.na(relationship2_kind_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_kind[pw2015_t2_relationship$relationship5_kind == 1] <- pw2015_t2_relationship$relationship2_kind_f[pw2015_t2_relationship$relationship5_kind == 1]
+pw2015_t2_relationship$relationship5_kind[pw2015_t2_relationship$relationship5_kind == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_start" = derivedVariable(
+     "1" = (!is.na(relationship2_start_m) & !is.na(relationship2_start_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_start[pw2015_t2_relationship$relationship5_start == 1] <- pw2015_t2_relationship$relationship2_start_f[pw2015_t2_relationship$relationship5_start == 1]
+pw2015_t2_relationship$relationship5_start[pw2015_t2_relationship$relationship5_start == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_name" = derivedVariable(
+     "1" = (!is.na(relationship2_m_name) & !is.na(relationship2_f_name)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_name[pw2015_t2_relationship$relationship5_name == 1] <- pw2015_t2_relationship$relationship2_f_name[pw2015_t2_relationship$relationship5_name == 1]
+pw2015_t2_relationship$relationship5_name[pw2015_t2_relationship$relationship2_name == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_name_new" = derivedVariable(
+     "1" = (!is.na(relationship2_name_m_new) & !is.na(relationship2_name_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_name_new[pw2015_t2_relationship$relationship5_name_new == 1] <- pw2015_t2_relationship$relationship2_name_f_new[pw2015_t2_relationship$relationship5_name_new == 1]
+pw2015_t2_relationship$relationship5_name_new[pw2015_t2_relationship$relationship5_name_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_age_new" = derivedVariable(
+     "1" = (!is.na(relationship2_age_m_new) & !is.na(relationship2_age_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_age_new[pw2015_t2_relationship$relationship5_age_new == 1] <- pw2015_t2_relationship$relationship2_age_f_new[pw2015_t2_relationship$relationship5_age_new == 1]
+pw2015_t2_relationship$relationship5_age_new[pw2015_t2_relationship$relationship5_age_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_height_new" = derivedVariable(
+     "1" = (!is.na(relationship2_height_m_new) & !is.na(relationship2_height_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_height_new[pw2015_t2_relationship$relationship5_height_new == 1] <- pw2015_t2_relationship$relationship2_height_f_new[pw2015_t2_relationship$relationship5_height_new == 1]
+pw2015_t2_relationship$relationship5_height_new[pw2015_t2_relationship$relationship5_height_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_relationship_new" = derivedVariable(
+     "1" = (!is.na(relationship2_relationship_m_new) & !is.na(relationship2_relationship_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_relationship_new[pw2015_t2_relationship$relationship5_relationship_new == 1] <- pw2015_t2_relationship$relationship2_relationship_f_new[pw2015_t2_relationship$relationship5_relationship_new == 1]
+pw2015_t2_relationship$relationship5_relationship_new[pw2015_t2_relationship$relationship5_relationship_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship5_duration_new" = derivedVariable(
+     "1" = (!is.na(relationship2_duration_m_new) & !is.na(relationship2_duration_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship5_duration_new[pw2015_t2_relationship$relationship5_duration_new == 1] <- pw2015_t2_relationship$relationship2_duration_f_new[pw2015_t2_relationship$relationship5_duration_new == 1]
+pw2015_t2_relationship$relationship5_duration_new[pw2015_t2_relationship$relationship5_duration_new == 0] <- NA
+
+##not necessary? -> created additional start variable
+#pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+ # "relationship5_start_months" = derivedVariable(
+  #   "1" = (!is.na(relationship2_start_months_m) & !is.na(relationship2_start_months_f)) ,.method = "first", .default = 0))
+#pw2015_t2_relationship$relationship5_start_months[pw2015_t2_relationship$relationship5_start_months == 1] <- #pw2015_t2_relationship$relationship2_start_months_f[pw2015_t2_relationship$relationship5_start_months == 1]
+#pw2015_t2_relationship$relationship5_start_months[pw2015_t2_relationship$relationship5_start_months == 0] <- NA
+
+##not necessary? -> created additional start variable
+#pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+ # "relationship5_start_weeks" = derivedVariable(
+  #   "1" = (!is.na(relationship2_start_weeks_m) & !is.na(relationship2_start_weeks_f)),.method = "first", .default = 0))
+#pw2015_t2_relationship$relationship5_start_weeks[pw2015_t2_relationship$relationship5_start_weeks == 1] <- #pw2015_t2_relationship$relationship2_start_weeks_f[pw2015_t2_relationship$relationship5_start_weeks == 1]
+#pw2015_t2_relationship$relationship5_start_weeks[pw2015_t2_relationship$relationship5_start_weeks == 0] <- NA
+```
+
+Relationship 3
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_kind" = derivedVariable(
+     "1" = (!is.na(relationship3_kind_m) & !is.na(relationship3_kind_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_kind[pw2015_t2_relationship$relationship6_kind == 1] <- pw2015_t2_relationship$relationship3_kind_f[pw2015_t2_relationship$relationship6_kind == 1]
+pw2015_t2_relationship$relationship6_kind[pw2015_t2_relationship$relationship6_kind == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_start" = derivedVariable(
+     "1" = (!is.na(relationship3_start_m) & !is.na(relationship3_start_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_start[pw2015_t2_relationship$relationship6_start == 1] <- pw2015_t2_relationship$relationship3_start_f[pw2015_t2_relationship$relationship6_start == 1]
+pw2015_t2_relationship$relationship6_start[pw2015_t2_relationship$relationship6_start == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_name" = derivedVariable(
+     "1" = (!is.na(relationship3_m_name) & !is.na(relationship3_f_name)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_name[pw2015_t2_relationship$relationship6_name == 1] <- pw2015_t2_relationship$relationship3_f_name[pw2015_t2_relationship$relationship6_name == 1]
+pw2015_t2_relationship$relationship6_name[pw2015_t2_relationship$relationship3_name == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_name_new" = derivedVariable(
+     "1" = (!is.na(relationship3_name_m_new) & !is.na(relationship3_name_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_name_new[pw2015_t2_relationship$relationship6_name_new == 1] <- pw2015_t2_relationship$relationship3_name_f_new[pw2015_t2_relationship$relationship6_name_new == 1]
+pw2015_t2_relationship$relationship6_name_new[pw2015_t2_relationship$relationship6_name_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_age_new" = derivedVariable(
+     "1" = (!is.na(relationship3_age_m_new) & !is.na(relationship3_age_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_age_new[pw2015_t2_relationship$relationship6_age_new == 1] <- pw2015_t2_relationship$relationship3_age_f_new[pw2015_t2_relationship$relationship6_age_new == 1]
+pw2015_t2_relationship$relationship6_age_new[pw2015_t2_relationship$relationship6_age_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_height_new" = derivedVariable(
+     "1" = (!is.na(relationship3_height_m_new) & !is.na(relationship3_height_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_height_new[pw2015_t2_relationship$relationship6_height_new == 1] <- pw2015_t2_relationship$relationship3_height_f_new[pw2015_t2_relationship$relationship6_height_new == 1]
+pw2015_t2_relationship$relationship6_height_new[pw2015_t2_relationship$relationship6_height_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_relationship_new" = derivedVariable(
+     "1" = (!is.na(relationship3_relationship_m_new) & !is.na(relationship3_relationship_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_relationship_new[pw2015_t2_relationship$relationship6_relationship_new == 1] <- pw2015_t2_relationship$relationship3_relationship_f_new[pw2015_t2_relationship$relationship6_relationship_new == 1]
+pw2015_t2_relationship$relationship6_relationship_new[pw2015_t2_relationship$relationship6_relationship_new == 0] <- NA
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "relationship6_duration_new" = derivedVariable(
+     "1" = (!is.na(relationship3_duration_m_new) & !is.na(relationship3_duration_f_new)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship6_duration_new[pw2015_t2_relationship$relationship6_duration_new == 1] <- pw2015_t2_relationship$relationship3_duration_f_new[pw2015_t2_relationship$relationship6_duration_new == 1]
+pw2015_t2_relationship$relationship6_duration_new[pw2015_t2_relationship$relationship6_duration_new == 0] <- NA
+
+##not necessary? -> created additional start variable
+#pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+ # "relationship6_start_months" = derivedVariable(
+  #   "1" = (!is.na(relationship3_start_months_m) & !is.na(relationship3_start_months_f)) ,.method = "first", .default = 0))
+#pw2015_t2_relationship$relationship6_start_months[pw2015_t2_relationship$relationship6_start_months == 1] <- #pw2015_t2_relationship$relationship3_start_months_f[pw2015_t2_relationship$relationship6_start_months == 1]
+#pw2015_t2_relationship$relationship6_start_months[pw2015_t2_relationship$relationship6_start_months == 0] <- NA
+
+##not necessary? -> created additional start variable
+#pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+ # "relationship6_start_weeks" = derivedVariable(
+  #   "1" = (!is.na(relationship1_start_weeks_m) & !is.na(relationship1_start_weeks_f)),.method = "first", .default = 0))
+#pw2015_t2_relationship$relationship6_start_weeks[pw2015_t2_relationship$relationship6_start_weeks == 1] <- #pw2015_t2_relationship$relationship3_start_weeks_f[pw2015_t2_relationship$relationship6_start_weeks == 1]
+#pw2015_t2_relationship$relationship6_start_weeks[pw2015_t2_relationship$relationship6_start_weeks == 0] <- NA
+```
+
+#Unite Variables
+
+```{r}
+#Relationship 1
+pw2015_t2_relationship <- pw2015_t2_relationship %>% tidyr::unite(relationship1_kind, relationship1_kind_m, relationship1_kind_f) %>%
+      unite(relationship1_start, relationship1_start_m, relationship1_start_f) %>% 
+      unite(relationship1_name, relationship1_m_name, relationship1_f_name) %>% 
+      unite(relationship1_name_new, relationship1_name_m_new, relationship1_name_f_new) %>% 
+      unite(relationship1_age_new, relationship1_age_m_new, relationship1_age_f_new) %>% 
+      unite(relationship1_height_new, relationship1_height_m_new, relationship1_height_f_new) %>%
+      unite(relationship1_relationship_new, relationship1_relationship_m_new, relationship1_relationship_f_new) %>%
+      unite(relationship1_duration_new, relationship1_duration_m_new, relationship1_duration_f_new)
+
+#Relationship 2
+pw2015_t2_relationship <- pw2015_t2_relationship %>% tidyr::unite(relationship2_kind, relationship2_kind_m, relationship2_kind_f) %>%
+      unite(relationship2_start, relationship2_start_m, relationship2_start_f) %>% 
+      unite(relationship2_name, relationship2_m_name, relationship2_f_name) %>% 
+      unite(relationship2_name_new, relationship2_name_m_new, relationship2_name_f_new) %>% 
+      unite(relationship2_age_new, relationship2_age_m_new, relationship2_age_f_new) %>% 
+      unite(relationship2_height_new, relationship2_height_m_new, relationship2_height_f_new) %>%
+      unite(relationship2_relationship_new, relationship2_relationship_m_new, relationship2_relationship_f_new) %>%
+      unite(relationship2_duration_new, relationship2_duration_m_new, relationship2_duration_f_new)
+
+#Relationship 3
+pw2015_t2_relationship <- pw2015_t2_relationship %>% tidyr::unite(relationship3_kind, relationship3_kind_m, relationship3_kind_f) %>%
+      unite(relationship3_start, relationship3_start_m, relationship3_start_f) %>% 
+      unite(relationship3_name, relationship3_m_name, relationship3_f_name) %>% 
+      unite(relationship3_name_new, relationship3_name_m_new, relationship3_name_f_new) %>% 
+      unite(relationship3_age_new, relationship3_age_m_new, relationship3_age_f_new) %>% 
+      unite(relationship3_height_new, relationship3_height_m_new, relationship3_height_f_new) %>%
+      unite(relationship3_relationship_new, relationship3_relationship_m_new, relationship3_relationship_f_new) %>%
+      unite(relationship3_duration_new, relationship3_duration_m_new, relationship3_duration_f_new) 
+
+```
+
+
+
+
+
+```{r}
 #convert wide to long format (unfinished)
 
 pw2015_t2_relationship_long <- gather(pw2015_t2_relationship, relationship_count , relationship1:relationship3)
