@@ -167,7 +167,7 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::select(-relationship
                        -relationship3_start_days_f)
 ```
 
-##Divide relationships depending on sex 
+##Divide current relationships depending on sex 
 
 Relationship 1
 ```{r}
@@ -364,7 +364,7 @@ pw2015_t2_relationship$relationship6_duration_new[pw2015_t2_relationship$relatio
 #pw2015_t2_relationship$relationship6_start_weeks[pw2015_t2_relationship$relationship6_start_weeks == 0] <- NA
 ```
 
-#Unite Variables
+Unite Variables
 
 ```{r}
 #Relationship 1
@@ -399,9 +399,30 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% tidyr::unite(relationship3_
 
 ```
 
+##Divide past relationships depending on sex
+
+Ended relationship(s) since T1?
+```{r}
+#Achtung: Umgedrehte Kodierung wie bei t2_relationship!!
+pw2015_t2_relationship <-  pw2015_t2_relationship %>% dplyr::mutate(
+  "t2_pastrelationship" = derivedFactor(
+            "0" = (pastrelationship1_f == 2 & pastrelationship1_m == 2) | (pastrelationship1_f == 2 & 
+                    is.na(pastrelationship1_m)) | (is.na(pastrelationship1_f) & pastrelationship1_m == 2),
+            "1" = (pastrelationship1_f == 1 | pastrelationship1_m == 1), .method = "first", .default = 0))
+
+```
 
 
+Relationship 1
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::mutate(
+  "pastrelationship1_kind" = derivedVariable(
+     "1" = (!is.na(pastrelationship1_kind_m) & !is.na(pastrelationship1_kind_f)),.method = "first", .default = 0))
+pw2015_t2_relationship$relationship4_kind[pw2015_t2_relationship$relationship4_kind == 1] <- pw2015_t2_relationship$relationship1_kind_f[pw2015_t2_relationship$relationship4_kind == 1]
+pw2015_t2_relationship$relationship4_kind[pw2015_t2_relationship$relationship4_kind == 0] <- NA
+```
 
+what variables??  kind, start, end, name, name new, age, height, duration, relationship
 
 ```{r}
 #convert wide to long format (unfinished)
@@ -422,5 +443,4 @@ Data$longterm_GESAMT[Data$sex==2] <- Data$longterm_f[Data$sex==2]
 
 
 ```
-
 
