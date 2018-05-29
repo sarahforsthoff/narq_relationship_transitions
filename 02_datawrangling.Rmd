@@ -372,54 +372,6 @@ pw2015_t2_relationship$relationship6_duration_new[pw2015_t2_relationship$relatio
 #pw2015_t2_relationship$relationship6_start_weeks[pw2015_t2_relationship$relationship6_start_weeks == 0] <- NA
 ```
 
-Preparation to unite and seperate variables again -> Entry must not have spaces
-```{r}
-#Relationship 1
-pw2015_t2_relationship$relationship1_m_name <- as.character(pw2015_t2_relationship$relationship1_m_name)
-pw2015_t2_relationship$relationship1_m_name[pw2015_t2_relationship$relationship1_m_name == "Kommt nicht in dieser Liste vor"] <- "KommtNichtInDieserListeVor"
-
-pw2015_t2_relationship$relationship1_f_name <- as.character(pw2015_t2_relationship$relationship1_f_name)
-pw2015_t2_relationship$relationship1_f_name[pw2015_t2_relationship$relationship1_f_name == "Kommt nicht in dieser Liste vor"] <- "KommtNichtInDieserListeVor"
-
-#Relationship 2
-pw2015_t2_relationship$relationship2_m_name <- as.character(pw2015_t2_relationship$relationship2_m_name)
-pw2015_t2_relationship$relationship2_m_name[pw2015_t2_relationship$relationship2_m_name == "Kommt nicht in dieser Liste vor"] <- "KommtNichtInDieserListeVor"
-
-pw2015_t2_relationship$relationship2_f_name <- as.character(pw2015_t2_relationship$relationship2_f_name)
-pw2015_t2_relationship$relationship2_f_name[pw2015_t2_relationship$relationship2_f_name == "Kommt nicht in dieser Liste vor"] <- "KommtNichtInDieserListeVor"
-
-#Relationship 3
-pw2015_t2_relationship$relationship3_m_name <- as.character(pw2015_t2_relationship$relationship3_m_name)
-pw2015_t2_relationship$relationship3_m_name[pw2015_t2_relationship$relationship3_m_name == "Kommt nicht in dieser Liste vor"] <- "KommtNichtInDieserListeVor"
-
-pw2015_t2_relationship$relationship3_f_name <- as.character(pw2015_t2_relationship$relationship3_f_name)
-pw2015_t2_relationship$relationship3_f_name[pw2015_t2_relationship$relationship3_f_name == "Kommt nicht in dieser Liste vor"] <- "KommtNichtInDieserListeVor"
-```
-
-Preparation of "date"-variables: Must not be seperated by dashes
-```{r}
-#Relationship 1
-pw2015_t2_relationship$relationship1_start_m <- strptime(as.character(pw2015_t2_relationship$relationship1_start_m), "%Y-%m-%d")
-pw2015_t2_relationship$relationship1_start_m <- format(pw2015_t2_relationship$relationship1_start_m, "%Y/%m/%d")
-
-pw2015_t2_relationship$relationship1_start_f <- strptime(as.character(pw2015_t2_relationship$relationship1_start_f), "%Y-%m-%d")
-pw2015_t2_relationship$relationship1_start_f <- format(pw2015_t2_relationship$relationship1_start_f, "%Y/%m/%d")
-
-#Relationship 2
-#pw2015_t2_relationship$relationship2_start_m <- strptime(as.character(pw2015_t2_relationship$relationship2_start_m), "%Y-%m-%d")
-#pw2015_t2_relationship$relationship2_start_m <- format(pw2015_t2_relationship$relationship2_start_m, "%Y/%m/%d")
-
-#pw2015_t2_relationship$relationship2_start_f <- strptime(as.character(pw2015_t2_relationship$relationship2_start_f), "%Y-%m-%d")
-#pw2015_t2_relationship$relationship2_start_f <- format(pw2015_t2_relationship$relationship2_start_f, "%Y/%m/%d")
-
-#Relationship 3
-#pw2015_t2_relationship$relationship3_start_m <- strptime(as.character(pw2015_t2_relationship$relationship3_start_m), "%Y-%m-%d")
-#pw2015_t2_relationship$relationship3_start_m <- format(pw2015_t2_relationship$relationship3_start_m, "%Y/%m/%d")
-
-#pw2015_t2_relationship$relationship3_start_f <- strptime(as.character(pw2015_t2_relationship$relationship3_start_f), "%Y-%m-%d")
-#pw2015_t2_relationship$relationship3_start_f <- format(pw2015_t2_relationship$relationship3_start_f, "%Y/%m/%d")
-```
-
 
 Unite Variables
 ```{r}
@@ -463,47 +415,45 @@ Divide variables, necessary when VPs had both male and female partners
 Relationship 1
 ```{r}
 
-#Dates <- format(as.POSIXct(strptime(pw2015_t2_relationship$relationship1_start,"%Y/%m/%d_%Y/%m/%d",tz="")) ,format = "%Y/%m/%d")
-
 pw2015_t2_relationship$relationship1_kind <- sub('_NA*','', pw2015_t2_relationship$relationship1_kind)
 pw2015_t2_relationship$relationship1_kind <- sub('NA_*','', pw2015_t2_relationship$relationship1_kind)
 pw2015_t2_relationship$relationship1_kind[pw2015_t2_relationship$relationship1_kind==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_kind)) %>% separate(relationship1_kind, c("relationship1_kind","relationship4_kind"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_kind)) %>% separate(relationship1_kind, c("relationship1_kind","relationship4_kind"), sep = "_")
 
 pw2015_t2_relationship$relationship1_start <- sub('_NA*','', pw2015_t2_relationship$relationship1_start)
 pw2015_t2_relationship$relationship1_start <- sub('NA_*','', pw2015_t2_relationship$relationship1_start)
 pw2015_t2_relationship$relationship1_start[pw2015_t2_relationship$relationship1_start==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_start)) %>% separate(relationship1_start, c("relationship1_start","relationship4_start"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_start)) %>% separate(relationship1_start, c("relationship1_start","relationship4_start"), sep = "_")
 
 pw2015_t2_relationship$relationship1_name <- sub('_NA*','', pw2015_t2_relationship$relationship1_name)
 pw2015_t2_relationship$relationship1_name <- sub('NA_*','', pw2015_t2_relationship$relationship1_name)
 pw2015_t2_relationship$relationship1_name[pw2015_t2_relationship$relationship1_name==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_name)) %>% separate(relationship1_name, c("relationship1_name","relationship4_name"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_name)) %>% separate(relationship1_name, c("relationship1_name","relationship4_name"), sep = "_")
 
 pw2015_t2_relationship$relationship1_name_new <- sub('_NA*','', pw2015_t2_relationship$relationship1_name_new)
 pw2015_t2_relationship$relationship1_name_new <- sub('NA_*','', pw2015_t2_relationship$relationship1_name_new)
 pw2015_t2_relationship$relationship1_name_new[pw2015_t2_relationship$relationship1_name_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_name_new)) %>% separate(relationship1_name_new, c("relationship1_name_new","relationship4_name_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_name_new)) %>% separate(relationship1_name_new, c("relationship1_name_new","relationship4_name_new"), sep = "_")
 
 pw2015_t2_relationship$relationship1_age_new <- sub('_NA*','', pw2015_t2_relationship$relationship1_age_new)
 pw2015_t2_relationship$relationship1_age_new <- sub('NA_*','', pw2015_t2_relationship$relationship1_age_new)
 pw2015_t2_relationship$relationship1_age_new[pw2015_t2_relationship$relationship1_age_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_age_new)) %>% separate(relationship1_age_new, c("relationship1_age_new","relationship4_age_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_age_new)) %>% separate(relationship1_age_new, c("relationship1_age_new","relationship4_age_new"), sep = "_")
 
 pw2015_t2_relationship$relationship1_height_new <- sub('_NA*','', pw2015_t2_relationship$relationship1_height_new)
 pw2015_t2_relationship$relationship1_height_new <- sub('NA_*','', pw2015_t2_relationship$relationship1_height_new)
 pw2015_t2_relationship$relationship1_height_new[pw2015_t2_relationship$relationship1_height_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_height_new)) %>% separate(relationship1_height_new, c("relationship1_height_new","relationship4_height_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_height_new)) %>% separate(relationship1_height_new, c("relationship1_height_new","relationship4_height_new"), sep = "_")
 
 pw2015_t2_relationship$relationship1_relationship_new <- sub('_NA*','', pw2015_t2_relationship$relationship1_relationship_new)
 pw2015_t2_relationship$relationship1_relationship_new <- sub('NA_*','', pw2015_t2_relationship$relationship1_relationship_new)
 pw2015_t2_relationship$relationship1_relationship_new[pw2015_t2_relationship$relationship1_relationship_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_relationship_new)) %>% separate(relationship1_relationship_new, c("relationship1_relationship_new","relationship4_relationship_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_relationship_new)) %>% separate(relationship1_relationship_new, c("relationship1_relationship_new","relationship4_relationship_new"), sep = "_")
 
 pw2015_t2_relationship$relationship1_duration_new <- sub('_NA*','', pw2015_t2_relationship$relationship1_duration_new)
 pw2015_t2_relationship$relationship1_duration_new <- sub('NA_*','', pw2015_t2_relationship$relationship1_duration_new)
 pw2015_t2_relationship$relationship1_duration_new[pw2015_t2_relationship$relationship1_duration_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_duration_new)) %>% separate(relationship1_duration_new, c("relationship1_duration_new","relationship4_duration_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship1_duration_new)) %>% separate(relationship1_duration_new, c("relationship1_duration_new","relationship4_duration_new"), sep = "_")
 ```
 
 Relationship 2
@@ -511,42 +461,42 @@ Relationship 2
 pw2015_t2_relationship$relationship2_kind <- sub('_NA*','', pw2015_t2_relationship$relationship2_kind)
 pw2015_t2_relationship$relationship2_kind <- sub('NA_*','', pw2015_t2_relationship$relationship2_kind)
 pw2015_t2_relationship$relationship2_kind[pw2015_t2_relationship$relationship2_kind==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_kind)) %>% separate(relationship2_kind, c("relationship2_kind","relationship5_kind"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_kind)) %>% separate(relationship2_kind, c("relationship2_kind","relationship5_kind"), sep = "_")
 
 pw2015_t2_relationship$relationship2_start <- sub('_NA*','', pw2015_t2_relationship$relationship2_start)
 pw2015_t2_relationship$relationship2_start <- sub('NA_*','', pw2015_t2_relationship$relationship2_start)
 pw2015_t2_relationship$relationship2_start[pw2015_t2_relationship$relationship2_start==""]  <- NA 
-z <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_start)) %>% separate(relationship2_start, c("relationship2_start","relationship5_start"))
+z <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_start)) %>% separate(relationship2_start, c("relationship2_start","relationship5_start"), sep = "_")
 
 pw2015_t2_relationship$relationship2_name <- sub('_NA*','', pw2015_t2_relationship$relationship2_name)
 pw2015_t2_relationship$relationship2_name <- sub('NA_*','', pw2015_t2_relationship$relationship2_name)
 pw2015_t2_relationship$relationship2_name[pw2015_t2_relationship$relationship2_name==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_name)) %>% separate(relationship2_name, c("relationship2_name","relationship5_name"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_name)) %>% separate(relationship2_name, c("relationship2_name","relationship5_name"), sep = "_")
 
 pw2015_t2_relationship$relationship2_name_new <- sub('_NA*','', pw2015_t2_relationship$relationship2_name_new)
 pw2015_t2_relationship$relationship2_name_new <- sub('NA_*','', pw2015_t2_relationship$relationship2_name_new)
 pw2015_t2_relationship$relationship2_name_new[pw2015_t2_relationship$relationship2_name_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_name_new)) %>% separate(relationship2_name_new, c("relationship2_name_new","relationship5_name_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_name_new)) %>% separate(relationship2_name_new, c("relationship2_name_new","relationship5_name_new"), sep = "_")
 
 pw2015_t2_relationship$relationship2_age_new <- sub('_NA*','', pw2015_t2_relationship$relationship2_age_new)
 pw2015_t2_relationship$relationship2_age_new <- sub('NA_*','', pw2015_t2_relationship$relationship2_age_new)
 pw2015_t2_relationship$relationship2_age_new[pw2015_t2_relationship$relationship2_age_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_age_new)) %>% separate(relationship2_age_new, c("relationship2_age_new","relationship5_age_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_age_new)) %>% separate(relationship2_age_new, c("relationship2_age_new","relationship5_age_new"), sep = "_")
 
 pw2015_t2_relationship$relationship2_height_new <- sub('_NA*','', pw2015_t2_relationship$relationship2_height_new)
 pw2015_t2_relationship$relationship2_height_new <- sub('NA_*','', pw2015_t2_relationship$relationship2_height_new)
 pw2015_t2_relationship$relationship2_height_new[pw2015_t2_relationship$relationship2_height_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_height_new)) %>% separate(relationship2_height_new, c("relationship2_height_new","relationship5_height_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_height_new)) %>% separate(relationship2_height_new, c("relationship2_height_new","relationship5_height_new"), sep = "_")
 
 pw2015_t2_relationship$relationship2_relationship_new <- sub('_NA*','', pw2015_t2_relationship$relationship2_relationship_new)
 pw2015_t2_relationship$relationship2_relationship_new <- sub('NA_*','', pw2015_t2_relationship$relationship2_relationship_new)
 pw2015_t2_relationship$relationship2_relationship_new[pw2015_t2_relationship$relationship2_relationship_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_relationship_new)) %>% separate(relationship2_relationship_new, c("relationship2_relationship_new","relationship5_relationship_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_relationship_new)) %>% separate(relationship2_relationship_new, c("relationship2_relationship_new","relationship5_relationship_new"), sep = "_")
 
 pw2015_t2_relationship$relationship2_duration_new <- sub('_NA*','', pw2015_t2_relationship$relationship2_duration_new)
 pw2015_t2_relationship$relationship2_duration_new <- sub('NA_*','', pw2015_t2_relationship$relationship2_duration_new)
 pw2015_t2_relationship$relationship2_duration_new[pw2015_t2_relationship$relationship2_duration_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_duration_new)) %>% separate(relationship2_duration_new, c("relationship2_duration_new","relationship5_duration_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship2_duration_new)) %>% separate(relationship2_duration_new, c("relationship2_duration_new","relationship5_duration_new"), sep = "_")
 ```
 
 Relationship 3
@@ -554,42 +504,42 @@ Relationship 3
 pw2015_t2_relationship$relationship3_kind <- sub('_NA*','', pw2015_t2_relationship$relationship3_kind)
 pw2015_t2_relationship$relationship3_kind <- sub('NA_*','', pw2015_t2_relationship$relationship3_kind)
 pw2015_t2_relationship$relationship3_kind[pw2015_t2_relationship$relationship3_kind==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_kind)) %>% separate(relationship3_kind, c("relationship3_kind","relationship6_kind"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_kind)) %>% separate(relationship3_kind, c("relationship3_kind","relationship6_kind"), sep = "_")
 
 pw2015_t2_relationship$relationship3_start <- sub('_NA*','', pw2015_t2_relationship$relationship3_start)
 pw2015_t2_relationship$relationship3_start <- sub('NA_*','', pw2015_t2_relationship$relationship3_start)
 pw2015_t2_relationship$relationship3_start[pw2015_t2_relationship$relationship3_start==""]  <- NA 
-z <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_start)) %>% separate(relationship3_start, c("relationship3_start","relationship6_start"))
+z <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_start)) %>% separate(relationship3_start, c("relationship3_start","relationship6_start"), sep = "_")
 
 pw2015_t2_relationship$relationship3_name <- sub('_NA*','', pw2015_t2_relationship$relationship3_name)
 pw2015_t2_relationship$relationship3_name <- sub('NA_*','', pw2015_t2_relationship$relationship3_name)
 pw2015_t2_relationship$relationship3_name[pw2015_t2_relationship$relationship3_name==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_name)) %>% separate(relationship3_name, c("relationship3_name","relationship6_name"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_name)) %>% separate(relationship3_name, c("relationship3_name","relationship6_name"), sep = "_")
 
 pw2015_t2_relationship$relationship3_name_new <- sub('_NA*','', pw2015_t2_relationship$relationship3_name_new)
 pw2015_t2_relationship$relationship3_name_new <- sub('NA_*','', pw2015_t2_relationship$relationship3_name_new)
 pw2015_t2_relationship$relationship3_name_new[pw2015_t2_relationship$relationship3_name_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_name_new)) %>% separate(relationship3_name_new, c("relationship3_name_new","relationship6_name_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_name_new)) %>% separate(relationship3_name_new, c("relationship3_name_new","relationship6_name_new"), sep = "_")
 
 pw2015_t2_relationship$relationship3_age_new <- sub('_NA*','', pw2015_t2_relationship$relationship3_age_new)
 pw2015_t2_relationship$relationship3_age_new <- sub('NA_*','', pw2015_t2_relationship$relationship3_age_new)
 pw2015_t2_relationship$relationship3_age_new[pw2015_t2_relationship$relationship3_age_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_age_new)) %>% separate(relationship3_age_new, c("relationship3_age_new","relationship6_age_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_age_new)) %>% separate(relationship3_age_new, c("relationship3_age_new","relationship6_age_new"), sep = "_")
 
 pw2015_t2_relationship$relationship3_height_new <- sub('_NA*','', pw2015_t2_relationship$relationship3_height_new)
 pw2015_t2_relationship$relationship3_height_new <- sub('NA_*','', pw2015_t2_relationship$relationship3_height_new)
 pw2015_t2_relationship$relationship3_height_new[pw2015_t2_relationship$relationship3_height_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_height_new)) %>% separate(relationship3_height_new, c("relationship3_height_new","relationship6_height_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_height_new)) %>% separate(relationship3_height_new, c("relationship3_height_new","relationship6_height_new"), sep = "_")
 
 pw2015_t2_relationship$relationship3_relationship_new <- sub('_NA*','', pw2015_t2_relationship$relationship3_relationship_new)
 pw2015_t2_relationship$relationship3_relationship_new <- sub('NA_*','', pw2015_t2_relationship$relationship3_relationship_new)
 pw2015_t2_relationship$relationship3_relationship_new[pw2015_t2_relationship$relationship3_relationship_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_relationship_new)) %>% separate(relationship3_relationship_new, c("relationship3_relationship_new","relationship6_relationship_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_relationship_new)) %>% separate(relationship3_relationship_new, c("relationship3_relationship_new","relationship6_relationship_new"), sep = "_")
 
 pw2015_t2_relationship$relationship3_duration_new <- sub('_NA*','', pw2015_t2_relationship$relationship3_duration_new)
 pw2015_t2_relationship$relationship3_duration_new <- sub('NA_*','', pw2015_t2_relationship$relationship3_duration_new)
 pw2015_t2_relationship$relationship3_duration_new[pw2015_t2_relationship$relationship3_duration_new==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_duration_new)) %>% separate(relationship3_duration_new, c("relationship3_duration_new","relationship6_duration_new"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relationship3_duration_new)) %>% separate(relationship3_duration_new, c("relationship3_duration_new","relationship6_duration_new"), sep = "_")
 ```
 
 
@@ -907,73 +857,7 @@ pw2015_t2_relationship$pastrelationship10_relationship_new[pw2015_t2_relationshi
 pw2015_t2_relationship$pastrelationship10_relationship_new[pw2015_t2_relationship$pastrelationship10_relationship_new == 0] <- NA
 ```
 
-Prepare "date"-variables to be united -> must not be seperated by dashes
-```{r}
-#Relationship 1
-pw2015_t2_relationship$pastrelationship1_start_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship1_start_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship1_start_f <- format(pw2015_t2_relationship$pastrelationship1_start_f, "%Y/%m/%d")
 
-pw2015_t2_relationship$pastrelationship1_start_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship1_start_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship1_start_m <- format(pw2015_t2_relationship$pastrelationship1_start_m, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship1_end_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship1_end_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship1_end_f <- format(pw2015_t2_relationship$pastrelationship1_end_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship1_end_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship1_end_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship1_end_m <- format(pw2015_t2_relationship$pastrelationship1_end_m, "%Y/%m/%d")
-
-#Relationship 2
-pw2015_t2_relationship$pastrelationship2_start_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship2_start_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship2_start_f <- format(pw2015_t2_relationship$pastrelationship2_start_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship2_start_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship2_start_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship2_start_m <- format(pw2015_t2_relationship$pastrelationship2_start_m, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship2_end_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship2_end_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship2_end_f <- format(pw2015_t2_relationship$pastrelationship2_end_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship2_end_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship2_end_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship2_end_m <- format(pw2015_t2_relationship$pastrelationship2_end_m, "%Y/%m/%d")
-
-#Relationship 3
-pw2015_t2_relationship$pastrelationship3_start_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship3_start_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship3_start_f <- format(pw2015_t2_relationship$pastrelationship3_start_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship3_start_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship3_start_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship3_start_m <- format(pw2015_t2_relationship$pastrelationship3_start_m, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship3_end_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship3_end_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship3_end_f <- format(pw2015_t2_relationship$pastrelationship3_end_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship3_end_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship3_end_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship3_end_m <- format(pw2015_t2_relationship$pastrelationship3_end_m, "%Y/%m/%d")
-
-#Relationship 4
-pw2015_t2_relationship$pastrelationship4_start_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship4_start_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship4_start_f <- format(pw2015_t2_relationship$pastrelationship4_start_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship4_start_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship4_start_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship4_start_m <- format(pw2015_t2_relationship$pastrelationship4_start_m, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship4_end_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship4_end_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship4_end_f <- format(pw2015_t2_relationship$pastrelationship4_end_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship4_end_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship4_end_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship4_end_m <- format(pw2015_t2_relationship$pastrelationship4_end_m, "%Y/%m/%d")
-
-#Relationship 5
-pw2015_t2_relationship$pastrelationship5_start_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship5_start_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship5_start_f <- format(pw2015_t2_relationship$pastrelationship5_start_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship5_start_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship5_start_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship5_start_m <- format(pw2015_t2_relationship$pastrelationship5_start_m, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship5_end_f <- strptime(as.character(pw2015_t2_relationship$pastrelationship5_end_f), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship5_end_f <- format(pw2015_t2_relationship$pastrelationship5_end_f, "%Y/%m/%d")
-
-pw2015_t2_relationship$pastrelationship5_end_m <- strptime(as.character(pw2015_t2_relationship$pastrelationship5_end_m), "%Y-%m-%d")
-pw2015_t2_relationship$pastrelationship5_end_m <- format(pw2015_t2_relationship$pastrelationship5_end_m, "%Y/%m/%d")
-```
 
 
 Unite "pastrelationship"-variables
@@ -1038,41 +922,333 @@ Divide variables, necessary when VPs had both male and female partners
 
 Past relationship 1
 ```{r}
-
 pw2015_t2_relationship$pastrelationship1_kind <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_kind)
 pw2015_t2_relationship$pastrelationship1_kind <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_kind)
 pw2015_t2_relationship$pastrelationship1_kind[pw2015_t2_relationship$pastrelationship1_kind==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_kind)) %>% separate(pastrelationship1_kind, c("pastrelationship1_kind","relationship6_kind"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_kind)) %>% separate(pastrelationship1_kind, c("pastrelationship1_kind","pastrelationship6_kind"), sep = "_")
 
 pw2015_t2_relationship$pastrelationship1_start <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_start)
 pw2015_t2_relationship$pastrelationship1_start <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_start)
 pw2015_t2_relationship$pastrelationship1_start[pw2015_t2_relationship$pastrelationship1_start==""]  <- NA 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_start)) %>% separate(pastrelationship1_start, c("pastrelationship1_start","relationship6_start"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_start)) %>% separate(pastrelationship1_start, c("pastrelationship1_start","pastrelationship6_start"), sep = "_")
 
+pw2015_t2_relationship$pastrelationship1_end <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_end)
+pw2015_t2_relationship$pastrelationship1_end <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_end)
+pw2015_t2_relationship$pastrelationship1_end[pw2015_t2_relationship$pastrelationship1_end==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_end)) %>% separate(pastrelationship1_end, c("pastrelationship1_end","pastrelationship6_end"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship1_name <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_name)
+pw2015_t2_relationship$pastrelationship1_name <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_name)
+pw2015_t2_relationship$pastrelationship1_name[pw2015_t2_relationship$pastrelationship1_name==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_name)) %>% separate(pastrelationship1_name, c("pastrelationship1_name","pastrelationship6_name"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship1_name_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_name_new)
+pw2015_t2_relationship$pastrelationship1_name_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_name_new)
+pw2015_t2_relationship$pastrelationship1_name_new[pw2015_t2_relationship$pastrelationship1_name_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_name_new)) %>% separate(pastrelationship1_name_new, c("pastrelationship1_name_new","pastrelationship6_name_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship1_age_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_age_new)
+pw2015_t2_relationship$pastrelationship1_age_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_age_new)
+pw2015_t2_relationship$pastrelationship1_age_new[pw2015_t2_relationship$pastrelationship1_age_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_age_new)) %>% separate(pastrelationship1_age_new, c("pastrelationship1_age_new","pastrelationship6_age_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship1_height_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_height_new)
+pw2015_t2_relationship$pastrelationship1_height_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_height_new)
+pw2015_t2_relationship$pastrelationship1_height_new[pw2015_t2_relationship$pastrelationship1_height_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_height_new)) %>% separate(pastrelationship1_height_new, c("pastrelationship1_height_new","pastrelationship6_height_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship1_relationship_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_relationship_new)
+pw2015_t2_relationship$pastrelationship1_relationship_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_relationship_new)
+pw2015_t2_relationship$pastrelationship1_relationship_new[pw2015_t2_relationship$pastrelationship1_relationship_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_relationship_new)) %>% separate(pastrelationship1_relationship_new, c("pastrelationship1_relationship_new","pastrelationship6_relationship_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship1_duration_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship1_duration_new)
+pw2015_t2_relationship$pastrelationship1_duration_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship1_duration_new)
+pw2015_t2_relationship$pastrelationship1_duration_new[pw2015_t2_relationship$pastrelationship1_duration_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship1_duration_new)) %>% separate(pastrelationship1_duration_new, c("pastrelationship1_duration_new","pastrelationship6_duration_new"), sep = "_")
+```
+
+Past relationship 2
+```{r}
+pw2015_t2_relationship$pastrelationship2_kind <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_kind)
+pw2015_t2_relationship$pastrelationship2_kind <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_kind)
+pw2015_t2_relationship$pastrelationship2_kind[pw2015_t2_relationship$pastrelationship2_kind==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_kind)) %>% separate(pastrelationship2_kind, c("pastrelationship2_kind","pastrelationship7_kind"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_start <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_start)
+pw2015_t2_relationship$pastrelationship2_start <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_start)
+pw2015_t2_relationship$pastrelationship2_start[pw2015_t2_relationship$pastrelationship2_start==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_start)) %>% separate(pastrelationship2_start, c("pastrelationship2_start","pastrelationship7_start"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_end <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_end)
+pw2015_t2_relationship$pastrelationship2_end <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_end)
+pw2015_t2_relationship$pastrelationship2_end[pw2015_t2_relationship$pastrelationship2_end==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_end)) %>% separate(pastrelationship2_end, c("pastrelationship2_end","pastrelationship7_end"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_name <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_name)
+pw2015_t2_relationship$pastrelationship2_name <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_name)
+pw2015_t2_relationship$pastrelationship2_name[pw2015_t2_relationship$pastrelationship2_name==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_name)) %>% separate(pastrelationship2_name, c("pastrelationship2_name","pastrelationship7_name"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_name_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_name_new)
+pw2015_t2_relationship$pastrelationship2_name_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_name_new)
+pw2015_t2_relationship$pastrelationship2_name_new[pw2015_t2_relationship$pastrelationship2_name_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_name_new)) %>% separate(pastrelationship2_name_new, c("pastrelationship2_name_new","pastrelationship7_name_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_age_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_age_new)
+pw2015_t2_relationship$pastrelationship2_age_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_age_new)
+pw2015_t2_relationship$pastrelationship2_age_new[pw2015_t2_relationship$pastrelationship2_age_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_age_new)) %>% separate(pastrelationship2_age_new, c("pastrelationship2_age_new","pastrelationship7_age_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_height_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_height_new)
+pw2015_t2_relationship$pastrelationship2_height_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_height_new)
+pw2015_t2_relationship$pastrelationship2_height_new[pw2015_t2_relationship$pastrelationship2_height_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_height_new)) %>% separate(pastrelationship2_height_new, c("pastrelationship2_height_new","pastrelationship7_height_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_relationship_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_relationship_new)
+pw2015_t2_relationship$pastrelationship2_relationship_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_relationship_new)
+pw2015_t2_relationship$pastrelationship2_relationship_new[pw2015_t2_relationship$pastrelationship2_relationship_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_relationship_new)) %>% separate(pastrelationship2_relationship_new, c("pastrelationship2_relationship_new","pastrelationship7_relationship_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship2_duration_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship2_duration_new)
+pw2015_t2_relationship$pastrelationship2_duration_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship2_duration_new)
+pw2015_t2_relationship$pastrelationship2_duration_new[pw2015_t2_relationship$pastrelationship2_duration_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship2_duration_new)) %>% separate(pastrelationship2_duration_new, c("pastrelationship2_duration_new","pastrelationship7_duration_new"), sep = "_")
+```
+
+Past relationship 3
+```{r}
+pw2015_t2_relationship$pastrelationship3_kind <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_kind)
+pw2015_t2_relationship$pastrelationship3_kind <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_kind)
+pw2015_t2_relationship$pastrelationship3_kind[pw2015_t2_relationship$pastrelationship3_kind==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_kind)) %>% separate(pastrelationship3_kind, c("pastrelationship3_kind","pastrelationship8_kind"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_start <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_start)
+pw2015_t2_relationship$pastrelationship3_start <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_start)
+pw2015_t2_relationship$pastrelationship3_start[pw2015_t2_relationship$pastrelationship3_start==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_start)) %>% separate(pastrelationship3_start, c("pastrelationship3_start","pastrelationship8_start"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_end <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_end)
+pw2015_t2_relationship$pastrelationship3_end <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_end)
+pw2015_t2_relationship$pastrelationship3_end[pw2015_t2_relationship$pastrelationship3_end==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_end)) %>% separate(pastrelationship3_end, c("pastrelationship3_end","pastrelationship8_end"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_name <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_name)
+pw2015_t2_relationship$pastrelationship3_name <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_name)
+pw2015_t2_relationship$pastrelationship3_name[pw2015_t2_relationship$pastrelationship3_name==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_name)) %>% separate(pastrelationship3_name, c("pastrelationship3_name","pastrelationship8_name"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_name_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_name_new)
+pw2015_t2_relationship$pastrelationship3_name_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_name_new)
+pw2015_t2_relationship$pastrelationship3_name_new[pw2015_t2_relationship$pastrelationship3_name_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_name_new)) %>% separate(pastrelationship3_name_new, c("pastrelationship3_name_new","pastrelationship8_name_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_age_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_age_new)
+pw2015_t2_relationship$pastrelationship3_age_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_age_new)
+pw2015_t2_relationship$pastrelationship3_age_new[pw2015_t2_relationship$pastrelationship3_age_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_age_new)) %>% separate(pastrelationship3_age_new, c("pastrelationship3_age_new","pastrelationship8_age_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_height_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_height_new)
+pw2015_t2_relationship$pastrelationship3_height_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_height_new)
+pw2015_t2_relationship$pastrelationship3_height_new[pw2015_t2_relationship$pastrelationship3_height_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_height_new)) %>% separate(pastrelationship3_height_new, c("pastrelationship3_height_new","pastrelationship8_height_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_relationship_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_relationship_new)
+pw2015_t2_relationship$pastrelationship3_relationship_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_relationship_new)
+pw2015_t2_relationship$pastrelationship3_relationship_new[pw2015_t2_relationship$pastrelationship3_relationship_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_relationship_new)) %>% separate(pastrelationship3_relationship_new, c("pastrelationship3_relationship_new","pastrelationship8_relationship_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship3_duration_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship3_duration_new)
+pw2015_t2_relationship$pastrelationship3_duration_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship3_duration_new)
+pw2015_t2_relationship$pastrelationship3_duration_new[pw2015_t2_relationship$pastrelationship3_duration_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship3_duration_new)) %>% separate(pastrelationship3_duration_new, c("pastrelationship3_duration_new","pastrelationship8_duration_new"), sep = "_")
+```
+
+Past relationship 4
+```{r}
+pw2015_t2_relationship$pastrelationship4_kind <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_kind)
+pw2015_t2_relationship$pastrelationship4_kind <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_kind)
+pw2015_t2_relationship$pastrelationship4_kind[pw2015_t2_relationship$pastrelationship4_kind==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_kind)) %>% separate(pastrelationship4_kind, c("pastrelationship4_kind","pastrelationship9_kind"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_start <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_start)
+pw2015_t2_relationship$pastrelationship4_start <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_start)
+pw2015_t2_relationship$pastrelationship4_start[pw2015_t2_relationship$pastrelationship4_start==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_start)) %>% separate(pastrelationship4_start, c("pastrelationship4_start","pastrelationship9_start"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_end <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_end)
+pw2015_t2_relationship$pastrelationship4_end <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_end)
+pw2015_t2_relationship$pastrelationship4_end[pw2015_t2_relationship$pastrelationship4_end==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_end)) %>% separate(pastrelationship4_end, c("pastrelationship4_end","pastrelationship9_end"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_name <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_name)
+pw2015_t2_relationship$pastrelationship4_name <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_name)
+pw2015_t2_relationship$pastrelationship4_name[pw2015_t2_relationship$pastrelationship4_name==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_name)) %>% separate(pastrelationship4_name, c("pastrelationship4_name","pastrelationship9_name"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_name_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_name_new)
+pw2015_t2_relationship$pastrelationship4_name_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_name_new)
+pw2015_t2_relationship$pastrelationship4_name_new[pw2015_t2_relationship$pastrelationship4_name_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_name_new)) %>% separate(pastrelationship4_name_new, c("pastrelationship4_name_new","pastrelationship9_name_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_age_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_age_new)
+pw2015_t2_relationship$pastrelationship4_age_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_age_new)
+pw2015_t2_relationship$pastrelationship4_age_new[pw2015_t2_relationship$pastrelationship4_age_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_age_new)) %>% separate(pastrelationship4_age_new, c("pastrelationship4_age_new","pastrelationship9_age_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_height_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_height_new)
+pw2015_t2_relationship$pastrelationship4_height_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_height_new)
+pw2015_t2_relationship$pastrelationship4_height_new[pw2015_t2_relationship$pastrelationship4_height_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_height_new)) %>% separate(pastrelationship4_height_new, c("pastrelationship4_height_new","pastrelationship9_height_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_relationship_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_relationship_new)
+pw2015_t2_relationship$pastrelationship4_relationship_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_relationship_new)
+pw2015_t2_relationship$pastrelationship4_relationship_new[pw2015_t2_relationship$pastrelationship4_relationship_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_relationship_new)) %>% separate(pastrelationship4_relationship_new, c("pastrelationship4_relationship_new","pastrelationship9_relationship_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship4_duration_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship4_duration_new)
+pw2015_t2_relationship$pastrelationship4_duration_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship4_duration_new)
+pw2015_t2_relationship$pastrelationship4_duration_new[pw2015_t2_relationship$pastrelationship4_duration_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship4_duration_new)) %>% separate(pastrelationship4_duration_new, c("pastrelationship4_duration_new","pastrelationship9_duration_new"), sep = "_")
+```
+
+Past relationship 5
+```{r}
+pw2015_t2_relationship$pastrelationship5_kind <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_kind)
+pw2015_t2_relationship$pastrelationship5_kind <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_kind)
+pw2015_t2_relationship$pastrelationship5_kind[pw2015_t2_relationship$pastrelationship1_kind==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_kind)) %>% separate(pastrelationship5_kind, c("pastrelationship5_kind","pastrelationship10_kind"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_start <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_start)
+pw2015_t2_relationship$pastrelationship5_start <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_start)
+pw2015_t2_relationship$pastrelationship5_start[pw2015_t2_relationship$pastrelationship5_start==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_start)) %>% separate(pastrelationship5_start, c("pastrelationship5_start","pastrelationship10_start"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_end <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_end)
+pw2015_t2_relationship$pastrelationship5_end <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_end)
+pw2015_t2_relationship$pastrelationship5_end[pw2015_t2_relationship$pastrelationship5_end==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_end)) %>% separate(pastrelationship5_end, c("pastrelationship5_end","pastrelationship10_end"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_name <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_name)
+pw2015_t2_relationship$pastrelationship5_name <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_name)
+pw2015_t2_relationship$pastrelationship5_name[pw2015_t2_relationship$pastrelationship5_name==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_name)) %>% separate(pastrelationship5_name, c("pastrelationship5_name","pastrelationship10_name"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_name_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_name_new)
+pw2015_t2_relationship$pastrelationship5_name_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_name_new)
+pw2015_t2_relationship$pastrelationship5_name_new[pw2015_t2_relationship$pastrelationship5_name_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_name_new)) %>% separate(pastrelationship5_name_new, c("pastrelationship5_name_new","pastrelationship10_name_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_age_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_age_new)
+pw2015_t2_relationship$pastrelationship5_age_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_age_new)
+pw2015_t2_relationship$pastrelationship5_age_new[pw2015_t2_relationship$pastrelationship5_age_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_age_new)) %>% separate(pastrelationship5_age_new, c("pastrelationship5_age_new","pastrelationship10_age_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_height_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_height_new)
+pw2015_t2_relationship$pastrelationship5_height_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_height_new)
+pw2015_t2_relationship$pastrelationship5_height_new[pw2015_t2_relationship$pastrelationship5_height_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_height_new)) %>% separate(pastrelationship5_height_new, c("pastrelationship5_height_new","pastrelationship10_height_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_relationship_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_relationship_new)
+pw2015_t2_relationship$pastrelationship5_relationship_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_relationship_new)
+pw2015_t2_relationship$pastrelationship5_relationship_new[pw2015_t2_relationship$pastrelationship5_relationship_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_relationship_new)) %>% separate(pastrelationship5_relationship_new, c("pastrelationship5_relationship_new","pastrelationship10_relationship_new"), sep = "_")
+
+pw2015_t2_relationship$pastrelationship5_duration_new <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_duration_new)
+pw2015_t2_relationship$pastrelationship5_duration_new <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_duration_new)
+pw2015_t2_relationship$pastrelationship5_duration_new[pw2015_t2_relationship$pastrelationship5_duration_new==""]  <- NA 
+pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_duration_new)) %>% separate(pastrelationship5_duration_new, c("pastrelationship5_duration_new","pastrelationship10_duration_new"), sep = "_")
 ```
 
 Bring data with new variables in proper order
 ```{r}
+#Delete grouping-variable "grepl"
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::select( -starts_with("grepl"))
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::select(-relationship_m, -relationship_f, -pastrelationship1_m,
+                          -pastrelationship1_f, -pastrelationship2_m, -pastrelationship2_f, -pastrelationship3_m,
+                          -pastrelationship3_f, -pastrelationship4_m, -pastrelationship4_f, -pastrelationship5_m,
+                          -pastrelationship5_f, -pastrelationship6_m, -pastrelationship6_f,
+                          -pastrelationshipmore_m, -pastrelationshipmore_f)
+
 pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::select(session, short_session, t2_relationship, t2_pastrelationship, starts_with("relationship"), starts_with("pastrelationship"))
 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% dplyr::select(-relationship_m, -relationship_f, -pastrelationship1_m,  
-                                         -pastrelationship1_f, -pastrelationship2_m, -pastrelationship2_f, -pastrelationship3_m,
-                                         -pastrelationship3_f, -pastrelationship4_m, -pastrelationship4_f, -pastrelationship5_m,
-                                         -pastrelationship5_f, -pastrelationship6_m, -pastrelationship6_f,
-                                         -pastrelationshipmore_m, -pastrelationshipmore_f)
+
+```
+
+```{r}
+pw2015_t2_relationship <- subset(pw2015_t2_relationship, !duplicated(short_session))
+
+pw2015_t2_relationship <- as.data.frame(pw2015_t2_relationship)
+
+pw2015_t2_relationship <- reshape(pw2015_t2_relationship, direction='long', 
+        varying=c("relationship1_name", "relationship1_name_new", "relationship1_age_new", "relationship1_height_new",
+                  "relationship1_relationship_new", "relationship1_duration_new", "relationship1_kind",
+                  "relationship1_start", 
+                  "relationship2_name", "relationship2_name_new", "relationship2_age_new",
+                  "relationship2_height_new", "relationship2_relationship_new", "relationship2_duration_new", 
+                  "relationship2_kind", "relationship2_start", 
+                  "relationship3_name", "relationship3_name_new", "relationship3_age_new", "relationship3_height_new",
+                  "relationship3_relationship_new", "relationship3_duration_new", "relationship3_kind",
+                  "relationship3_start",
+                  "relationship4_name", "relationship4_name_new", "relationship4_age_new",
+                  "relationship4_height_new", "relationship4_relationship_new", "relationship4_duration_new", 
+                  "relationship4_kind", "relationship4_start", 
+                  "relationship5_name", "relationship5_name_new", "relationship5_age_new",
+                  "relationship5_height_new", "relationship5_relationship_new", "relationship5_duration_new", 
+                  "relationship5_kind", "relationship5_start", 
+                  "relationship6_name", "relationship6_name_new", "relationship6_age_new",
+                  "relationship6_height_new", "relationship6_relationship_new", "relationship6_duration_new", 
+                  "relationship6_kind", "relationship6_start", 
+                  "pastrelationship1_name", "pastrelationship1_name_new", "pastrelationship1_age_new", 
+                  "pastrelationship1_height_new","pastrelationship1_relationship_new", "pastrelationship1_duration_new", 
+                  "pastrelationship1_kind","pastrelationship1_start", "pastrelationship1_end",
+                  "pastrelationship2_name", "pastrelationship2_name_new", "pastrelationship2_age_new", 
+                  "pastrelationship2_height_new","pastrelationship2_relationship_new", "pastrelationship2_duration_new", 
+                  "pastrelationship2_kind","pastrelationship2_start", "pastrelationship2_end",
+                  "pastrelationship3_name", "pastrelationship3_name_new", "pastrelationship3_age_new", 
+                  "pastrelationship3_height_new","pastrelationship3_relationship_new", "pastrelationship3_duration_new", 
+                  "pastrelationship3_kind","pastrelationship3_start", "pastrelationship3_end",
+                  "pastrelationship4_name", "pastrelationship4_name_new", "pastrelationship4_age_new", 
+                  "pastrelationship4_height_new","pastrelationship4_relationship_new", "pastrelationship4_duration_new", 
+                  "pastrelationship4_kind","pastrelationship4_start", "pastrelationship4_end",
+                  "pastrelationship5_name", "pastrelationship5_name_new", "pastrelationship5_age_new", 
+                  "pastrelationship5_height_new","pastrelationship5_relationship_new", "pastrelationship5_duration_new", 
+                  "pastrelationship5_kind","pastrelationship5_start", "pastrelationship5_end",
+                  "pastrelationship6_name", "pastrelationship6_name_new", "pastrelationship6_age_new", 
+                  "pastrelationship6_height_new","pastrelationship6_relationship_new", "pastrelationship6_duration_new", 
+                  "pastrelationship6_kind","pastrelationship6_start", "pastrelationship6_end",
+                  "pastrelationship7_name", "pastrelationship7_name_new", "pastrelationship7_age_new", 
+                  "pastrelationship7_height_new","pastrelationship7_relationship_new", "pastrelationship7_duration_new", 
+                  "pastrelationship7_kind","pastrelationship7_start", "pastrelationship7_end",
+                  "pastrelationship8_name", "pastrelationship8_name_new", "pastrelationship8_age_new", 
+                  "pastrelationship8_height_new","pastrelationship8_relationship_new", "pastrelationship8_duration_new", 
+                  "pastrelationship8_kind","pastrelationship8_start", "pastrelationship8_end",
+                  "pastrelationship9_name", "pastrelationship9_name_new", "pastrelationship9_age_new", 
+                  "pastrelationship9_height_new","pastrelationship9_relationship_new", "pastrelationship9_duration_new", 
+                  "pastrelationship9_kind","pastrelationship9_start", "pastrelationship9_end",
+                  "pastrelationship10_name", "pastrelationship10_name_new", "pastrelationship10_age_new", 
+                  "pastrelationship10_height_new","pastrelationship10_relationship_new", "pastrelationship10_duration_new",                   "pastrelationship10_kind","pastrelationship10_start", "pastrelationship10_end",
+             timevar='var',
+        times=c('relationship1', 'relationship2', 'relationship3', 'relationship4', 'relationship5', 'relationship6',
+                'pastrelationship1', 'pastrelationship2', 'pastrelationship3', 'pastrelationship4', 'pastrelationship5',
+                'pastrelationship6', 'pastrelationship7', 'pastrelationship8', 'pastrelationship9', 'pastrelationship10'),
+        v.names=c('name', 'name_new', 'age_new', 'height_new', 'relationship_new', 'duration_new', 'kind', 'start', 'end'),
+        idvar='short_session'))
+
+pw2015_t2_relationship <- reshape(pw2015_t2_relationship, direction='long', 
+        varying=c('relationship1.kind', 'relationship1.start_months', 'relationship1.start_weeks', 
+        'relationship2.kind', 'relationship2.start_months', 'relationship2.start_weeks', 'relationship3.kind',        
+        'relationship3.start_months', 'relationship3.start_weeks', 'relationship4.kind', 'relationship4.start_months',
+        'relationship4.start_weeks'), 
+        timevar='var',
+        times=c('relationship1', 'relationship2', 'relationship3', 'relationship4'),
+        v.names=c('kind', 'start_months', 'start_weeks'),
+        idvar='short_session')
 ```
 
 
 ```{r}
-#convert wide to long format (unfinished)
-
-pw2015_t2_relationship_long <- gather(pw2015_t2_relationship, relationship_count , relationship1:relationship3)
-
-pw2015_t2_relationship_long <- gather(pw2015_t2_relationship_long, relationship_count ,relationship_start_months, relationship1_start_months_m, relationship2_start_months_m, relationship3_start_months_m, relationship1_start_months_f, relationship2_start_months_f, relationship3_start_months_f)
-
- 
-Data <- left_join(pw2015_demographie_select, pw2015_items_select, by=c("session","short_session"))
-
 
 ## one longterm variable for "focal" preferred sex,
 ## based on own sex
@@ -1082,4 +1258,5 @@ Data$longterm_GESAMT[Data$sex==2] <- Data$longterm_f[Data$sex==2]
 
 
 ```
+
 
