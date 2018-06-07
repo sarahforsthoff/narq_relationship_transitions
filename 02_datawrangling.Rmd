@@ -1407,11 +1407,16 @@ pw2015_t2_relationship <- reshape(pw2015_t2_relationship, direction='long',
 # Relationship t3
 
 ```{r}
+# Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
 pw2015_t3_partners = pw2015_t3_partners %>% 
-  group_by(session) %>%
-  arrange(session, F_t3_start) %>%
-  mutate(relationship_number = n(),
-         relationship_order = row_number())
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, F_t3_start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number()) # determining relationship order
+
+# Problems: which of these relationships happened in t2 already?
+# How to merge with relationships from t2?
 ```
 
 # Merge Relationship Data
