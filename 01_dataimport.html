@@ -184,12 +184,12 @@ pw2015_t3_ende$short_session = str_sub(pw2015_t3_ende$session,1,10)</code></pre>
 <div id="t1" class="section level3">
 <h3>t1</h3>
 <pre class="r"><code>pw2015_demographie_select = pw2015_demographie %&gt;%
-  select(session, short_session, ended, sex, age, occupation, education, sex_orientation, attracted_to,
-         starts_with(&quot;NARQ_&quot;), starts_with(&quot;BFI_K&quot;))
+  select(session, short_session, created, ended, sex, age, occupation, education, sex_orientation,
+         attracted_to, starts_with(&quot;NARQ_&quot;), starts_with(&quot;BFIK&quot;))
 
 
 pw2015_items_select = pw2015_items %&gt;%
-  select(session, short_session, ended,
+  select(session, short_session, created, ended,
          number_relationships, end_relationship_weeks, end_relationship_months, end_relationship_years,
          starts_with(&quot;global_interest_&quot;),
          starts_with(&quot;SOI_R&quot;),
@@ -199,48 +199,48 @@ pw2015_items_select = pw2015_items %&gt;%
 <div id="t2" class="section level3">
 <h3>t2</h3>
 <pre class="r"><code>pw2015_t2_select = pw2015_t2 %&gt;%
-  select(session, short_session, ended, 
+  select(session, short_session, created, ended, 
          starts_with(&quot;relationship&quot;),
          starts_with(&quot;pastrelationship&quot;))
 
 
 pw2015_t2_frauen_select = pw2015_t2_frauen %&gt;%
-  select(session, short_session, ended,
+  select(session, short_session, created, ended,
          starts_with(&quot;relationship&quot;),
          starts_with(&quot;pastrelationship&quot;))
 
 
 pw2015_t2_ende_select = pw2015_t2_ende %&gt;%
-  select(session, short_session, ended, notes_to_us_t2)</code></pre>
+  select(session, short_session, created, ended, notes_to_us_t2)</code></pre>
 </div>
 <div id="t3" class="section level3">
 <h3>t3</h3>
 <pre class="r"><code>pw2015_t3_start_select = pw2015_t3_start %&gt;%
-  select(session, short_session, ended, F_self_t3_life_events,F_self_t3_life_event_other)
+  select(session, short_session, created, ended, F_self_t3_life_events,F_self_t3_life_event_other)
 
 
 pw2015_t3_singles_select = pw2015_t3_singles %&gt;%
-  select(session, short_session, ended, F_self_t3_interest_longterm_single_now)
+  select(session, short_session, created, ended, F_self_t3_interest_longterm_single_now)
 
 
 pw2015_t3_relationship_number_select = pw2015_t3_relationship_number %&gt;%
-  select(session, short_session, ended, F_t3_relationship_ultimate, F_t3_relationship)
+  select(session, short_session, created, ended, F_t3_relationship_ultimate, F_t3_relationship)
 
 
 pw2015_t3_partners_select = pw2015_t3_partners %&gt;%
-  select(session, short_session, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup, F_t3_kind,
+  select(session, short_session, created, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup, F_t3_kind,
          F_t3_past_kind, F_t3_closeup_kind)
 
 
 pw2015_t3_mainrelation_select = pw2015_t3_mainrelation %&gt;%
-  select(session, short_session, ended,
+  select(session, short_session, created, ended,
          starts_with(&quot;F_self_t3_IMS&quot;), F_mate_t3_IMS_alternaavailab,
          starts_with(&quot;F_self_t3_transgreact&quot;), 
          F_t3_mainrelation_sex, F_t3_mainrelation_age, 
          F_t3_mainrelation_description)
 
 pw2015_t3_ende_select = pw2015_t3_ende %&gt;%
-  select(session, short_session, ended, F_t3_honesty_check, F_t3_dishonest_answers, F_t3_notes_to_us)</code></pre>
+  select(session, short_session, created, ended, F_t3_honesty_check, F_t3_dishonest_answers, F_t3_notes_to_us)</code></pre>
 </div>
 </div>
 <div id="abspeichern-von-datenfiles" class="section level2">

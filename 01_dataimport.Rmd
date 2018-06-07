@@ -57,12 +57,12 @@ Die System- bzw. neu gebildeten Variablen Variablen "session", "short_session" u
 ### t1
 ```{r}
 pw2015_demographie_select = pw2015_demographie %>%
-  select(session, short_session, ended, sex, age, occupation, education, sex_orientation, attracted_to,
-         starts_with("NARQ_"), starts_with("BFI_K"))
+  select(session, short_session, created, ended, sex, age, occupation, education, sex_orientation,
+         attracted_to, starts_with("NARQ_"), starts_with("BFIK"))
 
 
 pw2015_items_select = pw2015_items %>%
-  select(session, short_session, ended,
+  select(session, short_session, created, ended,
          number_relationships, end_relationship_weeks, end_relationship_months, end_relationship_years,
          starts_with("global_interest_"),
          starts_with("SOI_R"),
@@ -74,19 +74,19 @@ pw2015_items_select = pw2015_items %>%
 ### t2
 ```{r}
 pw2015_t2_select = pw2015_t2 %>%
-  select(session, short_session, ended, 
+  select(session, short_session, created, ended, 
          starts_with("relationship"),
          starts_with("pastrelationship"))
 
 
 pw2015_t2_frauen_select = pw2015_t2_frauen %>%
-  select(session, short_session, ended,
+  select(session, short_session, created, ended,
          starts_with("relationship"),
          starts_with("pastrelationship"))
 
 
 pw2015_t2_ende_select = pw2015_t2_ende %>%
-  select(session, short_session, ended, notes_to_us_t2)
+  select(session, short_session, created, ended, notes_to_us_t2)
 ```
 
 
@@ -94,31 +94,31 @@ pw2015_t2_ende_select = pw2015_t2_ende %>%
 ### t3
 ```{r}
 pw2015_t3_start_select = pw2015_t3_start %>%
-  select(session, short_session, ended, F_self_t3_life_events,F_self_t3_life_event_other)
+  select(session, short_session, created, ended, F_self_t3_life_events,F_self_t3_life_event_other)
 
 
 pw2015_t3_singles_select = pw2015_t3_singles %>%
-  select(session, short_session, ended, F_self_t3_interest_longterm_single_now)
+  select(session, short_session, created, ended, F_self_t3_interest_longterm_single_now)
 
 
 pw2015_t3_relationship_number_select = pw2015_t3_relationship_number %>%
-  select(session, short_session, ended, F_t3_relationship_ultimate, F_t3_relationship)
+  select(session, short_session, created, ended, F_t3_relationship_ultimate, F_t3_relationship)
 
 
 pw2015_t3_partners_select = pw2015_t3_partners %>%
-  select(session, short_session, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup, F_t3_kind,
+  select(session, short_session, created, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup, F_t3_kind,
          F_t3_past_kind, F_t3_closeup_kind)
 
 
 pw2015_t3_mainrelation_select = pw2015_t3_mainrelation %>%
-  select(session, short_session, ended,
+  select(session, short_session, created, ended,
          starts_with("F_self_t3_IMS"), F_mate_t3_IMS_alternaavailab,
          starts_with("F_self_t3_transgreact"), 
          F_t3_mainrelation_sex, F_t3_mainrelation_age, 
          F_t3_mainrelation_description)
 
 pw2015_t3_ende_select = pw2015_t3_ende %>%
-  select(session, short_session, ended, F_t3_honesty_check, F_t3_dishonest_answers, F_t3_notes_to_us)
+  select(session, short_session, created, ended, F_t3_honesty_check, F_t3_dishonest_answers, F_t3_notes_to_us)
 ```
 
 
