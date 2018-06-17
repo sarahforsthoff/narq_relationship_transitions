@@ -8,6 +8,8 @@ output: html_document
 ## What to do:
 Relationships:
 FERTIG  (- für t2: zurückrechnen vom Datum des Ausfüllens zum Beginn der Beziehung --> Tage aus Wochen und Monaten            bestimmen und dann über as.Date zurückrechnen auf Datum des Beziehungsbeginn )
+
+- t2: Anstelle "ended"-Variable, "Beginn"-Variable benutzen um relationship_start zu erzeugen
 - t2: longformat
 - für t2, t3: past relationships und current relationships (t3: x)
 - t3: longformat (x)
@@ -130,7 +132,7 @@ pw2015_t2$short_session = as.character(pw2015_t2$short_session)
 pw2015_t2_frauen$short_session = as.character(pw2015_t2_frauen$short_session)
 
 # pw2015_t2_relationship <- bind_rows(pw2015_t2, pw2015_t2_frauen) @Sarah: check if we can change to this version
-pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session", "short_session"))
+pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session", "short_session"), suffix = c(".m", ".f"))
 ```
 
 ### Relationship information t2
@@ -148,37 +150,37 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
 
 ### T2: Create start (date) variable of current relationships 
 ```{r}
-pw2015_t2_relationship$ended.x <- as.Date(pw2015_t2_relationship$ended.x)
-pw2015_t2_relationship$ended.y <- as.Date(pw2015_t2_relationship$ended.y)
+pw2015_t2_relationship$ended.m <- as.Date(pw2015_t2_relationship$ended.m)
+pw2015_t2_relationship$ended.f <- as.Date(pw2015_t2_relationship$ended.f)
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship1_start_days_m" = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7,
-  "relationship1_start_m" = ended.x - relationship1_start_days_m
+  "relationship1_start_m" = ended.m - relationship1_start_days_m
   )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7,
-  "relationship1_start_f" = ended.y - relationship1_start_days_f
+  "relationship1_start_f" = ended.f - relationship1_start_days_f
   )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship2_start_days_m" = relationship2_start_months_m * 30 + relationship2_start_weeks_m * 7,
-  "relationship2_start_m" = ended.x - relationship2_start_days_m
+  "relationship2_start_m" = ended.m - relationship2_start_days_m
   )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship2_start_days_f" = relationship2_start_months_f * 30 + relationship2_start_weeks_f * 7,
-  "relationship2_start_f" = ended.y - relationship2_start_days_f
+  "relationship2_start_f" = ended.f - relationship2_start_days_f
   )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship3_start_days_m" = relationship3_start_months_m * 30 + relationship3_start_weeks_m * 7,
-  "relationship3_start_m" = ended.x - relationship3_start_days_m
+  "relationship3_start_m" = ended.m - relationship3_start_days_m
   )
 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship3_start_days_f" = relationship3_start_months_f * 30 + relationship3_start_weeks_f * 7,
-  "relationship3_start_f" = ended.y - relationship3_start_days_f
+  "relationship3_start_f" = ended.f - relationship3_start_days_f
   )
 
 #filter unnecessary start variables
@@ -1133,7 +1135,7 @@ Past relationship 5
 ```{r}
 pw2015_t2_relationship$pastrelationship5_kind <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_kind)
 pw2015_t2_relationship$pastrelationship5_kind <- sub('NA_*','', pw2015_t2_relationship$pastrelationship5_kind)
-pw2015_t2_relationship$pastrelationship5_kind[pw2015_t2_relationship$pastrelationship1_kind==""]  <- NA 
+pw2015_t2_relationship$pastrelationship5_kind[pw2015_t2_relationship$pastrelationship5_kind==""]  <- NA 
 pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_kind)) %>% separate(pastrelationship5_kind, c("pastrelationship5_kind","pastrelationship10_kind"), sep = "_")
 
 pw2015_t2_relationship$pastrelationship5_start <- sub('_NA*','', pw2015_t2_relationship$pastrelationship5_start)
@@ -1300,114 +1302,127 @@ pw2015_t2_relationship <- as.data.frame(pw2015_t2_relationship)
 ```
 
 
-```{r}
-pw2015_t2_relationship <- pw2015_t2_relationship %>% select(session, short_session, t2_relationship, t2_pastrelationship,
-                        relationship1.name, relationship1.name_new, relationship1.age_new, 
-                        relationship1.height_new,
-                  relationship1.relationship_new, relationship1.duration_new, relationship1.kind,
-                  relationship1.start, relationship1.end,
-                  relationship2.name, relationship2.name_new, relationship2.age_new,
-                  relationship2.height_new, relationship2.relationship_new, relationship2.duration_new, 
-                  relationship2.kind, relationship2.start, relationship2.end,
-                  relationship3.name, relationship3.name_new, relationship3.age_new, relationship3.height_new,
-                  relationship3.relationship_new, relationship3.duration_new, relationship3.kind,
-                  relationship3.start, relationship3.end,
-                  relationship4.name, relationship4.name_new, relationship4.age_new,
-                  relationship4.height_new, relationship4.relationship_new, relationship4.duration_new, 
-                  relationship4.kind, relationship4.start, relationship4.end,
-                  relationship5.name, relationship5.name_new, relationship5.age_new,
-                  relationship5.height_new, relationship5.relationship_new, relationship5.duration_new, 
-                  relationship5.kind, relationship5.start, relationship5.end,
-                  relationship6.name, relationship6.name_new, relationship6.age_new,
-                  relationship6.height_new, relationship6.relationship_new, relationship6.duration_new, 
-                  relationship6.kind, relationship6.start, relationship6.end,
-                  pastrelationship1.name, pastrelationship1.name_new, pastrelationship1.age_new, 
-                  pastrelationship1.height_new, pastrelationship1.relationship_new, pastrelationship1.duration_new, 
-                  pastrelationship1.kind ,pastrelationship1.start, pastrelationship1.end,
-                  pastrelationship2.name, pastrelationship2.name_new, pastrelationship2.age_new, 
-                  pastrelationship2.height_new, pastrelationship2.relationship_new, pastrelationship2.duration_new, 
-                  pastrelationship2.kind, pastrelationship2.start, pastrelationship2.end,
-                  pastrelationship3.name, pastrelationship3.name_new, pastrelationship3.age_new, 
-                  pastrelationship3.height_new, pastrelationship3.relationship_new, pastrelationship3.duration_new, 
-                  pastrelationship3.kind, pastrelationship3.start, pastrelationship3.end,
-                  pastrelationship4.name, pastrelationship4.name_new, pastrelationship4.age_new, 
-                  pastrelationship4.height_new, pastrelationship4.relationship_new, pastrelationship4.duration_new, 
-                  pastrelationship4.kind, pastrelationship4.start, pastrelationship4.end,
-                  pastrelationship5.name, pastrelationship5.name_new, pastrelationship5.age_new, 
-                  pastrelationship5.height_new, pastrelationship5.relationship_new, pastrelationship5.duration_new, 
-                  pastrelationship5.kind, pastrelationship5.start, pastrelationship5.end,
-                  pastrelationship6.name, pastrelationship6.name_new, pastrelationship6.age_new, 
-                  pastrelationship6.height_new, pastrelationship6.relationship_new, pastrelationship6.duration_new, 
-                  pastrelationship6.kind, pastrelationship6.start, pastrelationship6.end,
-                  pastrelationship7.name, pastrelationship7.name_new, pastrelationship7.age_new, 
-                  pastrelationship7.height_new, pastrelationship7.relationship_new, pastrelationship7.duration_new, 
-                  pastrelationship7.kind, pastrelationship7.start, pastrelationship7.end,
-                  pastrelationship8.name, pastrelationship8.name_new, pastrelationship8.age_new, 
-                  pastrelationship8.height_new, pastrelationship8.relationship_new, pastrelationship8.duration_new, 
-                  pastrelationship8.kind, pastrelationship8.start, pastrelationship8.end,
-                  pastrelationship9.name, pastrelationship9.name_new, pastrelationship9.age_new, 
-                  pastrelationship9.height_new, pastrelationship9.relationship_new, pastrelationship9.duration_new, 
-                  pastrelationship9.kind, pastrelationship9.start, pastrelationship9.end,
-                  pastrelationship10.name, pastrelationship10.name_new, pastrelationship10.age_new, 
-                  pastrelationship10.height_new, pastrelationship10.relationship_new, pastrelationship10.duration_new,                  pastrelationship10.kind, pastrelationship10.start, pastrelationship10.end)
-```
-
-
+Reshape data : Variables must be listed in alphabetical order
 ```{r}
 pw2015_t2_relationship <- reshape(pw2015_t2_relationship, direction='long', 
-        varying=c('relationship1.name', 'relationship1.name_new', 'relationship1.age_new', 'relationship1.height_new',
-                  'relationship1.relationship_new', 'relationship1.duration_new', 'relationship1.kind',
-                  'relationship1.start', 'relationship1.end',
-                  'relationship2.name', 'relationship2.name_new', 'relationship2.age_new',
-                  'relationship2.height_new', 'relationship2.relationship_new', 'relationship2.duration_new', 
-                  'relationship2.kind', 'relationship2.start', 'relationship2.end',
-                  'relationship3.name', 'relationship3.name_new', 'relationship3.age_new', 'relationship3.height_new',
-                  'relationship3.relationship_new', 'relationship3.duration_new', 'relationship3.kind',
-                  'relationship3.start', 'relationship3.end',
-                  'relationship4.name', 'relationship4.name_new', 'relationship4.age_new',
-                  'relationship4.height_new', 'relationship4.relationship_new', 'relationship4.duration_new', 
-                  'relationship4.kind', 'relationship4.start', 'relationship4.end',
-                  'relationship5.name', 'relationship5.name_new', 'relationship5.age_new',
-                  'relationship5.height_new', 'relationship5.relationship_new', 'relationship5.duration_new', 
-                  'relationship5.kind', 'relationship5.start', 'relationship5.end',
-                  'relationship6.name', 'relationship6.name_new', 'relationship6.age_new',
-                  'relationship6.height_new', 'relationship6.relationship_new', 'relationship6.duration_new', 
-                  'relationship6.kind', 'relationship6.start', 'relationship6.end',
-                  "pastrelationship1.name", "pastrelationship1.name_new", "pastrelationship1.age_new", 
-                  "pastrelationship1.height_new","pastrelationship1.relationship_new", "pastrelationship1.duration_new", 
-                  "pastrelationship1.kind","pastrelationship1.start", "pastrelationship1.end",
-                  "pastrelationship2.name", "pastrelationship2.name_new", "pastrelationship2.age_new", 
-                  "pastrelationship2.height_new","pastrelationship2.relationship_new", "pastrelationship2.duration_new", 
-                  "pastrelationship2.kind","pastrelationship2.start", "pastrelationship2.end",
-                  "pastrelationship3.name", "pastrelationship3.name_new", "pastrelationship3.age_new", 
-                  "pastrelationship3.height_new","pastrelationship3.relationship_new", "pastrelationship3.duration_new", 
-                  "pastrelationship3.kind","pastrelationship3.start", "pastrelationship3.end",
-                  "pastrelationship4.name", "pastrelationship4.name_new", "pastrelationship4.age_new", 
-                  "pastrelationship4.height_new","pastrelationship4.relationship_new", "pastrelationship4.duration_new", 
-                  "pastrelationship4.kind","pastrelationship4.start", "pastrelationship4.end",
-                  "pastrelationship5.name", "pastrelationship5.name_new", "pastrelationship5.age_new", 
-                  "pastrelationship5.height_new","pastrelationship5.relationship_new", "pastrelationship5.duration_new", 
-                  "pastrelationship5.kind","pastrelationship5.start", "pastrelationship5.end",
-                  "pastrelationship6.name", "pastrelationship6.name_new", "pastrelationship6.age_new", 
-                  "pastrelationship6.height_new","pastrelationship6.relationship_new", "pastrelationship6.duration_new", 
-                  "pastrelationship6.kind","pastrelationship6.start", "pastrelationship6.end",
-                  "pastrelationship7.name", "pastrelationship7.name_new", "pastrelationship7.age_new", 
-                  "pastrelationship7.height_new","pastrelationship7.relationship_new", "pastrelationship7.duration_new", 
-                  "pastrelationship7.kind","pastrelationship7.start", "pastrelationship7.end",
-                  "pastrelationship8.name", "pastrelationship8.name_new", "pastrelationship8.age_new", 
-                  "pastrelationship8.height_new","pastrelationship8.relationship_new", "pastrelationship8.duration_new", 
-                  "pastrelationship8.kind","pastrelationship8.start", "pastrelationship8.end",
-                  "pastrelationship9.name", "pastrelationship9.name_new", "pastrelationship9.age_new", 
-                  "pastrelationship9.height_new","pastrelationship9.relationship_new", "pastrelationship9.duration_new", 
-                  "pastrelationship9.kind","pastrelationship9.start", "pastrelationship9.end",
-                  "pastrelationship10.name", "pastrelationship10.name_new", "pastrelationship10.age_new", 
-                  "pastrelationship10.height_new","pastrelationship10.relationship_new", "pastrelationship10.duration_new",                   "pastrelationship10.kind","pastrelationship10.start", "pastrelationship10.end"),
+        varying=c('relationship1.age_new', 'relationship1.duration_new', 'relationship1.end',
+                  'relationship1.height_new', 'relationship1.kind', 'relationship1.name',
+                  'relationship1.name_new', 'relationship1.relationship_new', 'relationship1.start',
+                  
+                  'relationship2.age_new', 'relationship2.duration_new', 'relationship2.end',
+                  'relationship2.height_new', 'relationship2.kind', 'relationship2.name',
+                  'relationship2.name_new', 'relationship2.relationship_new', 'relationship2.start',
+                  
+                  'relationship3.age_new', 'relationship3.duration_new', 'relationship3.end',
+                  'relationship3.height_new', 'relationship3.kind', 'relationship3.name',
+                  'relationship3.name_new', 'relationship3.relationship_new', 'relationship3.start',
+                 
+                  'relationship4.age_new', 'relationship4.duration_new', 'relationship4.end',
+                  'relationship4.height_new', 'relationship4.kind', 'relationship4.name',
+                  'relationship4.name_new', 'relationship4.relationship_new', 'relationship4.start',
+                  
+                  'relationship5.age_new', 'relationship5.duration_new', 'relationship5.end',
+                  'relationship5.height_new', 'relationship5.kind', 'relationship5.name',
+                  'relationship5.name_new', 'relationship5.relationship_new', 'relationship5.start',
+                  
+                  'relationship6.age_new', 'relationship6.duration_new', 'relationship6.end',
+                  'relationship6.height_new', 'relationship6.kind', 'relationship6.name',
+                  'relationship6.name_new', 'relationship6.relationship_new', 'relationship6.start',
+                  
+                  'pastrelationship1.age_new', 'pastrelationship1.duration_new', 'pastrelationship1.end',
+                  'pastrelationship1.height_new', 'pastrelationship1.kind', 'pastrelationship1.name',
+                  'pastrelationship1.name_new', 'pastrelationship1.relationship_new', 'pastrelationship1.start',
+                  
+                  'pastrelationship2.age_new', 'pastrelationship2.duration_new', 'pastrelationship2.end',
+                  'pastrelationship2.height_new', 'pastrelationship2.kind', 'pastrelationship2.name',
+                  'pastrelationship2.name_new', 'pastrelationship2.relationship_new', 'pastrelationship2.start',
+                  
+                  'pastrelationship3.age_new', 'pastrelationship3.duration_new', 'pastrelationship3.end',
+                  'pastrelationship3.height_new', 'pastrelationship3.kind', 'pastrelationship3.name',
+                  'pastrelationship3.name_new', 'pastrelationship3.relationship_new', 'pastrelationship3.start',
+                 
+                  'pastrelationship4.age_new', 'pastrelationship4.duration_new', 'pastrelationship4.end',
+                  'pastrelationship4.height_new', 'pastrelationship4.kind', 'pastrelationship4.name',
+                  'pastrelationship4.name_new', 'pastrelationship4.relationship_new', 'pastrelationship4.start',
+                 
+                  'pastrelationship5.age_new', 'pastrelationship5.duration_new', 'pastrelationship5.end',
+                  'pastrelationship5.height_new', 'pastrelationship5.kind', 'pastrelationship5.name',
+                  'pastrelationship5.name_new', 'pastrelationship5.relationship_new', 'pastrelationship5.start',
+                 
+                  'pastrelationship6.age_new', 'pastrelationship6.duration_new', 'pastrelationship6.end',
+                  'pastrelationship6.height_new', 'pastrelationship6.kind', 'pastrelationship6.name',
+                  'pastrelationship6.name_new', 'pastrelationship6.relationship_new', 'pastrelationship6.start',
+                 
+                  'pastrelationship7.age_new', 'pastrelationship7.duration_new', 'pastrelationship7.end',
+                  'pastrelationship7.height_new', 'pastrelationship7.kind', 'pastrelationship7.name',
+                  'pastrelationship7.name_new', 'pastrelationship7.relationship_new', 'pastrelationship7.start',
+                  
+                  'pastrelationship8.age_new', 'pastrelationship8.duration_new', 'pastrelationship8.end',
+                  'pastrelationship8.height_new', 'pastrelationship8.kind', 'pastrelationship8.name',
+                  'pastrelationship8.name_new', 'pastrelationship8.relationship_new', 'pastrelationship8.start',
+                  
+                  'pastrelationship9.age_new', 'pastrelationship9.duration_new', 'pastrelationship9.end',
+                  'pastrelationship9.height_new', 'pastrelationship9.kind', 'pastrelationship9.name',
+                  'pastrelationship9.name_new', 'pastrelationship9.relationship_new', 'pastrelationship9.start',
+                  
+                  'pastrelationship10.age_new', 'pastrelationship10.duration_new', 'pastrelationship10.end',
+                  'pastrelationship10.height_new', 'pastrelationship10.kind', 'pastrelationship10.name',
+                  'pastrelationship10.name_new', 'pastrelationship10.relationship_new', 'pastrelationship10.start'),
              timevar='var',
         times=c('relationship1', 'relationship2', 'relationship3', 'relationship4', 'relationship5', 'relationship6',
                 'pastrelationship1', 'pastrelationship2', 'pastrelationship3', 'pastrelationship4', 'pastrelationship5',
                 'pastrelationship6', 'pastrelationship7', 'pastrelationship8', 'pastrelationship9', 'pastrelationship10'),
-        v.names=c('name', 'name_new', 'age_new', 'height_new', 'relationship_new', 'duration_new', 'kind', 'start', 'end'),
+        v.names=c('age_new', 'duration_new', 'end', 'height_new', 'kind', 'name', 'name_new', 'relationship_new', 'start'),
         idvar='short_session')
+```
+
+
+Change format: 1 relationship per row, or if single whole time one row with only NAs
+```{r}
+pw2015_t2_relationship_1 <- pw2015_t2_relationship %>%  filter(t2_relationship != 0 | t2_pastrelationship != 0) %>%
+            filter(!is.na(age_new)| !is.na(duration_new) | !is.na(end) | !is.na(height_new) | !is.na(kind) | 
+            !is.na(name) | !is.na(name_new) | !is.na(relationship_new) | !is.na(start)) 
+
+#Dataframe with only participants who had at least one relationship between t1 and t2
+pw2015_t2_relationship_2 <- pw2015_t2_relationship %>% 
+              filter(t2_relationship == 0 & t2_pastrelationship == 0) %>% filter(var == "relationship1")
+
+#Dataframe with only participants who had NONE relationship between t1 and t2
+pw2015_t2_relationship <- bind_rows(pw2015_t2_relationship_1, pw2015_t2_relationship_2)  
+
+pw2015_t2_relationship <-  pw2015_t2_relationship %>% 
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number()) %>% # determining relationship order
+  ungroup()
+```
+
+Add variable lasting: so dataframes of t2 and t3 can be joined
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(lasting = var)
+    
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship1"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship2"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship3"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship4"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship5"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship6"] <- 1
+ 
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship1"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship2"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship3"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship4"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship5"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship6"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship7"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship8"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship9"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship10"] <- 2
+
+pw2015_t2_relationship$lasting <- as.integer(pw2015_t2_relationship$lasting)
 
 ```
 
@@ -1425,11 +1440,33 @@ pw2015_t3_partners = pw2015_t3_partners %>%
 
 # Problems: which of these relationships happened in t2 already?
 # How to merge with relationships from t2?
+# Sarah: What about single participants? How do merge them?
 ```
 
-# Merge Relationship Data
+# Merge Relationship Data TEST
 ```{r}
+t2_test <- pw2015_t2_relationship %>% select(session, short_session, start, end, kind, lasting, relationship_number, relationship_order)
 
+t3_test <- pw2015_t3_partners %>% select(session, short_session, F_t3_start, F_t3_end, F_t3_kind, F_t3_lasting, 
+                                         relationship_number, relationship_order)
+
+t3_test <- t3_test %>% transmute(
+                      start = F_t3_start, 
+                      end = F_t3_end,
+                      lasting = F_t3_lasting)
+                      
+
+t2_t3_relationship <- bind_rows(t2_test, t3_test)
+
+
+t2_t3_relationship = t2_t3_relationship %>% 
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number()) # determining relationship order
+
+#Problem: in t3_datasheet two variables for relationship kind 
 ```
 
 # Merge Data
@@ -1437,7 +1474,7 @@ pw2015_t3_partners = pw2015_t3_partners %>%
 ```{r}
 #create selected data sheets
 #pw2015_demographie
-pw2015_demographie_select <- select(pw2015_demographie, session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,sex_orientation, NARQ_GESAMT, NARQ_ADM, NARQ_RIV) 
+pw2015_demographie_select <- select(pw2015_demographie, session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,sex_orientation, NARQ_scale, NARQ_ADM, NARQ_RIV) 
 
 #pw2015_items
 pw2015_items_select <-  select(pw2015_items, session, short_session, 
