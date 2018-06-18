@@ -21,7 +21,7 @@ output: html_document
 - load data files into owncloud
 
 @sarah:
-- zeitpunkt seit der letzten Beziehung t1 --> previous_relationship_ended (as date)
+FERTIG (- zeitpunkt seit der letzten Beziehung t1 --> previous_relationship_ended (as date))
 
 - Ziel 2: erstes Analyseskript geschrieben
 
