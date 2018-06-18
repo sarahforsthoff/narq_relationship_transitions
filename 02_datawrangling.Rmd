@@ -5,17 +5,19 @@ date: "20 April 2018"
 output: html_document
 ---
 
-## What to do:
-Relationships:
-FERTIG  (- für t2: zurückrechnen vom Datum des Ausfüllens zum Beginn der Beziehung --> Tage aus Wochen und Monaten            bestimmen und dann über as.Date zurückrechnen auf Datum des Beziehungsbeginn )
-
-- t2: Anstelle "ended"-Variable, "created"-Variable benutzen um relationship_start zu erzeugen
-- t2: longformat
+## Open questions:
+- Why are there 5 items for openness but only 4 for the other personality measurements?
+- deal with duplicats
+- for merging: deal with singles!
+- t2: longformat (maybe talk about the best way to get there again... seems awfully complicated like this!)
 - für t2, t3: past relationships und current relationships (t3: x)
-- t3: longformat (x)
 - t2 & t3 mergen
+- Alle Informationen zu mergen (bereits für t3 passiert, fehlt noch für t2)
+- welche Informationen fehlen noch?
 
-Alle Informationen zu mergen
+- Ziel 1: Datensatz für Besprechung mit Tanja fertig
+- Ziel 2: erstes Analyseskript geschrieben
+
 
 ## Library
 ```{r}
@@ -119,7 +121,58 @@ pw2015_items = pw2015_items %>%
 crosstabs(~ is.na(longterm_f) + is.na(longterm_m), data = pw2015_items)
 ```
 
-###BFI items: scale @Laura
+###BFI items: scale
+```{r}
+##recode variable ending with R
+pw2015_demographie = pw2015_demographie %>%
+  mutate(BFIK_open_5 = as.numeric(recode(BFIK_open_5R,
+                                         "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_agree_1 = as.numeric(recode(BFIK_agree_1R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_neuro_2 = as.numeric(recode(BFIK_neuro_2R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_consc_2 = as.numeric(recode(BFIK_consc_2R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_agree_3 = as.numeric(recode(BFIK_agree_3R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_extra_3 = as.numeric(recode(BFIK_extra_3R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_extra_1 = as.numeric(recode(BFIK_extra_1R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         )
+
+## form scale
+pw2015_demographie = pw2015_demographie %>%
+  mutate(BFIK_open = mean(c(BFIK_open_1, BFIK_open_2, BFIK_open_3, BFIK_open_4, BFIK_open_5), na.rm = T),
+         BFIK_consc = mean(c(BFIK_consc_1, BFIK_consc_2, BFIK_consc_3, BFIK_consc_4), na.rm = T),
+         BFIK_extra = mean(c(BFIK_extra_1, BFIK_extra_2, BFIK_extra_3, BFIK_extra_4), na.rm = T),
+         BFIK_agree = mean(c(BFIK_agree_1, BFIK_agree_2, BFIK_agree_3, BFIK_agree_4), na.rm = T),
+         BFIK_neuro = mean(c(BFIK_neuro_1, BFIK_neuro_2, BFIK_neuro_3, BFIK_neuro_4)), na.rm = T)
+
+## check scales
+### overall
+pw2015_demographie %>% select(BFIK_open, BFIK_consc, BFIK_extra, BFIK_agree, BFIK_neuro) %>% apa.cor.table()
+
+### open
+pw2015_demographie %>% select(BFIK_open, BFIK_open_1, BFIK_open_2, BFIK_open_3, BFIK_open_4, BFIK_open_5) %>%
+  apa.cor.table()
+
+### consc
+pw2015_demographie %>% select(BFIK_consc, BFIK_consc_1, BFIK_consc_2, BFIK_consc_3, BFIK_consc_4) %>%
+  apa.cor.table()
+
+### extra
+pw2015_demographie %>% select(BFIK_extra, BFIK_extra_1, BFIK_extra_2, BFIK_extra_3, BFIK_extra_4) %>%
+  apa.cor.table()
+
+### agree
+pw2015_demographie %>% select(BFIK_agree, BFIK_agree_1, BFIK_agree_2, BFIK_agree_3, BFIK_agree_4) %>%
+  apa.cor.table()
+
+### neuro
+pw2015_demographie %>% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_neuro_3, BFIK_neuro_4) %>%
+  apa.cor.table()
+```
 
 
 
@@ -138,7 +191,8 @@ pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session",
 ### Relationship information t2
 
 ```{r}
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(
   "t2_relationship" = derivedVariable(
             "0" = (relationship_f == 1 & relationship_m == 1) | (relationship_f == 1 & is.na(relationship_m) |  
                           (is.na(relationship_f) & relationship_m == 1)),
@@ -150,38 +204,28 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
 
 ### T2: Create start (date) variable of current relationships 
 ```{r}
-pw2015_t2_relationship$ended.m <- as.Date(pw2015_t2_relationship$ended.m)
-pw2015_t2_relationship$ended.f <- as.Date(pw2015_t2_relationship$ended.f)
+pw2015_t2_relationship = pw2015_t2_relationship %>%
+  mutate(created.m = as.Date(created.m),
+         created.f = as.Date(created.f))
 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship1_start_days_m" = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7,
-  "relationship1_start_m" = ended.m - relationship1_start_days_m
-  )
 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship1_start_days_f" = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7,
-  "relationship1_start_f" = ended.f - relationship1_start_days_f
-  )
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(relationship1_start_days_m = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7,
+         relationship1_start_m = created.m - relationship1_start_days_m, 
+         relationship1_start_days_f = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7,
+         relationship1_start_f = created.f - relationship1_start_days_f)
 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship2_start_days_m" = relationship2_start_months_m * 30 + relationship2_start_weeks_m * 7,
-  "relationship2_start_m" = ended.m - relationship2_start_days_m
-  )
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(relationship2_start_days_m = relationship2_start_months_m * 30 + relationship2_start_weeks_m * 7,
+         relationship2_start_m = created.m - relationship2_start_days_m, 
+         relationship2_start_days_f = relationship2_start_months_f * 30 + relationship2_start_weeks_f * 7,
+         relationship2_start_f = created.f - relationship2_start_days_f)
 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship2_start_days_f" = relationship2_start_months_f * 30 + relationship2_start_weeks_f * 7,
-  "relationship2_start_f" = ended.f - relationship2_start_days_f
-  )
-
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship3_start_days_m" = relationship3_start_months_m * 30 + relationship3_start_weeks_m * 7,
-  "relationship3_start_m" = ended.m - relationship3_start_days_m
-  )
-
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  "relationship3_start_days_f" = relationship3_start_months_f * 30 + relationship3_start_weeks_f * 7,
-  "relationship3_start_f" = ended.f - relationship3_start_days_f
-  )
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(relationship3_start_days_m = relationship3_start_months_m * 30 + relationship3_start_weeks_m * 7,
+         relationship3_start_m = created.m - relationship3_start_days_m, 
+         relationship3_start_days_f = relationship3_start_months_f * 30 + relationship3_start_weeks_f * 7,
+         relationship3_start_f = created.f - relationship3_start_days_f)
 
 #filter unnecessary start variables
 pw2015_t2_relationship <- pw2015_t2_relationship %>% select(-relationship1_start_months_m, -relationship2_start_months_m,
@@ -563,7 +607,7 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relatio
 
 
 
-##Divide past relationships depending on sex
+###Divide past relationships depending on sex
 
 Ended relationship(s) since T1?
 ```{r}
@@ -1427,7 +1471,7 @@ pw2015_t2_relationship$lasting <- as.integer(pw2015_t2_relationship$lasting)
 ```
 
 
-# Relationship t3
+# Data t3
 
 ```{r}
 # Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
@@ -1440,11 +1484,13 @@ pw2015_t3_partners = pw2015_t3_partners %>%
 
 # Problems: which of these relationships happened in t2 already?
 # How to merge with relationships from t2?
-# Sarah: What about single participants? How do merge them?
 ```
 
 # Merge Relationship Data TEST
 ```{r}
+relationships = pw2015_t3_partners # this is just for now to make the code working
+
+
 t2_test <- pw2015_t2_relationship %>% select(session, short_session, start, end, kind, lasting, relationship_number, relationship_order)
 
 t3_test <- pw2015_t3_partners %>% select(session, short_session, F_t3_start, F_t3_end, F_t3_kind, F_t3_lasting, 
@@ -1474,12 +1520,21 @@ t2_t3_relationship = t2_t3_relationship %>%
 ```{r}
 #create selected data sheets
 #pw2015_demographie
-pw2015_demographie_select <- select(pw2015_demographie, session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,sex_orientation, NARQ_scale, NARQ_ADM, NARQ_RIV) 
+pw2015_demographie_select = pw2015_demographie %>%
+  select(session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,
+         sex_orientation, NARQ_scale, NARQ_ADM, NARQ_RIV, BFIK_open, BFIK_consc, BFIK_extra, BFIK_agree,
+         BFIK_neuro) 
 
 #pw2015_items
-pw2015_items_select <-  select(pw2015_items, session, short_session, 
+pw2015_items_select = pw2015_items %>%
+  select(session, short_session, 
           #number_relationships, end_relationship_years, end_relationship_months, end_relationship_weeks,
-          SOI_R_GESAMT, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
+          SOI_R_scale, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
+
+
+# use relationship information to merge data on
+data = left_join(relationships, pw2015_demographie_select, by = "session")
+data = left_join(data, pw2015_items_select, by = "session")
 ```
 
 
