@@ -9,7 +9,7 @@ output: html_document
 Relationships:
 FERTIG  (- für t2: zurückrechnen vom Datum des Ausfüllens zum Beginn der Beziehung --> Tage aus Wochen und Monaten            bestimmen und dann über as.Date zurückrechnen auf Datum des Beziehungsbeginn )
 
-- t2: Anstelle "ended"-Variable, "Beginn"-Variable benutzen um relationship_start zu erzeugen
+- t2: Anstelle "ended"-Variable, "created"-Variable benutzen um relationship_start zu erzeugen
 - t2: longformat
 - für t2, t3: past relationships und current relationships (t3: x)
 - t3: longformat (x)
