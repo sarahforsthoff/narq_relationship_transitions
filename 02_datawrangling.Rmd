@@ -18,7 +18,7 @@ output: html_document
 (FERTIG) remove test persons (xxx)
 - remove duplicates --> problems! some test persons can not be identified. do you have a script to get rid of them, Tanja?
 - remove people who were not single at t1
-- include single t3
+(FERTIG) - include single t3
 (FERTIG) - load data files into owncloud
 
 @sarah:
