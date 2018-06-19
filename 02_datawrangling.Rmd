@@ -13,12 +13,13 @@ output: html_document
 - welche Informationen fehlen noch?
 
 @laura:
-- Sarah: evtl. noch mal das t3_partners sheet mit den names_-Variablen hochladen? Danke!!
-- remove test persons (xxx)
-- remove duplicates
+(FERTIG) Sarah: evtl. noch mal das t3_partners sheet mit den names_-Variablen hochladen? Danke!!
+(FERTIG) do not import datasets that we dont nedd
+(FERTIG) remove test persons (xxx)
+- remove duplicates --> problems! some test persons can not be identified. do you have a script to get rid of them, Tanja?
 - remove people who were not single at t1
-- include single
-- load data files into owncloud
+- include single t3
+(FERTIG) - load data files into owncloud
 
 @sarah:
 FERTIG (- zeitpunkt seit der letzten Beziehung t1 --> previous_relationship_ended (as date))
@@ -52,21 +53,58 @@ pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep
 pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
 pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
 pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
-pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
-pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
-pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
-pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
+# pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
+# pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = ";")
+# pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
 pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
-pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
-pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+# pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
+# pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
 ```
 
-## Testpeople and Duplicats
+## Clean Data (Testpeople, Duplicates, Liars, etc.)
 ```{r}
-table(duplicated(pw2015_t2_relationship$short_session))
-test <- subset(pw2015_t2_relationship, session %contains% "XXX")
-dupes <- subset(pw2015_t2_relationship, duplicated(short_session)) ## look at duplicats
-check = subset(pw2015_t2_relationship, short_session == "3iL0HgCplo")
+#Testpeople (all individuals including a "XXX" in their session code, except: aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ)
+pw2015_demographie = pw2015_demographie %>%
+  filter(!(session %contains% "XXX") |
+         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+
+pw2015_items = pw2015_items %>%
+  filter(!(session %contains% "XXX") |
+         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+
+pw2015_t2 = pw2015_t2 %>%
+  filter(!(session %contains% "XXX") |
+         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+
+pw2015_t2_frauen = pw2015_t2_frauen %>%
+  filter(!(session %contains% "XXX") |
+         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+
+pw2015_t3_singles = pw2015_t3_singles %>%
+  filter(!(session %contains% "XXX") |
+         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+
+pw2015_t3_partners = pw2015_t3_partners %>%
+  filter(!(session %contains% "XXX") |
+         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+
+## Check Duplicates
+dupes = pw2015_demographie %>% filter(duplicated(session))
+dupes = pw2015_demographie %>%
+  filter(session =="92d71edd24cba64cfdd22d7c354a444a8439eb63be2f640f3fe0d96673c27d78")
+#in this case information is just repeated (exactly the same), we keep information of first report
+pw2015_demographie = pw2015_demographie %>%
+  filter(created != "2016-05-08 15:54:50")
+
+dupes = pw2015_items %>% filter(duplicated(session))
+dupes = pw2015_items %>%
+  filter(session =="JygX0T9uqL30FjF0OK5ZIyy9ZA9Ep0ojP92A9jJxI-8kB5p87AXXy4cyciQlM0cH")
+#in this case the session code is a testperson --> remove it entirely
+pw2015_items = pw2015_items %>%
+  filter(session != "JygX0T9uqL30FjF0OK5ZIyy9ZA9Ep0ojP92A9jJxI-8kB5p87AXXy4cyciQlM0cH")
+
+### this is where i stopped removing people, bc i think maybe there is already a script for cleaning the data? or a better way to do so?
 ```
 
 ## Data t1: 
@@ -1510,6 +1548,8 @@ pw2015_t2_relationship$lasting <- as.integer(pw2015_t2_relationship$lasting)
 # Data t3
 
 ```{r}
+# first we have to combine singles and partnered reports
+pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)
 # Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
 pw2015_t3_partners = pw2015_t3_partners %>% 
   group_by(session) %>% # we want to look at relationships specifically for each person
@@ -1517,10 +1557,12 @@ pw2015_t3_partners = pw2015_t3_partners %>%
                                    # starting data
   mutate(relationship_number = n(), # counting total number of relationships
          relationship_order = row_number(), # determining relationship order
-         kind = ifelse(!is.na(F_t3_kind), F_t3_kind, F_t3_past_kind)) # determining relationship order
+         kind = ifelse(!is.na(F_t3_kind), F_t3_kind, F_t3_past_kind)) %>%
+  mutate(relationship_number = ifelse(is.na(F_t3_start), 0, relationship_number),
+         relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
+         F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
 
-# Problems: which of these relationships happened in t2 already?
-# How to merge with relationships from t2?
+
 ```
 
 # Merge Relationship Data TEST
@@ -1556,12 +1598,13 @@ pw2015_t2_relationship_x = pw2015_t2_relationship %>%
 
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, kind, lasting, name)
 
-t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start, F_t3_end, kind, F_t3_lasting, name)
+t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start, F_t3_end, kind, F_t3_lasting, F_t3_name)
 
 t3_test <- t3_test %>% transmute(
                       start = F_t3_start, 
                       end = F_t3_end,
-                      lasting = F_t3_lasting)
+                      lasting = F_t3_lasting,
+                      name = F_t3_name)
                       
 
 t2_t3_relationship <- bind_rows(t2_test, t3_test)
