@@ -67,7 +67,8 @@ pw2015_items_select = pw2015_items %>%
          starts_with("global_interest_"),
          starts_with("SOI_R"),
          starts_with("longterm_"),
-         notes_to_us)
+         notes_to_us,
+         email2)
 ```
 
 

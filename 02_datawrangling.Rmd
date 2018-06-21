@@ -45,7 +45,7 @@ library(dplyr)
 
 ## Data Import
 ```{r}
-#setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
 #setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
 # set workingdirectory
 
@@ -53,41 +53,141 @@ pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep
 pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
 pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
 pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
-# pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
+pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
 # pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
 pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = ";")
 # pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
 pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
 # pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
-# pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
 ```
 
 ## Clean Data (Testpeople, Duplicates, Liars, etc.)
+### t1
 ```{r}
-#Testpeople (all individuals including a "XXX" in their session code, except: aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ)
-pw2015_demographie = pw2015_demographie %>%
-  filter(!(session %contains% "XXX") |
-         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+# Demographie
+## Testpeople (all individuals including a "XXX" in their session code, except: aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ)
+test_demographie = pw2015_demographie %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_demographie_vector = test_demographie$session
 
-pw2015_items = pw2015_items %>%
-  filter(!(session %contains% "XXX") |
-         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+# Items
+## Testpeople
+test_items = pw2015_items %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_items_vector = test_items$session
 
-pw2015_t2 = pw2015_t2 %>%
-  filter(!(session %contains% "XXX") |
-         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+## notes to us
+comments_pw2015_items = pw2015_items %>%
+  filter(notes_to_us %contains% "Cyril Test"|
+           notes_to_us %contains% "Tabea Test!"|
+           notes_to_us == "Test!" |
+           notes_to_us %contains% "Test, test, test." |
+           notes_to_us == "Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja" |
+           notes_to_us == "Test Eva" |
+           notes_to_us == "Test, Eva" |
+           notes_to_us == "Test!!! Silvia B." |
+           notes_to_us == "selina testet" |
+           notes_to_us %contains% "thank the formr monkey\nmany times" |
+           notes_to_us == "Test Silvia" |
+           notes_to_us == "Test Silvi")
 
-pw2015_t2_frauen = pw2015_t2_frauen %>%
-  filter(!(session %contains% "XXX") |
-         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+comments_pw2015_items_vector = comments_pw2015_items$session
+```
 
-pw2015_t3_singles = pw2015_t3_singles %>%
-  filter(!(session %contains% "XXX") |
-         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+### t2
+``` {r}
+test_pw2015_t2 = pw2015_t2 %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_vector = test_pw2015_t2$session
 
-pw2015_t3_partners = pw2015_t3_partners %>%
-  filter(!(session %contains% "XXX") |
-         session == "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_frauen = pw2015_t2_frauen %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_frauen_vector = test_pw2015_t2_frauen$session
+
+# Ende Dataset
+### Test people
+test_pw2015_t2_ende = pw2015_t2_ende %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_ende_vector = test_pw2015_t2_ende$session
+
+### People based on comments_to_us
+comments_pw2015_t2_ende = pw2015_t2_ende %>%
+  filter(!is.na(notes_to_us_t2)) %>%
+  select(session, notes_to_us_t2)
+
+comments_pw2015_t2_ende$notes_to_us_t2
+
+comments_pw2015_t2_ende = comments_pw2015_t2_ende %>%
+  filter(notes_to_us_t2 %contains% "Tanja" | notes_to_us_t2 %contains% "Keine Daten, Testdurchgang!!!"|
+         notes_to_us_t2 %contains% "thank the formr monkey\nmany times"|
+         notes_to_us_t2 %contains% "Test Silvia"| notes_to_us_t2 %contains% "Test Silvi")
+comments_pw2015_t2_ende_vector = comments_pw2015_t2_ende$session
+```
+
+### t3
+``` {r}
+test_pw2015_t3_singles = pw2015_t3_singles %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t3_singles_vector = test_pw2015_t3_singles$session
+
+test_pw2015_t3_partners = pw2015_t3_partners %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t3_partners_vector = test_pw2015_t3_partners$session
+
+# Ende
+## Test People
+test_pw2015_t3_ende = pw2015_t3_ende %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t3_ende_vector = test_pw2015_t3_ende$session
+
+## Dishonest answers
+dishonest_pw2015_t3_ende = pw2015_t3_ende %>%
+  filter(F_t3_honesty_check == 2)
+dishonest_pw2015_t3_ende_vector = dishonest_pw2015_t3_ende$session
+
+## notes to us
+comments_pw2015_t3_ende = pw2015_t3_ende %>%
+  filter(F_t3_notes_to_us %contains% "thank the formr monkey\nmany times" |
+           F_t3_notes_to_us %contains% "Test Silvia" |
+           F_t3_notes_to_us == "test" |
+           F_t3_notes_to_us %contains% "Test Silvi")
+comments_pw2015_t3_ende_vector = comments_pw2015_t3_ende$session
+
+```
+
+### Combine vectors and clean all data sets
+```{r}
+# Combine all vectors
+cleaning_vector = c(test_demographie_vector, test_items_vector, comments_pw2015_items_vector, test_pw2015_t2_vector, test_pw2015_t2_frauen_vector, test_pw2015_t2_ende_vector, comments_pw2015_t2_ende_vector, test_pw2015_t3_singles_vector, test_pw2015_t3_partners_vector,  test_pw2015_t3_ende_vector, dishonest_pw2015_t3_ende_vector, comments_pw2015_t3_ende_vector)
+
+# Remove duplicats in vector
+cleaning_vector = unique(cleaning_vector)
+
+# Remove these people in all datasets
+pw2015_demographie_x =  pw2015_demographie %>%
+  filter(!(session %in% cleaning_vector))
+  
+  
+pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
+pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
+pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
+# pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = ";")
+# pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
+pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
+# pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
+pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+```
+
 
 ## Check Duplicates
 dupes = pw2015_demographie %>% filter(duplicated(session))
