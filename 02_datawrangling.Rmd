@@ -195,23 +195,71 @@ pw2015_t3_ende =  pw2015_t3_ende %>%
 ```
 
 
-## Check Duplicates
-dupes = pw2015_demographie %>% filter(duplicated(session))
-dupes = pw2015_demographie %>%
-  filter(session =="92d71edd24cba64cfdd22d7c354a444a8439eb63be2f640f3fe0d96673c27d78")
-#in this case information is just repeated (exactly the same), we keep information of first report
-pw2015_demographie = pw2015_demographie %>%
-  filter(created != "2016-05-08 15:54:50")
+### Check Duplicates
+```{r}
+dupes_demographie = pw2015_demographie %>% filter(duplicated(session)) #no dupes
+dupes_items = pw2015_items %>% filter(duplicated(session)) #no dupes
+dupes_t2 = pw2015_t2 %>% filter(duplicated(session))
+duplicats = as.character(dupes_t2$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
-dupes = pw2015_items %>% filter(duplicated(session))
-dupes = pw2015_items %>%
-  filter(session =="JygX0T9uqL30FjF0OK5ZIyy9ZA9Ep0ojP92A9jJxI-8kB5p87AXXy4cyciQlM0cH")
-#in this case the session code is a testperson --> remove it entirely
-pw2015_items = pw2015_items %>%
-  filter(session != "JygX0T9uqL30FjF0OK5ZIyy9ZA9Ep0ojP92A9jJxI-8kB5p87AXXy4cyciQlM0cH")
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
 
-### this is where i stopped removing people, bc i think maybe there is already a script for cleaning the data? or a better way to do so?
+pw2015_items =  pw2015_items %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))  
 
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+
+dupes_t2_frauen = pw2015_t2_frauen %>% filter(duplicated(session)) # no dupes
+dupes_t2_ende = pw2015_t2_ende %>% filter(duplicated(session)) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
+
+
+
+dupes_t3_ende = pw2015_t3_ende %>% filter(duplicated(session))
+dupes_t3_ende = pw2015_t3_ende %>% filter(short_session == "ZV_cjcx1fj" | short_session == "BDu_KSxo6P")
+dupes_t3_partners = pw2015_t3_partners %>% filter(short_session == "ZV_cjcx1fj" | short_session == "BDu_KSxo6P") # both reported partners for only one date, remove double information from ended dataset, but not from every dataset
+pw2015_t3_ende = pw2015_t3_ende %>% filter(!(short_session == "ZV_cjcx1fj" & is.na(ended)) &
+                                             !(short_session == "BDu_KSxo6P" & is.na(ended)))
+
+dupes_t3_singles = pw2015_t3_singles %>% filter(duplicated(session)) # no dupes
+```
+
+### Non-Singles at t1
+```{r}
+# Get starting date of t1
+starting_date = pw2015_demographie %>% select(session, created_t1 = created)
+
+
+#t3
+non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = "session") %>%
+  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(F_t3_start), 0, 1)) %>%
+  filter(check_liars == 1)
+
+non_singles_t3_session = non_singles_t3 %>% filter(!duplicated(session)) %>%
+  mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
+
+count(non_singles_t3_session)
+table(non_singles_t3_session$F_t3_past_kind)         
+         
+
+```
 
 ## Data t1: 
 ### Scale Calculation: 
@@ -1680,6 +1728,23 @@ pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastre
 pw2015_t2_relationship$sex_partner <- as.integer(pw2015_t2_relationship$sex_partner)
 ```
 
+# Liars in t2
+```{r}
+# Get starting date of t1
+starting_date = pw2015_demographie %>% select(session, created_t1 = created)
+
+
+#t2
+non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = "session") %>%
+  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(start), 0, 1)) %>%
+  filter(check_liars == 1)
+
+non_singles_t2_session = non_singles_t2 %>% filter(!duplicated(session))
+
+count(non_singles_t2_session)
+table(non_singles_t2_session$kind)         
+
+```
 
 # Data t3
 
