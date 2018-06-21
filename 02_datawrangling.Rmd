@@ -6,6 +6,7 @@ output: html_document
 ---
 
 ## Open questions:
+- Age  of partners already listed at t1, where do we get that information?
 - Why are there 5 items for openness but only 4 for the other personality measurements?
 - deal with duplicats
 - for merging: deal with singles!
