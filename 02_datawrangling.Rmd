@@ -242,7 +242,7 @@ pw2015_items <- pw2015_items %>%
                                             end_relationship_weeks * 7,
          previous_relationship_ended = created - previous_relationship_ended_days)
 
-pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years
+pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years,
                                         -end_relationship_months, -end_relationship_weeks)
 ```
 
