@@ -107,8 +107,9 @@ pw2015_t3_relationship_number_select = pw2015_t3_relationship_number %>%
 
 
 pw2015_t3_partners_select = pw2015_t3_partners %>%
-  select(session, short_session, created, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup, F_t3_kind,
-         F_t3_past_kind, F_t3_closeup_kind, F_t3_name, F_t3_name_new)
+  select(session, short_session, created, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup,
+         F_t3_kind, F_t3_past_kind, F_t3_closeup_kind, F_t3_name, F_t3_name_new, F_t3_age_new,
+         F_t3_sex_new)
 
 
 pw2015_t3_mainrelation_select = pw2015_t3_mainrelation %>%
