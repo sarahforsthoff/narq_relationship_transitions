@@ -1743,7 +1743,6 @@ non_singles_t2_session = non_singles_t2 %>% filter(!duplicated(session))
 
 count(non_singles_t2_session)
 table(non_singles_t2_session$kind)         
-
 ```
 
 # Data t3
