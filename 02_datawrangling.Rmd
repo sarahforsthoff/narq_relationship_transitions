@@ -6,26 +6,26 @@ output: html_document
 ---
 
 ## Open questions:
-- Age  of partners already listed at t1, where do we get that information?
-- Why are there 5 items for openness but only 4 for the other personality measurements?
-- deal with duplicats
-- for merging: deal with singles!
-- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
-- welche Informationen fehlen noch?
+- Check To-Do's for Analyses -> 03_analyses
+- Get age from t2_partners already assessed at T1 
+- Analyses of relationship dissolution after relationship start
 
 @laura:
-(FERTIG) Sarah: evtl. noch mal das t3_partners sheet mit den names_-Variablen hochladen? Danke!!
-(FERTIG) do not import datasets that we dont nedd
-(FERTIG) remove test persons (xxx)
-- remove duplicates --> problems! some test persons can not be identified. do you have a script to get rid of them, Tanja?
 - remove people who were not single at t1
-(FERTIG) - include single t3
-(FERTIG) - load data files into owncloud
+- Pick one of t2 or t3 entries of relationships which lasted over both assessments?
+      - create sub_data with "double"-information about same relationship
+- Create start_single variable (s. 03_analyses): Can you reuse previous code?
 
 @sarah:
-FERTIG (- zeitpunkt seit der letzten Beziehung t1 --> previous_relationship_ended (as date))
+- t2: shorter wrangling script 
+- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
+          -> remove from all data
+          -> diff: age(demographie) - years_since(items) > 10 can be included
+
 
 - Ziel 2: erstes Analyseskript geschrieben
+
+
 
 
 ## Library
@@ -46,7 +46,7 @@ library(dplyr)
 
 ## Data Import
 ```{r}
-setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+#setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
 #setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
 # set workingdirectory
 
@@ -1817,7 +1817,7 @@ pw2015_t2_relationship_x = pw2015_t2_relationship %>%
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, kind, lasting, name,
                                                            sex_partner)
 
-t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start, F_t3_end, kind, F_t3_lasting, F_t3_name)
+t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start, F_t3_sex,F_t3_end, kind, F_t3_lasting, F_t3_name)
 
 t3_test <- t3_test %>% transmute(
                       start = F_t3_start, 

@@ -118,7 +118,9 @@ plot(m)
 #Preperations before analyses
   - event-variable: binary variable indicating if relationship (-> event) happened or not
                     -> so far the data includes the variable "kind", which represents the relationship typ
-  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not dates 
+  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not  
+                      dates
+                      
   
 Data: merged data from t1, t2, t3
 ```{r}
@@ -131,6 +133,7 @@ surv_data <- surv_data %>% mutate(
 
 ```
 
+!!! incomplete !!!
 Create start_single variable
 ```{r}
 #Idea: start_single-variable needs to be calculated differently for Relationship order > 1
