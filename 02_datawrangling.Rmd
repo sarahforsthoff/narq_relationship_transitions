@@ -54,7 +54,7 @@ pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
 pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
 pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
 pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
-# pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+#pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
 pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = ";")
 # pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
 pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
@@ -1741,8 +1741,20 @@ non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = "session"
 
 non_singles_t2_session = non_singles_t2 %>% filter(!duplicated(session))
 
+
 count(non_singles_t2_session)
-table(non_singles_t2_session$kind)         
+table(non_singles_t2_session$kind)  
+
+non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
+non_singles_vector_t3 = as.data.frame(non_singles_t3_session$session)
+
+non_singles_vector = bind_rows(non_singles_vector_t2, non_singles_vector_t3) %>%
+  mutate(session = ifelse(is.na(`non_singles_t2_session$session`),
+                          `non_singles_t3_session$session`,
+                          `non_singles_t2_session$session`))
+
+non_singles_vector_unique = non_singles_vector %>% filter(!duplicated(session))
+count(non_singles_vector_unique)
 ```
 
 # Data t3
