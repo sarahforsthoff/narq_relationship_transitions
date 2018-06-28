@@ -1749,6 +1749,8 @@ table(non_singles_t2_session$kind)
 non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
 non_singles_vector_t3 = as.data.frame(non_singles_t3_session$session)
 
+count(non_singles_vector_t3)
+
 non_singles_vector = bind_rows(non_singles_vector_t2, non_singles_vector_t3) %>%
   mutate(session = ifelse(is.na(`non_singles_t2_session$session`),
                           `non_singles_t3_session$session`,
