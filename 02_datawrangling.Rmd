@@ -18,9 +18,9 @@ output: html_document
 
 @sarah:
 - t2: shorter wrangling script 
-- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
+FERTIG (- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
           -> remove from all data
-          -> diff: age(demographie) - years_since(items) > 10 can be included
+          -> diff: age(demographie) - years_since(items) > 10 can be included)
 
 
 - Ziel 2: erstes Analyseskript geschrieben
@@ -98,6 +98,49 @@ comments_pw2015_items = pw2015_items %>%
 
 comments_pw2015_items_vector = as.character(comments_pw2015_items$session)
 ```
+
+"When was your last relationship?": Exclude participants with "funny" answers = last relationshin when younger than 10
+```{r}
+#merge t1 files including age and time since last relationship
+t1_age <- pw2015_demographie %>% select(session, short_session, age)
+
+table(pw2015_items$end_relationship_weeks)
+table(pw2015_items$end_relationship_months) 
+#No entries exceeding 52 (weeks) or 12 (months), therefore only years will checked
+t1_time_single <- pw2015_items %>% select(session, short_session, end_relationship_years)
+
+t1_time_single_test <- left_join(t1_age, t1_time_single)
+t1_time_single_test <- t1_time_single_test %>% filter((age - end_relationship_years) < 10) #three cases detected
+
+vec_time_single_test <- t1_time_single_test$session #vector with session code of the three cases
+
+#exclude from all data
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_items =  pw2015_items %>%
+  filter(!(session %in% vec_time_single_test))  
+
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session %in% vec_time_single_test))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session %in% vec_time_single_test))
+
+```
+
 
 #### t2
 ``` {r}
