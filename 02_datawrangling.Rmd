@@ -12,8 +12,9 @@ output: html_document
 
 @laura:
 (DONE) - remove people who were not single at t1 --> named data_clean
-- Pick one of t2 or t3 entries of relationships which lasted over both assessments?
-      - create sub_data with "double"-information about same relationship
+(DONE)- Pick one of t2 or t3 entries of relationships which lasted over both assessments?
+            - create sub_data with "double"-information about same relationship
+            - remove t2 - single information for people who have a relationship at t3
 - Create start_single variable (s. 03_analyses): Can you reuse previous code?
 
 @sarah:
@@ -1610,8 +1611,6 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
 )
 
 
-pw2015_t2_relationship <- subset(pw2015_t2_relationship, !duplicated(short_session)) ## look at duplicats
-
 pw2015_t2_relationship <- as.data.frame(pw2015_t2_relationship)
 ```
 
@@ -1738,6 +1737,8 @@ pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationsh
 pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship9"] <- 2
 pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship10"] <- 2
 
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "Single"] <- 0
+
 pw2015_t2_relationship$lasting <- as.integer(pw2015_t2_relationship$lasting)
 
 ```
@@ -1826,7 +1827,7 @@ pw2015_t3_partners = pw2015_t3_partners %>%
 
 ```
 
-# Merge Relationship Data TEST
+# Relationships at t2 and t3
 ```{r}
 # Remove relationships from t2 that have information in t3 before merging based on names
 # Form Variable including name for t3
@@ -1845,27 +1846,31 @@ pw2015_t3_partners = pw2015_t3_partners %>%
                                ifelse(F_t3_description %contains% "<U+2640>", 1, NA)),
          F_t3_sex = ifelse(is.na(F_t3_sex_old), F_t3_sex_new, F_t3_sex_old))
 
-# Form matchin variable for t2 and t3
-pw2015_t3_partners = pw2015_t3_partners %>%
+# Remove double singles
+double_singles = pw2015_t2_relationship %>%
+  filter(lasting == 0) %>%
+  filter(session %in% pw2015_t3_partners$session)
+
+pw2015_t2_relationship = pw2015_t2_relationship %>%
+  filter(!(session %in% double_singles$session))
+
+# Remove duble relationships
+# Form matching variable for t2 and t3
+double_relationships_t3 = pw2015_t3_partners %>%
+  filter(!is.na(F_t3_name)) %>%
   mutate(session_partnername = paste0(session, "_", F_t3_name))
+
+double_relationships_t2 = pw2015_t2_relationship %>%
+  mutate(name = ifelse(name == "Kommt nicht in dieser Liste vor", name_new, name)) %>%
+  filter(!is.na(name), lasting == 1) %>%
+  mutate(session_partnername = paste0(session, "_", name)) %>%
+  filter(session_partnername %in% double_relationships_t3$session_partnername)
+
 
 pw2015_t2_relationship = pw2015_t2_relationship %>%
   mutate(name = ifelse(name == "Kommt nicht in dieser Liste vor", name_new, name),
-         session_partnername = paste0(session, "_", name),
-         session_partnername = ifelse(var == "Single", "Single", session_partnername))
-
-
-# Find focals in t2 who reported same partner in t3
-# investigate double information:
-pw2015_t2_relationship_x = pw2015_t2_relationship %>%
-  filter(duplicated(session_partnername)) %>%
-  filter(session_partnername != "Single")
-
-
-pw2015_t2_relationship_x = pw2015_t2_relationship %>%
-  mutate(remove = ifelse(session_partnername == "Single", 0,
-                         ifelse(session_partnername %in% pw2015_t3_partners$session_partnername, 1,
-                                session_partnername))
+         session_partnername = ifelse(lasting == 1, paste0(session, "_", name), NA)) %>%
+  filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
 
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, kind, lasting, name,
@@ -1890,7 +1895,7 @@ t2_t3_relationship = t2_t3_relationship %>%
                                    # starting data
   mutate(relationship_number = n(), # counting total number of relationships
          relationship_order = row_number(),
-         lasting = ifelse(is.na(start), 0, lasting),
+         # lasting = ifelse(is.na(start), 0, lasting), done earliere (hopefully)
          relationship_order = ifelse(is.na(start), 0, relationship_order),
          relationship_number = ifelse(is.na(start), 0, relationship_number)) # determining relationship order
 
