@@ -11,7 +11,7 @@ output: html_document
 - Analyses of relationship dissolution after relationship start
 
 @laura:
-- remove people who were not single at t1
+(DONE) - remove people who were not single at t1 --> named data_clean
 - Pick one of t2 or t3 entries of relationships which lasted over both assessments?
       - create sub_data with "double"-information about same relationship
 - Create start_single variable (s. 03_analyses): Can you reuse previous code?
@@ -1800,7 +1800,10 @@ non_singles_vector = bind_rows(non_singles_vector_t2, non_singles_vector_t3) %>%
                           `non_singles_t2_session$session`))
 
 non_singles_vector_unique = non_singles_vector %>% filter(!duplicated(session))
-count(non_singles_vector_unique)
+non_singles_vector_unique = non_singles_vector_unique$`non_singles_t2_session$session`
+length(non_singles_vector_unique)
+
+
 ```
 
 # Data t3
@@ -1853,8 +1856,16 @@ pw2015_t2_relationship = pw2015_t2_relationship %>%
 
 
 # Find focals in t2 who reported same partner in t3
+# investigate double information:
 pw2015_t2_relationship_x = pw2015_t2_relationship %>%
-  mutate(remove = ifelse(session_partnername %in% pw2015_t3_partners$session_partnername, 1, 0))
+  filter(duplicated(session_partnername)) %>%
+  filter(session_partnername != "Single")
+
+
+pw2015_t2_relationship_x = pw2015_t2_relationship %>%
+  mutate(remove = ifelse(session_partnername == "Single", 0,
+                         ifelse(session_partnername %in% pw2015_t3_partners$session_partnername, 1,
+                                session_partnername))
 
 
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, kind, lasting, name,
@@ -1883,6 +1894,7 @@ t2_t3_relationship = t2_t3_relationship %>%
          relationship_order = ifelse(is.na(start), 0, relationship_order),
          relationship_number = ifelse(is.na(start), 0, relationship_number)) # determining relationship order
 
+
 #Problem: in t3_datasheet two variables for relationship kind 
 ```
 
@@ -1906,6 +1918,9 @@ pw2015_items_select = pw2015_items %>%
 # use relationship information to merge data on
 data = left_join(t2_t3_relationship, pw2015_demographie_select, by = c("session", "short_session"))
 data = left_join(data, pw2015_items_select, by = c("session", "short_session"))
+
+# clean data set without liars
+data_clean = data %>% filter(!(session %in% non_singles_vector_unique))
 ```
 
 
