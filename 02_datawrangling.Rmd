@@ -12,7 +12,7 @@ output: html_document
 
 @laura:
 (DONE) - remove people who were not single at t1 --> named data_clean
-(DONE)- Pick one of t2 or t3 entries of relationships which lasted over both assessments?
+(DONE) - Pick one of t2 or t3 entries of relationships which lasted over both assessments?
             - create sub_data with "double"-information about same relationship
             - remove t2 - single information for people who have a relationship at t3
 - Create start_single variable (s. 03_analyses): Can you reuse previous code?
@@ -439,6 +439,13 @@ pw2015_items <- pw2015_items %>%
   mutate(previous_relationship_ended_days = end_relationship_years * 365 + 
                                             end_relationship_months * 30 + 
                                             end_relationship_weeks * 7,
+         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+                                                   end_relationship_years * 365 + 
+                                                     end_relationship_months * 30,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+                                                   end_relationship_years * 365,
+                                                   previous_relationship_ended_days),
          previous_relationship_ended = created - previous_relationship_ended_days)
 
 pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years,
@@ -1868,25 +1875,37 @@ double_relationships_t2 = pw2015_t2_relationship %>%
 
 
 pw2015_t2_relationship = pw2015_t2_relationship %>%
+  filter(!(short_session == "hLWe0YPc9g" & is.na(name))) %>%
+  filter(!(short_session == "ocQ1e9cRL4" & is.na(name))) %>%
   mutate(name = ifelse(name == "Kommt nicht in dieser Liste vor", name_new, name),
+         name = ifelse(is.na(name), name_new, name),
          session_partnername = ifelse(lasting == 1, paste0(session, "_", name), NA)) %>%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
 
-t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, kind, lasting, name,
-                                                           sex_partner)
+t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end,
+                                                           kind, lasting, name, sex_partner)
 
-t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start, F_t3_sex,F_t3_end, kind, F_t3_lasting, F_t3_name)
+pw2015_t3_partners = pw2015_t3_partners %>%
+  mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
 
-t3_test <- t3_test %>% transmute(
+t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start,
+                                                       F_t3_sex,F_t3_end, kind, F_t3_lasting,
+                                                       F_t3_name)
+
+t3_test <- t3_test %>% rename(
                       start = F_t3_start, 
                       end = F_t3_end,
                       lasting = F_t3_lasting,
                       name = F_t3_name,
-                      sex_partner = F_t3_sex)
+                      sex_partner = F_t3_sex) %>%
+  mutate(kind = as.character(kind))
                       
 
 t2_t3_relationship <- bind_rows(t2_test, t3_test)
+
+# Remove weird cases before analysis
+t2_t3_relationship = t2_t3_relationship %>% filter(!(lasting != 0 & is.na(kind)))
 
 
 t2_t3_relationship = t2_t3_relationship %>% 
@@ -1924,6 +1943,29 @@ pw2015_items_select = pw2015_items %>%
 data = left_join(t2_t3_relationship, pw2015_demographie_select, by = c("session", "short_session"))
 data = left_join(data, pw2015_items_select, by = c("session", "short_session"))
 
+```
+
+## Create additional variables for survival analysis
+```{r}
+# Create event-variable
+data <- data %>% 
+  mutate(event = ifelse(lasting == 0, 0, 1),
+         single_start = ifelse(relationship_order == 0,  previous_relationship_ended))
+
+#Create start_single variable
+#Idea: start_single-variable needs to be calculated differently for Relationship order > 1
+  # e.g. relationship no.2: start of relationship 2 - end of relationship 1
+        ### For that we might have to change back into wide format
+surv_data <- surv_data %>% mutate(
+  start_single = ifelse(relationship_order == 1, difftime(start - previous_relationship_ended, units = "days"), ifelse(
+    relationship_order == 2, difftime(ended - start, units = "days")
+  ))
+)
+```
+
+
+## Clean data set
+```{r}
 # clean data set without liars
 data_clean = data %>% filter(!(session %in% non_singles_vector_unique))
 ```
