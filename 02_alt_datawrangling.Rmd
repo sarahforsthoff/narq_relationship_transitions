@@ -443,7 +443,7 @@ pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end
 
 ## Data t2
 ### Join male-interested (pw2015_t2) and female-interested (pw2015_t2_frauen) dataset
-Change classes of variables before joining
+Change classes of variables before joining, so variables depending of sex can be integrated 
 ``` {r }
 pw2015_t2$session = as.character(pw2015_t2$session)
 pw2015_t2_frauen$session = as.character(pw2015_t2_frauen$session)
@@ -453,7 +453,8 @@ pw2015_t2$created = as.Date(pw2015_t2$created, origin = "1970-01-01")
 pw2015_t2_frauen$created = as.Date(pw2015_t2_frauen$created, origin = "1970-01-01")
 
 
-#male
+#t2_male sheet
+##name
 pw2015_t2$relationship1_m_name = as.character(pw2015_t2$relationship1_m_name)
 pw2015_t2$relationship2_m_name = as.character(pw2015_t2$relationship2_m_name)
 pw2015_t2$relationship3_m_name = as.character(pw2015_t2$relationship3_m_name)
@@ -463,6 +464,7 @@ pw2015_t2$pastrelationship3_m_name = as.character(pw2015_t2$pastrelationship3_m_
 pw2015_t2$pastrelationship4_m_name = as.character(pw2015_t2$pastrelationship4_m_name)
 pw2015_t2$pastrelationship5_m_name = as.character(pw2015_t2$pastrelationship5_m_name)
 
+##name_new
 pw2015_t2$relationship1_name_m_new = as.character(pw2015_t2$relationship1_name_m_new)
 pw2015_t2$relationship2_name_m_new = as.character(pw2015_t2$relationship2_name_m_new)
 pw2015_t2$relationship3_name_m_new = as.character(pw2015_t2$relationship3_name_m_new)
@@ -472,6 +474,7 @@ pw2015_t2$pastrelationship3_name_m_new = as.character(pw2015_t2$pastrelationship
 pw2015_t2$pastrelationship4_name_m_new = as.character(pw2015_t2$pastrelationship4_name_m_new)
 pw2015_t2$pastrelationship5_name_m_new = as.character(pw2015_t2$pastrelationship5_name_m_new)
 
+##relationship_new
 pw2015_t2$relationship1_relationship_m_new = as.character(pw2015_t2$relationship1_relationship_m_new)
 pw2015_t2$relationship2_relationship_m_new = as.character(pw2015_t2$relationship2_relationship_m_new)
 pw2015_t2$relationship3_relationship_m_new = as.character(pw2015_t2$relationship3_relationship_m_new)
@@ -481,14 +484,14 @@ pw2015_t2$pastrelationship3_relationship_m_new = as.character(pw2015_t2$pastrela
 pw2015_t2$pastrelationship4_relationship_m_new = as.character(pw2015_t2$pastrelationship4_relationship_m_new)
 pw2015_t2$pastrelationship5_relationship_m_new = as.character(pw2015_t2$pastrelationship5_relationship_m_new)
 
-
-
+##start
 pw2015_t2$pastrelationship1_start_m = as.Date(pw2015_t2$pastrelationship1_start_m, origin = "1970-01-01")
 pw2015_t2$pastrelationship2_start_m = as.Date(pw2015_t2$pastrelationship2_start_m, origin = "1970-01-01")
 pw2015_t2$pastrelationship3_start_m = as.Date(pw2015_t2$pastrelationship3_start_m, origin = "1970-01-01")
 pw2015_t2$pastrelationship4_start_m = as.Date(pw2015_t2$pastrelationship4_start_m, origin = "1970-01-01")
 pw2015_t2$pastrelationship5_start_m = as.Date(pw2015_t2$pastrelationship5_start_m, origin = "1970-01-01")
 
+##end
 pw2015_t2$pastrelationship1_end_m = as.Date(pw2015_t2$pastrelationship1_end_m, origin = "1970-01-01")
 pw2015_t2$pastrelationship2_end_m = as.Date(pw2015_t2$pastrelationship2_end_m, origin = "1970-01-01")
 pw2015_t2$pastrelationship3_end_m = as.Date(pw2015_t2$pastrelationship3_end_m, origin = "1970-01-01")
@@ -496,8 +499,8 @@ pw2015_t2$pastrelationship4_end_m = as.Date(pw2015_t2$pastrelationship4_end_m, o
 pw2015_t2$pastrelationship5_end_m = as.Date(pw2015_t2$pastrelationship5_end_m, origin = "1970-01-01")
 
 
-
-#Female
+#t2_female
+##name
 pw2015_t2_frauen$relationship1_f_name = as.character(pw2015_t2_frauen$relationship1_f_name)
 pw2015_t2_frauen$relationship2_f_name = as.character(pw2015_t2_frauen$relationship2_f_name)
 pw2015_t2_frauen$relationship3_f_name = as.character(pw2015_t2_frauen$relationship3_f_name)
@@ -507,6 +510,7 @@ pw2015_t2_frauen$pastrelationship3_f_name = as.character(pw2015_t2_frauen$pastre
 pw2015_t2_frauen$pastrelationship4_f_name = as.character(pw2015_t2_frauen$pastrelationship4_f_name)
 pw2015_t2_frauen$pastrelationship5_f_name = as.character(pw2015_t2_frauen$pastrelationship5_f_name)
 
+##name_new
 pw2015_t2_frauen$relationship1_name_f_new = as.character(pw2015_t2_frauen$relationship1_name_f_new)
 pw2015_t2_frauen$relationship2_name_f_new = as.character(pw2015_t2_frauen$relationship2_name_f_new)
 pw2015_t2_frauen$relationship3_name_f_new = as.character(pw2015_t2_frauen$relationship3_name_f_new)
@@ -516,40 +520,63 @@ pw2015_t2_frauen$pastrelationship3_name_f_new = as.character(pw2015_t2_frauen$pa
 pw2015_t2_frauen$pastrelationship4_name_f_new = as.character(pw2015_t2_frauen$pastrelationship4_name_f_new)
 pw2015_t2_frauen$pastrelationship5_name_f_new = as.character(pw2015_t2_frauen$pastrelationship5_name_f_new)
 
-pw2015_t2_frauen$relationship1_relationship_f_new = as.character(pw2015_t2_frauen$relationship1_relationship_f_new)
-pw2015_t2_frauen$relationship2_relationship_f_new = as.character(pw2015_t2_frauen$relationship2_relationship_f_new)
-pw2015_t2_frauen$relationship3_relationship_f_new = as.character(pw2015_t2_frauen$relationship3_relationship_f_new)
-pw2015_t2_frauen$pastrelationship1_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship1_relationship_f_new)
-pw2015_t2_frauen$pastrelationship2_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship2_relationship_f_new)
-pw2015_t2_frauen$pastrelationship3_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship3_relationship_f_new)
-pw2015_t2_frauen$pastrelationship4_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship4_relationship_f_new)
-pw2015_t2_frauen$pastrelationship5_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship5_relationship_f_new)
+##relationship_new
+pw2015_t2_frauen$relationship1_relationship_f_new = 
+  as.character(pw2015_t2_frauen$relationship1_relationship_f_new)
+pw2015_t2_frauen$relationship2_relationship_f_new = 
+  as.character(pw2015_t2_frauen$relationship2_relationship_f_new)
+pw2015_t2_frauen$relationship3_relationship_f_new = 
+  as.character(pw2015_t2_frauen$relationship3_relationship_f_new)
+pw2015_t2_frauen$pastrelationship1_relationship_f_new = 
+  as.character(pw2015_t2_frauen$pastrelationship1_relationship_f_new)
+pw2015_t2_frauen$pastrelationship2_relationship_f_new = 
+  as.character(pw2015_t2_frauen$pastrelationship2_relationship_f_new)
+pw2015_t2_frauen$pastrelationship3_relationship_f_new = 
+  as.character(pw2015_t2_frauen$pastrelationship3_relationship_f_new)
+pw2015_t2_frauen$pastrelationship4_relationship_f_new = 
+  as.character(pw2015_t2_frauen$pastrelationship4_relationship_f_new)
+pw2015_t2_frauen$pastrelationship5_relationship_f_new = 
+  as.character(pw2015_t2_frauen$pastrelationship5_relationship_f_new)
 
-pw2015_t2_frauen$pastrelationship1_start_f = as.Date(pw2015_t2_frauen$pastrelationship1_start_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship2_start_f = as.Date(pw2015_t2_frauen$pastrelationship2_start_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship3_start_f = as.Date(pw2015_t2_frauen$pastrelationship3_start_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship4_start_f = as.Date(pw2015_t2_frauen$pastrelationship4_start_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship5_start_f = as.Date(pw2015_t2_frauen$pastrelationship5_start_f, origin = "1970-01-01")
+##start
+pw2015_t2_frauen$pastrelationship1_start_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship1_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship2_start_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship2_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship3_start_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship3_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship4_start_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship4_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship5_start_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship5_start_f, origin = "1970-01-01")
 
-pw2015_t2_frauen$pastrelationship1_end_f = as.Date(pw2015_t2_frauen$pastrelationship1_end_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship2_end_f = as.Date(pw2015_t2_frauen$pastrelationship2_end_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship3_end_f = as.Date(pw2015_t2_frauen$pastrelationship3_end_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship4_end_f = as.Date(pw2015_t2_frauen$pastrelationship4_end_f, origin = "1970-01-01")
-pw2015_t2_frauen$pastrelationship5_end_f = as.Date(pw2015_t2_frauen$pastrelationship5_end_f, origin = "1970-01-01")
-
+##end
+pw2015_t2_frauen$pastrelationship1_end_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship1_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship2_end_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship2_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship3_end_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship3_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship4_end_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship4_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship5_end_f = 
+  as.Date(pw2015_t2_frauen$pastrelationship5_end_f, origin = "1970-01-01")
 
 ```
 
 Join t2 data
 ```{r}
 # pw2015_t2_relationship <- bind_rows(pw2015_t2, pw2015_t2_frauen) @Sarah: check if we can change to this version
+
 pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session", "short_session"), suffix = c(".m", ".f"))
 ```
 
+### Relationship status at t2
 
-### Relationship information t2
-
+Creating variable indicating if participants are engaged in a relationship at T2
 ```{r}
+
+
 pw2015_t2_relationship <- pw2015_t2_relationship %>%
   mutate(
   "t2_relationship" = derivedVariable(
@@ -560,9 +587,9 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>%
 
 ```
 
-Ended relationship(s) since T1?
+Creating variable indicating if participants were engaged in a relationship since T1
 ```{r}
-#Achtung: Umgedrehte Kodierung wie bei t2_relationship!!
+# !! Reverse coding than of relationship status above !!
 pw2015_t2_relationship <-  pw2015_t2_relationship %>% mutate(
   "t2_pastrelationship" = derivedFactor(
             "0" = (pastrelationship1_f == 2 & pastrelationship1_m == 2) | (pastrelationship1_f == 2 & 
