@@ -1,0 +1,1187 @@
+---
+title: "alt_02_datawrangling"
+author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
+date: "20 April 2018"
+output: html_document
+---
+
+## Open questions:
+- Check To-Do's for Analyses -> 03_analyses
+- Get age from t2_partners already assessed at T1 
+- Analyses of relationship dissolution after relationship start
+
+@laura:
+(DONE) - remove people who were not single at t1 --> named data_clean
+(DONE) - Pick one of t2 or t3 entries of relationships which lasted over both assessments?
+            - create sub_data with "double"-information about same relationship
+            - remove t2 - single information for people who have a relationship at t3
+- Create start_single variable (s. 03_analyses): Can you reuse previous code?
+
+@sarah:
+- t2: shorter wrangling script 
+FERTIG (- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
+          -> remove from all data
+          -> diff: age(demographie) - years_since(items) > 10 can be included)
+
+
+- Ziel 2: erstes Analyseskript geschrieben
+
+
+
+
+## Library
+```{r}
+# library(jsonlite)
+# install.packages("devtools")
+# devtools::install_github("rubenarslan/formr")
+ library(formr)
+# library(psych)
+# library(stringr)
+library(mosaic)
+library(tidyr)
+library(apaTables)
+library(dplyr)
+```
+
+
+
+## Data Import
+```{r}
+# setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+#setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
+# set workingdirectory
+
+pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
+pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
+pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
+pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
+pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
+#pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
+pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = ";")
+# pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
+pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
+# pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
+pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+```
+
+## Clean Data (Testpeople, Duplicates, Liars, etc.)
+### Testperson and missing session
+#### t1
+```{r}
+# Demographie
+## Testpeople (all individuals including a "XXX" in their session code, except: aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ)
+test_demographie = pw2015_demographie %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_demographie_vector = as.character(test_demographie$session)
+
+# Items
+## Testpeople
+test_items = pw2015_items %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_items_vector = as.character(test_items$session)
+
+## notes to us
+comments_pw2015_items = pw2015_items %>%
+  filter(notes_to_us %contains% "Cyril Test"|
+           notes_to_us %contains% "Tabea Test!"|
+           notes_to_us == "Test!" |
+           notes_to_us %contains% "Test, test, test." |
+           notes_to_us == "Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja" |
+           notes_to_us == "Test Eva" |
+           notes_to_us == "Test, Eva" |
+           notes_to_us == "Test!!! Silvia B." |
+           notes_to_us == "selina testet" |
+           notes_to_us %contains% "thank the formr monkey\nmany times" |
+           notes_to_us == "Test Silvia" |
+           notes_to_us == "Test Silvi")
+
+comments_pw2015_items_vector = as.character(comments_pw2015_items$session)
+```
+
+"When was your last relationship?": Exclude participants with "funny" answers = last relationshin when younger than 10
+```{r}
+#merge t1 files including age and time since last relationship
+t1_age <- pw2015_demographie %>% select(session, short_session, age)
+
+table(pw2015_items$end_relationship_weeks)
+table(pw2015_items$end_relationship_months) 
+#No entries exceeding 52 (weeks) or 12 (months), therefore only years will checked
+t1_time_single <- pw2015_items %>% select(session, short_session, end_relationship_years)
+
+t1_time_single_test <- left_join(t1_age, t1_time_single)
+t1_time_single_test <- t1_time_single_test %>% filter((age - end_relationship_years) < 10) #three cases detected
+
+vec_time_single_test <- t1_time_single_test$session #vector with session code of the three cases
+
+#exclude from all data
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_items =  pw2015_items %>%
+  filter(!(session %in% vec_time_single_test))  
+
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session %in% vec_time_single_test))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session %in% vec_time_single_test))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session %in% vec_time_single_test))
+
+```
+
+
+#### t2
+``` {r}
+test_pw2015_t2 = pw2015_t2 %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_vector = as.character(test_pw2015_t2$session)
+
+test_pw2015_t2_frauen = pw2015_t2_frauen %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_frauen_vector = as.character(test_pw2015_t2_frauen$session)
+
+# Ende Dataset
+### Test people
+test_pw2015_t2_ende = pw2015_t2_ende %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t2_ende_vector = as.character(test_pw2015_t2_ende$session)
+
+### People based on comments_to_us
+comments_pw2015_t2_ende = pw2015_t2_ende %>%
+  filter(!is.na(notes_to_us_t2)) %>%
+  select(session, notes_to_us_t2)
+
+comments_pw2015_t2_ende = comments_pw2015_t2_ende %>%
+  filter(notes_to_us_t2 %contains% "Tanja" | notes_to_us_t2 %contains% "Keine Daten, Testdurchgang!!!"|
+         notes_to_us_t2 %contains% "thank the formr monkey\nmany times"|
+         notes_to_us_t2 %contains% "Test Silvia"| notes_to_us_t2 %contains% "Test Silvi")
+comments_pw2015_t2_ende_vector = as.character(comments_pw2015_t2_ende$session)
+```
+
+#### t3
+``` {r}
+test_pw2015_t3_singles = pw2015_t3_singles %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t3_singles_vector = as.character(test_pw2015_t3_singles$session)
+
+test_pw2015_t3_partners = pw2015_t3_partners %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t3_partners_vector = as.character(test_pw2015_t3_partners$session)
+
+# Ende
+## Test People
+test_pw2015_t3_ende = pw2015_t3_ende %>%
+  filter((session %contains% "XXX") &
+         session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
+test_pw2015_t3_ende_vector = as.character(test_pw2015_t3_ende$session)
+
+## Dishonest answers
+dishonest_pw2015_t3_ende = pw2015_t3_ende %>%
+  filter(F_t3_honesty_check == 2)
+dishonest_pw2015_t3_ende_vector = as.character(dishonest_pw2015_t3_ende$session)
+
+## notes to us
+comments_pw2015_t3_ende = pw2015_t3_ende %>%
+  filter(F_t3_notes_to_us %contains% "thank the formr monkey\nmany times" |
+           F_t3_notes_to_us %contains% "Test Silvia" |
+           F_t3_notes_to_us == "test" |
+           F_t3_notes_to_us %contains% "Test Silvi")
+comments_pw2015_t3_ende_vector = as.character(comments_pw2015_t3_ende$session)
+
+```
+
+#### Combine vectors and clean all data sets
+```{r}
+# Combine all vectors
+cleaning_vector = c(test_demographie_vector, test_items_vector, comments_pw2015_items_vector, test_pw2015_t2_vector, test_pw2015_t2_frauen_vector, test_pw2015_t2_ende_vector, comments_pw2015_t2_ende_vector, test_pw2015_t3_singles_vector, test_pw2015_t3_partners_vector,  test_pw2015_t3_ende_vector, dishonest_pw2015_t3_ende_vector, comments_pw2015_t3_ende_vector, NA)
+
+# Remove these people in all datasets and remove missing sessions (NA)
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_items =  pw2015_items %>%
+  filter(!(session %in% cleaning_vector))  
+
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session %in% cleaning_vector))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session %in% cleaning_vector))
+```
+
+
+### Check Duplicates
+```{r}
+dupes_demographie = pw2015_demographie %>% filter(duplicated(session)) #no dupes
+dupes_items = pw2015_items %>% filter(duplicated(session)) #no dupes
+dupes_t2 = pw2015_t2 %>% filter(duplicated(session))
+duplicats = as.character(dupes_t2$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
+
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_items =  pw2015_items %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))  
+
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
+
+
+dupes_t2_frauen = pw2015_t2_frauen %>% filter(duplicated(session)) # no dupes
+dupes_t2_ende = pw2015_t2_ende %>% filter(duplicated(session)) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
+
+
+
+dupes_t3_ende = pw2015_t3_ende %>% filter(duplicated(session))
+dupes_t3_ende = pw2015_t3_ende %>% filter(short_session == "ZV_cjcx1fj" | short_session == "BDu_KSxo6P")
+dupes_t3_partners = pw2015_t3_partners %>% filter(short_session == "ZV_cjcx1fj" | short_session == "BDu_KSxo6P") # both reported partners for only one date, remove double information from ended dataset, but not from every dataset
+pw2015_t3_ende = pw2015_t3_ende %>% filter(!(short_session == "ZV_cjcx1fj" & is.na(ended)) &
+                                             !(short_session == "BDu_KSxo6P" & is.na(ended)))
+
+dupes_t3_singles = pw2015_t3_singles %>% filter(duplicated(session)) # no dupes
+```
+
+## Data t1: 
+### Scale Calculation: 
+#### NARQ, NARQ_Adm, NARQ_Riv
+```{r}
+pw2015_demographie[11:28] <-lapply(pw2015_demographie[11:28], as.numeric)
+pw2015_demographie <- pw2015_demographie %>% rowwise () %>%  
+  mutate("NARQ_ADM" = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3),
+                           na.rm = TRUE)) %>% 
+  mutate("NARQ_RIV" = mean(c(NARQ_17, NARQ_11, NARQ_13, NARQ_6, NARQ_14, NARQ_9, NARQ_10, NARQ_12, NARQ_4),
+                           na.rm = TRUE)) %>%
+  mutate("NARQ_scale" = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3,
+                                NARQ_17, NARQ_11, NARQ_13,  NARQ_6, NARQ_14, NARQ_9, NARQ_10, NARQ_12,
+                                NARQ_4 ), na.rm = TRUE)) 
+```
+
+
+#### SOI_R
+```{r }
+#Item SOI_R_6R umpolen
+pw2015_items$SOI_R_6 <- as.integer(recode(pw2015_items$SOI_R_6R, "1" = "7", "2" = "6", "3" = "5", "4" = "4", "5" = "3", "6" = "2", "7" = "1")) 
+
+# scale mean of soi_r
+pw2015_items <- pw2015_items %>%  #z-standardisieren, da untersch. Likert-Skalen
+  mutate(z_SOI_R_5 = scale(SOI_R_5, center = TRUE, scale = TRUE),
+         z_SOI_R_6 = scale(SOI_R_6, center = TRUE, scale = TRUE),
+         z_SOI_R_4 = scale(SOI_R_4, center = TRUE, scale = TRUE),
+         z_SOI_R_1 = scale(SOI_R_1, center = TRUE, scale = TRUE),
+         z_SOI_R_2 = scale(SOI_R_2, center = TRUE, scale = TRUE),
+         z_SOI_R_3 = scale(SOI_R_3, center = TRUE, scale = TRUE),
+         z_SOI_R_7 = scale(SOI_R_7, center = TRUE, scale = TRUE),
+         z_SOI_R_8 = scale(SOI_R_8, center = TRUE, scale = TRUE),
+         z_SOI_R_8 = scale(SOI_R_8, center = TRUE, scale = TRUE),
+         z_SOI_R_9 = scale(SOI_R_9, center = TRUE, scale = TRUE))
+
+# scale mean of soi_r
+pw2015_items <- pw2015_items %>% 
+  rowwise() %>%
+  mutate(SOI_R_scale = mean(c(z_SOI_R_5, z_SOI_R_6, z_SOI_R_4, z_SOI_R_1, z_SOI_R_2,
+                                              z_SOI_R_3, z_SOI_R_7, z_SOI_R_8, z_SOI_R_9), na.rm = TRUE)) %>%
+  ungroup()
+```
+
+#### Long Term Orientation
+``` {r}
+pw2015_items$longterm_2 <- as.integer(recode(pw2015_items$longterm_2_R, "1" = "7", "2" = "6", "3" = "5", "4" = "4", "5" = "3", "6" = "2", "7" = "1"))
+pw2015_items$longterm_4_M <- as.integer(recode(pw2015_items$longterm_4_R_M, "1" = "7", "2" = "6", "3" = "5", "4" = "4", "5" = "3", "6" = "2", "7" = "1"))
+pw2015_items$longterm_4_F <- as.integer(recode(pw2015_items$longterm_4_R_F, "1" = "7", "2" = "6", "3" = "5", "4" = "4", "5" = "3", "6" = "2", "7" = "1"))
+
+pw2015_items <- pw2015_items %>% #z-standardisieren, da untersch. Likert-Skalen
+   mutate(z_longterm_1 = scale(longterm_1, center = TRUE, scale = TRUE), z_longterm_2 = scale(longterm_2, center = TRUE, scale = TRUE),
+          z_longterm_3_M = scale(longterm_3_M, center = TRUE, scale = TRUE), z_longterm_3_F = scale(longterm_3_F, center = TRUE, scale = TRUE),
+          z_longterm_4_M = scale(longterm_4_M, center = TRUE, scale = TRUE), z_longterm_4_F = scale(longterm_4_F, center = TRUE, scale = TRUE),
+          z_longterm_5_M = scale(longterm_5_M, center = TRUE, scale = TRUE), z_longterm_5_F = scale(longterm_5_F, center = TRUE, scale = TRUE),
+          z_longterm_6_M = scale(longterm_6_M, center = TRUE, scale = TRUE), z_longterm_7_F = scale(longterm_7_F, center = TRUE, scale = TRUE))
+ 
+#Skalenwert Long-Term Orientation
+#define items
+longterm_items_f <- c("z_longterm_3_F", "z_longterm_4_F", "z_longterm_5_F", "z_longterm_7_F", "z_longterm_1", "z_longterm_2")
+longterm_items_m <- c("z_longterm_3_M", "z_longterm_4_M", "z_longterm_5_M", "z_longterm_6_M", "z_longterm_1", "z_longterm_2")
+
+#aggregate to scale
+pw2015_items = pw2015_items %>%
+  mutate(longterm_f =  rowMeans(pw2015_items[,longterm_items_f], na.rm = T),
+         longterm_f = ifelse(is.na(z_longterm_3_F), NA, longterm_f),
+         longterm_m =  rowMeans(pw2015_items[,longterm_items_m], na.rm = T),
+         longterm_m = ifelse(is.na(z_longterm_3_M), NA, longterm_m))
+         
+#crosstabs(~ is.na(longterm_f) + is.na(longterm_m), data = pw2015_items)
+```
+
+###BFI items: scale
+```{r}
+##recode variable ending with R
+pw2015_demographie = pw2015_demographie %>%
+  mutate(BFIK_open_5 = as.numeric(recode(BFIK_open_5R,
+                                         "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_agree_1 = as.numeric(recode(BFIK_agree_1R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_neuro_2 = as.numeric(recode(BFIK_neuro_2R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_consc_2 = as.numeric(recode(BFIK_consc_2R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_agree_3 = as.numeric(recode(BFIK_agree_3R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_extra_3 = as.numeric(recode(BFIK_extra_3R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         BFIK_extra_1 = as.numeric(recode(BFIK_extra_1R,
+                                          "0" = "5", "1" = "4", "2" = "3", "3" = "2", "4" = "1", "5" = "0")),
+         )
+
+## form scale
+pw2015_demographie = pw2015_demographie %>%
+  mutate(BFIK_open = mean(c(BFIK_open_1, BFIK_open_2, BFIK_open_3, BFIK_open_4, BFIK_open_5), na.rm = T),
+         BFIK_consc = mean(c(BFIK_consc_1, BFIK_consc_2, BFIK_consc_3, BFIK_consc_4), na.rm = T),
+         BFIK_extra = mean(c(BFIK_extra_1, BFIK_extra_2, BFIK_extra_3, BFIK_extra_4), na.rm = T),
+         BFIK_agree = mean(c(BFIK_agree_1, BFIK_agree_2, BFIK_agree_3, BFIK_agree_4), na.rm = T),
+         BFIK_neuro = mean(c(BFIK_neuro_1, BFIK_neuro_2, BFIK_neuro_3, BFIK_neuro_4)), na.rm = T)
+
+## check scales
+### overall
+pw2015_demographie %>% select(BFIK_open, BFIK_consc, BFIK_extra, BFIK_agree, BFIK_neuro) %>% apa.cor.table()
+
+### open
+pw2015_demographie %>% select(BFIK_open, BFIK_open_1, BFIK_open_2, BFIK_open_3, BFIK_open_4, BFIK_open_5) %>%
+  apa.cor.table()
+
+### consc
+pw2015_demographie %>% select(BFIK_consc, BFIK_consc_1, BFIK_consc_2, BFIK_consc_3, BFIK_consc_4) %>%
+  apa.cor.table()
+
+### extra
+pw2015_demographie %>% select(BFIK_extra, BFIK_extra_1, BFIK_extra_2, BFIK_extra_3, BFIK_extra_4) %>%
+  apa.cor.table()
+
+### agree
+pw2015_demographie %>% select(BFIK_agree, BFIK_agree_1, BFIK_agree_2, BFIK_agree_3, BFIK_agree_4) %>%
+  apa.cor.table()
+
+### neuro
+pw2015_demographie %>% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_neuro_3, BFIK_neuro_4) %>%
+  apa.cor.table()
+```
+
+###Time since last relationship as date Variable --> create Variable "previous_relationship_ended"
+```{r}
+pw2015_items <-  pw2015_items %>%
+  mutate(created = as.Date(created))
+
+# For people who have never had a relationship we need their age to calculate backwards how long they have been single
+pw2015_items = left_join(pw2015_items, pw2015_demographie %>% select(session, age), by = "session")
+
+pw2015_items = pw2015_items %>%
+  mutate(end_relationship_years = ifelse(number_relationships == 0, age, end_relationship_years))
+
+pw2015_items <- pw2015_items %>%
+  mutate(previous_relationship_ended_days = end_relationship_years * 365 + 
+                                            end_relationship_months * 30 + 
+                                            end_relationship_weeks * 7,
+         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+                                                   end_relationship_years * 365 + 
+                                                     end_relationship_months * 30,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+                                                   end_relationship_years * 365,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended = created - previous_relationship_ended_days)
+
+crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw2015_items)
+
+pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years,
+                                        -end_relationship_months, -end_relationship_weeks)
+```
+
+
+
+## Data t2
+### Join male-interested (pw2015_t2) and female-interested (pw2015_t2_frauen) dataset
+Change classes of variables before joining
+``` {r }
+pw2015_t2$session = as.character(pw2015_t2$session)
+pw2015_t2_frauen$session = as.character(pw2015_t2_frauen$session)
+pw2015_t2$short_session = as.character(pw2015_t2$short_session)
+pw2015_t2_frauen$short_session = as.character(pw2015_t2_frauen$short_session)
+pw2015_t2$created = as.Date(pw2015_t2$created, origin = "1970-01-01")
+pw2015_t2_frauen$created = as.Date(pw2015_t2_frauen$created, origin = "1970-01-01")
+
+
+#male
+pw2015_t2$relationship1_m_name = as.character(pw2015_t2$relationship1_m_name)
+pw2015_t2$relationship2_m_name = as.character(pw2015_t2$relationship2_m_name)
+pw2015_t2$relationship3_m_name = as.character(pw2015_t2$relationship3_m_name)
+pw2015_t2$pastrelationship1_m_name = as.character(pw2015_t2$pastrelationship1_m_name)
+pw2015_t2$pastrelationship2_m_name = as.character(pw2015_t2$pastrelationship2_m_name)
+pw2015_t2$pastrelationship3_m_name = as.character(pw2015_t2$pastrelationship3_m_name)
+pw2015_t2$pastrelationship4_m_name = as.character(pw2015_t2$pastrelationship4_m_name)
+pw2015_t2$pastrelationship5_m_name = as.character(pw2015_t2$pastrelationship5_m_name)
+
+pw2015_t2$relationship1_name_m_new = as.character(pw2015_t2$relationship1_name_m_new)
+pw2015_t2$relationship2_name_m_new = as.character(pw2015_t2$relationship2_name_m_new)
+pw2015_t2$relationship3_name_m_new = as.character(pw2015_t2$relationship3_name_m_new)
+pw2015_t2$pastrelationship1_name_m_new = as.character(pw2015_t2$pastrelationship1_name_m_new)
+pw2015_t2$pastrelationship2_name_m_new = as.character(pw2015_t2$pastrelationship2_name_m_new)
+pw2015_t2$pastrelationship3_name_m_new = as.character(pw2015_t2$pastrelationship3_name_m_new)
+pw2015_t2$pastrelationship4_name_m_new = as.character(pw2015_t2$pastrelationship4_name_m_new)
+pw2015_t2$pastrelationship5_name_m_new = as.character(pw2015_t2$pastrelationship5_name_m_new)
+
+pw2015_t2$relationship1_relationship_m_new = as.character(pw2015_t2$relationship1_relationship_m_new)
+pw2015_t2$relationship2_relationship_m_new = as.character(pw2015_t2$relationship2_relationship_m_new)
+pw2015_t2$relationship3_relationship_m_new = as.character(pw2015_t2$relationship3_relationship_m_new)
+pw2015_t2$pastrelationship1_relationship_m_new = as.character(pw2015_t2$pastrelationship1_relationship_m_new)
+pw2015_t2$pastrelationship2_relationship_m_new = as.character(pw2015_t2$pastrelationship2_relationship_m_new)
+pw2015_t2$pastrelationship3_relationship_m_new = as.character(pw2015_t2$pastrelationship3_relationship_m_new)
+pw2015_t2$pastrelationship4_relationship_m_new = as.character(pw2015_t2$pastrelationship4_relationship_m_new)
+pw2015_t2$pastrelationship5_relationship_m_new = as.character(pw2015_t2$pastrelationship5_relationship_m_new)
+
+
+
+pw2015_t2$pastrelationship1_start_m = as.Date(pw2015_t2$pastrelationship1_start_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship2_start_m = as.Date(pw2015_t2$pastrelationship2_start_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship3_start_m = as.Date(pw2015_t2$pastrelationship3_start_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship4_start_m = as.Date(pw2015_t2$pastrelationship4_start_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship5_start_m = as.Date(pw2015_t2$pastrelationship5_start_m, origin = "1970-01-01")
+
+pw2015_t2$pastrelationship1_end_m = as.Date(pw2015_t2$pastrelationship1_end_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship2_end_m = as.Date(pw2015_t2$pastrelationship2_end_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship3_end_m = as.Date(pw2015_t2$pastrelationship3_end_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship4_end_m = as.Date(pw2015_t2$pastrelationship4_end_m, origin = "1970-01-01")
+pw2015_t2$pastrelationship5_end_m = as.Date(pw2015_t2$pastrelationship5_end_m, origin = "1970-01-01")
+
+
+
+#Female
+pw2015_t2_frauen$relationship1_f_name = as.character(pw2015_t2_frauen$relationship1_f_name)
+pw2015_t2_frauen$relationship2_f_name = as.character(pw2015_t2_frauen$relationship2_f_name)
+pw2015_t2_frauen$relationship3_f_name = as.character(pw2015_t2_frauen$relationship3_f_name)
+pw2015_t2_frauen$pastrelationship1_f_name = as.character(pw2015_t2_frauen$pastrelationship1_f_name)
+pw2015_t2_frauen$pastrelationship2_f_name = as.character(pw2015_t2_frauen$pastrelationship2_f_name)
+pw2015_t2_frauen$pastrelationship3_f_name = as.character(pw2015_t2_frauen$pastrelationship3_f_name)
+pw2015_t2_frauen$pastrelationship4_f_name = as.character(pw2015_t2_frauen$pastrelationship4_f_name)
+pw2015_t2_frauen$pastrelationship5_f_name = as.character(pw2015_t2_frauen$pastrelationship5_f_name)
+
+pw2015_t2_frauen$relationship1_name_f_new = as.character(pw2015_t2_frauen$relationship1_name_f_new)
+pw2015_t2_frauen$relationship2_name_f_new = as.character(pw2015_t2_frauen$relationship2_name_f_new)
+pw2015_t2_frauen$relationship3_name_f_new = as.character(pw2015_t2_frauen$relationship3_name_f_new)
+pw2015_t2_frauen$pastrelationship1_name_f_new = as.character(pw2015_t2_frauen$pastrelationship1_name_f_new)
+pw2015_t2_frauen$pastrelationship2_name_f_new = as.character(pw2015_t2_frauen$pastrelationship2_name_f_new)
+pw2015_t2_frauen$pastrelationship3_name_f_new = as.character(pw2015_t2_frauen$pastrelationship3_name_f_new)
+pw2015_t2_frauen$pastrelationship4_name_f_new = as.character(pw2015_t2_frauen$pastrelationship4_name_f_new)
+pw2015_t2_frauen$pastrelationship5_name_f_new = as.character(pw2015_t2_frauen$pastrelationship5_name_f_new)
+
+pw2015_t2_frauen$relationship1_relationship_f_new = as.character(pw2015_t2_frauen$relationship1_relationship_f_new)
+pw2015_t2_frauen$relationship2_relationship_f_new = as.character(pw2015_t2_frauen$relationship2_relationship_f_new)
+pw2015_t2_frauen$relationship3_relationship_f_new = as.character(pw2015_t2_frauen$relationship3_relationship_f_new)
+pw2015_t2_frauen$pastrelationship1_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship1_relationship_f_new)
+pw2015_t2_frauen$pastrelationship2_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship2_relationship_f_new)
+pw2015_t2_frauen$pastrelationship3_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship3_relationship_f_new)
+pw2015_t2_frauen$pastrelationship4_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship4_relationship_f_new)
+pw2015_t2_frauen$pastrelationship5_relationship_f_new = as.character(pw2015_t2_frauen$pastrelationship5_relationship_f_new)
+
+pw2015_t2_frauen$pastrelationship1_start_f = as.Date(pw2015_t2_frauen$pastrelationship1_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship2_start_f = as.Date(pw2015_t2_frauen$pastrelationship2_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship3_start_f = as.Date(pw2015_t2_frauen$pastrelationship3_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship4_start_f = as.Date(pw2015_t2_frauen$pastrelationship4_start_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship5_start_f = as.Date(pw2015_t2_frauen$pastrelationship5_start_f, origin = "1970-01-01")
+
+pw2015_t2_frauen$pastrelationship1_end_f = as.Date(pw2015_t2_frauen$pastrelationship1_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship2_end_f = as.Date(pw2015_t2_frauen$pastrelationship2_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship3_end_f = as.Date(pw2015_t2_frauen$pastrelationship3_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship4_end_f = as.Date(pw2015_t2_frauen$pastrelationship4_end_f, origin = "1970-01-01")
+pw2015_t2_frauen$pastrelationship5_end_f = as.Date(pw2015_t2_frauen$pastrelationship5_end_f, origin = "1970-01-01")
+
+
+```
+
+Join t2 data
+```{r}
+# pw2015_t2_relationship <- bind_rows(pw2015_t2, pw2015_t2_frauen) @Sarah: check if we can change to this version
+pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session", "short_session"), suffix = c(".m", ".f"))
+```
+
+
+### Relationship information t2
+
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(
+  "t2_relationship" = derivedVariable(
+            "0" = (relationship_f == 1 & relationship_m == 1) | (relationship_f == 1 & is.na(relationship_m) |  
+                          (is.na(relationship_f) & relationship_m == 1)),
+            "1" = (relationship_f == 2 | relationship_m == 2),
+            "2" = (relationship_f == 3 | relationship_m == 3), .method = "first", .default = 0))
+
+```
+
+Ended relationship(s) since T1?
+```{r}
+#Achtung: Umgedrehte Kodierung wie bei t2_relationship!!
+pw2015_t2_relationship <-  pw2015_t2_relationship %>% mutate(
+  "t2_pastrelationship" = derivedFactor(
+            "0" = (pastrelationship1_f == 2 & pastrelationship1_m == 2) | (pastrelationship1_f == 2 & 
+                    is.na(pastrelationship1_m)) | (is.na(pastrelationship1_f) & pastrelationship1_m == 2),
+            "1" = (pastrelationship1_f == 1 | pastrelationship1_m == 1), .method = "first", .default = 0))
+
+```
+
+### T2: Create start (date) variable of current relationships 
+```{r}
+pw2015_t2_relationship = pw2015_t2_relationship %>%
+  mutate(created.m = as.Date(created.m),
+         created.f = as.Date(created.f))
+
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(relationship1_start_days_m = relationship1_start_months_m * 30 + relationship1_start_weeks_m * 7,
+         relationship1_start_m = created.m - relationship1_start_days_m, 
+         relationship1_start_days_f = relationship1_start_months_f * 30 + relationship1_start_weeks_f * 7,
+         relationship1_start_f = created.f - relationship1_start_days_f)
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(relationship2_start_days_m = relationship2_start_months_m * 30 + relationship2_start_weeks_m * 7,
+         relationship2_start_m = created.m - relationship2_start_days_m, 
+         relationship2_start_days_f = relationship2_start_months_f * 30 + relationship2_start_weeks_f * 7,
+         relationship2_start_f = created.f - relationship2_start_days_f)
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(relationship3_start_days_m = relationship3_start_months_m * 30 + relationship3_start_weeks_m * 7,
+         relationship3_start_m = created.m - relationship3_start_days_m, 
+         relationship3_start_days_f = relationship3_start_months_f * 30 + relationship3_start_weeks_f * 7,
+         relationship3_start_f = created.f - relationship3_start_days_f)
+
+#filter unnecessary start variables
+pw2015_t2_relationship <- pw2015_t2_relationship %>% select(-relationship1_start_months_m, -relationship2_start_months_m,
+                       -relationship3_start_months_m, -relationship1_start_weeks_m, -relationship2_start_weeks_m,    
+                       -relationship3_start_weeks_m, -relationship1_start_days_m, -relationship2_start_days_m,
+                       -relationship3_start_days_m, -relationship1_start_months_f, -relationship2_start_months_f,
+                       -relationship3_start_months_f, -relationship1_start_weeks_f, -relationship2_start_weeks_f,    
+                       -relationship3_start_weeks_f, -relationship1_start_days_f, -relationship2_start_days_f,
+                       -relationship3_start_days_f)
+```
+
+```{r}
+#kind
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.kind" = ifelse(!is.na(relationship1_kind_m), relationship1_kind_m, NA),
+  "relationship2.kind" = ifelse(!is.na(relationship2_kind_m), relationship2_kind_m, NA),
+  "relationship3.kind" = ifelse(!is.na(relationship3_kind_m), relationship3_kind_m, NA),
+  "relationship4.kind" = ifelse(!is.na(relationship1_kind_f), relationship1_kind_f, NA),
+  "relationship5.kind" = ifelse(!is.na(relationship2_kind_f), relationship2_kind_f, NA),
+  "relationship6.kind" = ifelse(!is.na(relationship3_kind_f), relationship3_kind_f, NA),
+  "pastrelationship1.kind" = ifelse(!is.na(pastrelationship1_kind_m), pastrelationship1_kind_m, NA),
+  "pastrelationship2.kind" = ifelse(!is.na(pastrelationship2_kind_m), pastrelationship2_kind_m, NA),
+  "pastrelationship3.kind" = ifelse(!is.na(pastrelationship3_kind_m), pastrelationship3_kind_m, NA),
+  "pastrelationship4.kind" = ifelse(!is.na(pastrelationship4_kind_m), pastrelationship4_kind_m, NA),
+  "pastrelationship5.kind" = ifelse(!is.na(pastrelationship5_kind_m), pastrelationship5_kind_m, NA),
+  "pastrelationship6.kind" = ifelse(!is.na(pastrelationship1_kind_f), pastrelationship1_kind_f, NA),
+  "pastrelationship7.kind" = ifelse(!is.na(pastrelationship2_kind_f), pastrelationship2_kind_f, NA),
+  "pastrelationship8.kind" = ifelse(!is.na(pastrelationship3_kind_f), pastrelationship3_kind_f, NA),
+  "pastrelationship9.kind" = ifelse(!is.na(pastrelationship4_kind_f), pastrelationship4_kind_f, NA),
+  "pastrelationship10.kind" = ifelse(!is.na(pastrelationship5_kind_f), pastrelationship5_kind_f, NA))
+
+#name
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.name" = ifelse(!is.na(relationship1_m_name), relationship1_m_name, NA),
+  "relationship2.name" = ifelse(!is.na(relationship2_m_name), relationship2_m_name, NA),
+  "relationship3.name" = ifelse(!is.na(relationship3_m_name), relationship3_m_name, NA),
+  "relationship4.name" = ifelse(!is.na(relationship1_f_name), relationship1_f_name, NA),
+  "relationship5.name" = ifelse(!is.na(relationship2_f_name), relationship2_f_name, NA),
+  "relationship6.name" = ifelse(!is.na(relationship3_f_name), relationship3_f_name, NA),
+  "pastrelationship1.name" = ifelse(!is.na(pastrelationship1_m_name), pastrelationship1_m_name, NA),
+  "pastrelationship2.name" = ifelse(!is.na(pastrelationship2_m_name), pastrelationship2_m_name, NA),
+  "pastrelationship3.name" = ifelse(!is.na(pastrelationship3_m_name), pastrelationship3_m_name, NA),
+  "pastrelationship4.name" = ifelse(!is.na(pastrelationship4_m_name), pastrelationship4_m_name, NA),
+  "pastrelationship5.name" = ifelse(!is.na(pastrelationship5_m_name), pastrelationship5_m_name, NA),
+  "pastrelationship6.name" = ifelse(!is.na(pastrelationship1_f_name), pastrelationship1_f_name, NA),
+  "pastrelationship7.name" = ifelse(!is.na(pastrelationship2_f_name), pastrelationship2_f_name, NA),
+  "pastrelationship8.name" = ifelse(!is.na(pastrelationship3_f_name), pastrelationship3_f_name, NA),
+  "pastrelationship9.name" = ifelse(!is.na(pastrelationship4_f_name), pastrelationship4_f_name, NA),
+  "pastrelationship10.name" = ifelse(!is.na(pastrelationship5_f_name), pastrelationship5_f_name, NA))
+
+#name_new
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.name_new" = ifelse(!is.na(relationship1_name_m_new), relationship1_name_m_new, NA),
+  "relationship2.name_new" = ifelse(!is.na(relationship2_name_m_new), relationship2_name_m_new, NA),
+  "relationship3.name_new" = ifelse(!is.na(relationship3_name_m_new), relationship3_name_m_new, NA),
+  "relationship4.name_new" = ifelse(!is.na(relationship1_name_f_new), relationship1_name_f_new, NA),
+  "relationship5.name_new" = ifelse(!is.na(relationship2_name_f_new), relationship2_name_f_new, NA),
+  "relationship6.name_new" = ifelse(!is.na(relationship3_name_f_new), relationship3_name_f_new, NA),
+  "pastrelationship1.name_new" = ifelse(!is.na(pastrelationship1_name_m_new), pastrelationship1_name_m_new, NA),
+  "pastrelationship2.name_new" = ifelse(!is.na(pastrelationship2_name_m_new), pastrelationship2_name_m_new, NA),
+  "pastrelationship3.name_new" = ifelse(!is.na(pastrelationship3_name_m_new), pastrelationship3_name_m_new, NA),
+  "pastrelationship4.name_new" = ifelse(!is.na(pastrelationship4_name_m_new), pastrelationship4_name_m_new, NA),
+  "pastrelationship5.name_new" = ifelse(!is.na(pastrelationship5_name_m_new), pastrelationship5_name_m_new, NA),
+  "pastrelationship6.name_new" = ifelse(!is.na(pastrelationship1_name_f_new), pastrelationship1_name_f_new, NA),
+  "pastrelationship7.name_new" = ifelse(!is.na(pastrelationship2_name_f_new), pastrelationship2_name_f_new, NA),
+  "pastrelationship8.name_new" = ifelse(!is.na(pastrelationship3_name_f_new), pastrelationship3_name_f_new, NA),
+  "pastrelationship9.name_new" = ifelse(!is.na(pastrelationship4_name_f_new), pastrelationship4_name_f_new, NA),
+  "pastrelationship10.name_new" = ifelse(!is.na(pastrelationship5_name_f_new), pastrelationship5_name_f_new, NA))
+
+#age_new
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.age_new" = ifelse(!is.na(relationship1_age_m_new), relationship1_age_m_new, NA),
+  "relationship2.age_new" = ifelse(!is.na(relationship2_age_m_new), relationship2_age_m_new, NA),
+  "relationship3.age_new" = ifelse(!is.na(relationship3_age_m_new), relationship3_age_m_new, NA),
+  "relationship4.age_new" = ifelse(!is.na(relationship1_age_f_new), relationship1_age_f_new, NA),
+  "relationship5.age_new" = ifelse(!is.na(relationship2_age_f_new), relationship2_age_f_new, NA),
+  "relationship6.age_new" = ifelse(!is.na(relationship3_age_f_new), relationship3_age_f_new, NA),
+  "pastrelationship1.age_new" = ifelse(!is.na(pastrelationship1_age_m_new), pastrelationship1_age_m_new, NA),
+  "pastrelationship2.age_new" = ifelse(!is.na(pastrelationship2_age_m_new), pastrelationship2_age_m_new, NA),
+  "pastrelationship3.age_new" = ifelse(!is.na(pastrelationship3_age_m_new), pastrelationship3_age_m_new, NA),
+  "pastrelationship4.age_new" = ifelse(!is.na(pastrelationship4_age_m_new), pastrelationship4_age_m_new, NA),
+  "pastrelationship5.age_new" = ifelse(!is.na(pastrelationship5_age_m_new), pastrelationship5_age_m_new, NA),
+  "pastrelationship6.age_new" = ifelse(!is.na(pastrelationship1_age_f_new), pastrelationship1_age_f_new, NA),
+  "pastrelationship7.age_new" = ifelse(!is.na(pastrelationship2_age_f_new), pastrelationship2_age_f_new, NA),
+  "pastrelationship8.age_new" = ifelse(!is.na(pastrelationship3_age_f_new), pastrelationship3_age_f_new, NA),
+  "pastrelationship9.age_new" = ifelse(!is.na(pastrelationship4_age_f_new), pastrelationship4_age_f_new, NA),
+  "pastrelationship10.age_new" = ifelse(!is.na(pastrelationship5_age_f_new), pastrelationship5_age_f_new, NA))
+
+#height_new
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.height_new" = ifelse(!is.na(relationship1_height_m_new), relationship1_height_m_new, NA),
+  "relationship2.height_new" = ifelse(!is.na(relationship2_height_m_new), relationship2_height_m_new, NA),
+  "relationship3.height_new" = ifelse(!is.na(relationship3_height_m_new), relationship3_height_m_new, NA),
+  "relationship4.height_new" = ifelse(!is.na(relationship1_height_f_new), relationship1_height_f_new, NA),
+  "relationship5.height_new" = ifelse(!is.na(relationship2_height_f_new), relationship2_height_f_new, NA),
+  "relationship6.height_new" = ifelse(!is.na(relationship3_height_f_new), relationship3_height_f_new, NA),
+  "pastrelationship1.height_new" = ifelse(!is.na(pastrelationship1_height_m_new), pastrelationship1_height_m_new, NA),
+  "pastrelationship2.height_new" = ifelse(!is.na(pastrelationship2_height_m_new), pastrelationship2_height_m_new, NA),
+  "pastrelationship3.height_new" = ifelse(!is.na(pastrelationship3_height_m_new), pastrelationship3_height_m_new, NA),
+  "pastrelationship4.height_new" = ifelse(!is.na(pastrelationship4_height_m_new), pastrelationship4_height_m_new, NA),
+  "pastrelationship5.height_new" = ifelse(!is.na(pastrelationship5_height_m_new), pastrelationship5_height_m_new, NA),
+  "pastrelationship6.height_new" = ifelse(!is.na(pastrelationship1_height_f_new), pastrelationship1_height_f_new, NA),
+  "pastrelationship7.height_new" = ifelse(!is.na(pastrelationship2_height_f_new), pastrelationship2_height_f_new, NA),
+  "pastrelationship8.height_new" = ifelse(!is.na(pastrelationship3_height_f_new), pastrelationship3_height_f_new, NA),
+  "pastrelationship9.height_new" = ifelse(!is.na(pastrelationship4_height_f_new), pastrelationship4_height_f_new, NA),
+  "pastrelationship10.height_new" = ifelse(!is.na(pastrelationship5_height_f_new), pastrelationship5_height_f_new, NA))
+
+#relationship_new
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.relationship_new" = ifelse(!is.na(relationship1_relationship_m_new), relationship1_relationship_m_new, NA),
+  "relationship2.relationship_new" = ifelse(!is.na(relationship2_relationship_m_new), relationship2_relationship_m_new, NA),
+  "relationship3.relationship_new" = ifelse(!is.na(relationship3_relationship_m_new), relationship3_relationship_m_new, NA),
+  "relationship4.relationship_new" = ifelse(!is.na(relationship1_relationship_f_new), relationship1_relationship_f_new, NA),
+  "relationship5.relationship_new" = ifelse(!is.na(relationship2_relationship_f_new), relationship2_relationship_f_new, NA),
+  "relationship6.relationship_new" = ifelse(!is.na(relationship3_relationship_f_new), relationship3_relationship_f_new, NA),
+  "pastrelationship1.relationship_new" = ifelse(!is.na(pastrelationship1_relationship_m_new), pastrelationship1_relationship_m_new, NA),
+  "pastrelationship2.relationship_new" = ifelse(!is.na(pastrelationship2_relationship_m_new), pastrelationship2_relationship_m_new, NA),
+  "pastrelationship3.relationship_new" = ifelse(!is.na(pastrelationship3_relationship_m_new), pastrelationship3_relationship_m_new, NA),
+  "pastrelationship4.relationship_new" = ifelse(!is.na(pastrelationship4_relationship_m_new), pastrelationship4_relationship_m_new, NA),
+  "pastrelationship5.relationship_new" = ifelse(!is.na(pastrelationship5_relationship_m_new), pastrelationship5_relationship_m_new, NA),
+  "pastrelationship6.relationship_new" = ifelse(!is.na(pastrelationship1_relationship_f_new), pastrelationship1_relationship_f_new, NA),
+  "pastrelationship7.relationship_new" = ifelse(!is.na(pastrelationship2_relationship_f_new), pastrelationship2_relationship_f_new, NA),
+  "pastrelationship8.relationship_new" = ifelse(!is.na(pastrelationship3_relationship_f_new), pastrelationship3_relationship_f_new, NA),
+  "pastrelationship9.relationship_new" = ifelse(!is.na(pastrelationship4_relationship_f_new), pastrelationship4_relationship_f_new, NA),
+  "pastrelationship10.relationship_new" = ifelse(!is.na(pastrelationship5_relationship_f_new), pastrelationship5_relationship_f_new, NA))
+
+#duration_new
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.duration_new" = ifelse(!is.na(relationship1_duration_m_new), relationship1_duration_m_new, NA),
+  "relationship2.duration_new" = ifelse(!is.na(relationship2_duration_m_new), relationship2_duration_m_new, NA),
+  "relationship3.duration_new" = ifelse(!is.na(relationship3_duration_m_new), relationship3_duration_m_new, NA),
+  "relationship4.duration_new" = ifelse(!is.na(relationship1_duration_f_new), relationship1_duration_f_new, NA),
+  "relationship5.duration_new" = ifelse(!is.na(relationship2_duration_f_new), relationship2_duration_f_new, NA),
+  "relationship6.duration_new" = ifelse(!is.na(relationship3_duration_f_new), relationship3_duration_f_new, NA),
+  "pastrelationship1.duration_new" = ifelse(!is.na(pastrelationship1_duration_m_new), pastrelationship1_duration_m_new, NA),
+  "pastrelationship2.duration_new" = ifelse(!is.na(pastrelationship2_duration_m_new), pastrelationship2_duration_m_new, NA),
+  "pastrelationship3.duration_new" = ifelse(!is.na(pastrelationship3_duration_m_new), pastrelationship3_duration_m_new, NA),
+  "pastrelationship4.duration_new" = ifelse(!is.na(pastrelationship4_duration_m_new), pastrelationship4_duration_m_new, NA),
+  "pastrelationship5.duration_new" = ifelse(!is.na(pastrelationship5_duration_m_new), pastrelationship5_duration_m_new, NA),
+  "pastrelationship6.duration_new" = ifelse(!is.na(pastrelationship1_duration_f_new), pastrelationship1_duration_f_new, NA),
+  "pastrelationship7.duration_new" = ifelse(!is.na(pastrelationship2_duration_f_new), pastrelationship2_duration_f_new, NA),
+  "pastrelationship8.duration_new" = ifelse(!is.na(pastrelationship3_duration_f_new), pastrelationship3_duration_f_new, NA),
+  "pastrelationship9.duration_new" = ifelse(!is.na(pastrelationship4_duration_f_new), pastrelationship4_duration_f_new, NA),
+  "pastrelationship10.duration_new" = ifelse(!is.na(pastrelationship5_duration_f_new), pastrelationship5_duration_f_new, NA))
+
+#start
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  relationship1.start = if_else(!is.na(relationship1_start_m), relationship1_start_m, as.Date(NA)),
+  relationship2.start = if_else(!is.na(relationship2_start_m), relationship2_start_m, as.Date(NA)),
+  relationship3.start = if_else(!is.na(relationship3_start_m), relationship3_start_m, as.Date(NA)),
+  relationship4.start = if_else(!is.na(relationship1_start_f), relationship1_start_f, as.Date(NA)),
+  relationship5.start = if_else(!is.na(relationship2_start_f), relationship2_start_f, as.Date(NA)),
+  relationship6.start = if_else(!is.na(relationship3_start_f), relationship3_start_f, as.Date(NA)),
+  pastrelationship1.start = if_else(!is.na(pastrelationship1_start_m), pastrelationship1_start_m, as.Date(NA)),
+  pastrelationship2.start = if_else(!is.na(pastrelationship2_start_m), pastrelationship2_start_m, as.Date(NA)),
+  pastrelationship3.start = if_else(!is.na(pastrelationship3_start_m), pastrelationship3_start_m, as.Date(NA)),
+  pastrelationship4.start = if_else(!is.na(pastrelationship4_start_m), pastrelationship4_start_m, as.Date(NA)),
+  pastrelationship5.start = if_else(!is.na(pastrelationship5_start_m), pastrelationship5_start_m, as.Date(NA)),
+  pastrelationship6.start = if_else(!is.na(pastrelationship1_start_f), pastrelationship1_start_f, as.Date(NA)),
+  pastrelationship7.start = if_else(!is.na(pastrelationship2_start_f), pastrelationship2_start_f, as.Date(NA)),
+  pastrelationship8.start = if_else(!is.na(pastrelationship3_start_f), pastrelationship3_start_f, as.Date(NA)),
+  pastrelationship9.start = if_else(!is.na(pastrelationship4_start_f), pastrelationship4_start_f, as.Date(NA)),
+  pastrelationship10.start = if_else(!is.na(pastrelationship5_start_f), pastrelationship5_start_f, as.Date(NA)))
+
+#end
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  pastrelationship1.end = if_else(!is.na(pastrelationship1_end_m), pastrelationship1_end_m, as.Date(NA)),
+  pastrelationship2.end = if_else(!is.na(pastrelationship2_end_m), pastrelationship2_end_m, as.Date(NA)),
+  pastrelationship3.end = if_else(!is.na(pastrelationship3_end_m), pastrelationship3_end_m, as.Date(NA)),
+  pastrelationship4.end = if_else(!is.na(pastrelationship4_end_m), pastrelationship4_end_m, as.Date(NA)),
+  pastrelationship5.end = if_else(!is.na(pastrelationship5_end_m), pastrelationship5_end_m, as.Date(NA)),
+  pastrelationship6.end = if_else(!is.na(pastrelationship1_end_f), pastrelationship1_end_f, as.Date(NA)),
+  pastrelationship7.end = if_else(!is.na(pastrelationship2_end_f), pastrelationship2_end_f, as.Date(NA)),
+  pastrelationship8.end = if_else(!is.na(pastrelationship3_end_f), pastrelationship3_end_f, as.Date(NA)),
+  pastrelationship9.end = if_else(!is.na(pastrelationship4_end_f), pastrelationship4_end_f, as.Date(NA)),
+  pastrelationship10.end = if_else(!is.na(pastrelationship5_end_f), pastrelationship5_end_f, as.Date(NA)))
+
+```
+
+
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  "relationship1.end" = as.Date(NA), "relationship2.end" = as.Date(NA), "relationship3.end" = as.Date(NA),
+  "relationship4.end" = as.Date(NA), "relationship5.end" = as.Date(NA), "relationship6.end" = as.Date(NA))
+```
+
+
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>% select(session, short_session, t2_relationship, t2_pastrelationship, 
+                        starts_with("relationship1."), starts_with("relationship2."), 
+                        starts_with("relationship3."), starts_with("relationship4."),
+                        starts_with("relationship5."), starts_with("relationship6."),
+                        starts_with("pastrelationship1."), starts_with("pastrelationship2."), 
+                        starts_with("pastrelationship3."), starts_with("pastrelationship4."), 
+                        starts_with("pastrelationship5."), starts_with("pastrelationship6."),
+                        starts_with("pastrelationship7."), starts_with("pastrelationship8."),
+                        starts_with("pastrelationship9."), starts_with("pastrelationship10."))
+```
+
+
+
+Reshape data : Variables must be listed in alphabetical order
+```{r}
+pw2015_t2_relationship <- subset(pw2015_t2_relationship, !duplicated(short_session)) ## look at duplicats
+
+pw2015_t2_relationship <- as.data.frame(pw2015_t2_relationship)
+
+pw2015_t2_relationship <- reshape(pw2015_t2_relationship, direction='long', 
+        varying=c('relationship1.age_new', 'relationship1.duration_new', 'relationship1.end',
+                  'relationship1.height_new', 'relationship1.kind', 'relationship1.name',
+                  'relationship1.name_new', 'relationship1.relationship_new', 'relationship1.start',
+                  
+                  'relationship2.age_new', 'relationship2.duration_new', 'relationship2.end',
+                  'relationship2.height_new', 'relationship2.kind', 'relationship2.name',
+                  'relationship2.name_new', 'relationship2.relationship_new', 'relationship2.start',
+                  
+                  'relationship3.age_new', 'relationship3.duration_new', 'relationship3.end',
+                  'relationship3.height_new', 'relationship3.kind', 'relationship3.name',
+                  'relationship3.name_new', 'relationship3.relationship_new', 'relationship3.start',
+                 
+                  'relationship4.age_new', 'relationship4.duration_new', 'relationship4.end',
+                  'relationship4.height_new', 'relationship4.kind', 'relationship4.name',
+                  'relationship4.name_new', 'relationship4.relationship_new', 'relationship4.start',
+                  
+                  'relationship5.age_new', 'relationship5.duration_new', 'relationship5.end',
+                  'relationship5.height_new', 'relationship5.kind', 'relationship5.name',
+                  'relationship5.name_new', 'relationship5.relationship_new', 'relationship5.start',
+                  
+                  'relationship6.age_new', 'relationship6.duration_new', 'relationship6.end',
+                  'relationship6.height_new', 'relationship6.kind', 'relationship6.name',
+                  'relationship6.name_new', 'relationship6.relationship_new', 'relationship6.start',
+                  
+                  'pastrelationship1.age_new', 'pastrelationship1.duration_new', 'pastrelationship1.end',
+                  'pastrelationship1.height_new', 'pastrelationship1.kind', 'pastrelationship1.name',
+                  'pastrelationship1.name_new', 'pastrelationship1.relationship_new', 'pastrelationship1.start',
+                  
+                  'pastrelationship2.age_new', 'pastrelationship2.duration_new', 'pastrelationship2.end',
+                  'pastrelationship2.height_new', 'pastrelationship2.kind', 'pastrelationship2.name',
+                  'pastrelationship2.name_new', 'pastrelationship2.relationship_new', 'pastrelationship2.start',
+                  
+                  'pastrelationship3.age_new', 'pastrelationship3.duration_new', 'pastrelationship3.end',
+                  'pastrelationship3.height_new', 'pastrelationship3.kind', 'pastrelationship3.name',
+                  'pastrelationship3.name_new', 'pastrelationship3.relationship_new', 'pastrelationship3.start',
+                 
+                  'pastrelationship4.age_new', 'pastrelationship4.duration_new', 'pastrelationship4.end',
+                  'pastrelationship4.height_new', 'pastrelationship4.kind', 'pastrelationship4.name',
+                  'pastrelationship4.name_new', 'pastrelationship4.relationship_new', 'pastrelationship4.start',
+                 
+                  'pastrelationship5.age_new', 'pastrelationship5.duration_new', 'pastrelationship5.end',
+                  'pastrelationship5.height_new', 'pastrelationship5.kind', 'pastrelationship5.name',
+                  'pastrelationship5.name_new', 'pastrelationship5.relationship_new', 'pastrelationship5.start',
+                 
+                  'pastrelationship6.age_new', 'pastrelationship6.duration_new', 'pastrelationship6.end',
+                  'pastrelationship6.height_new', 'pastrelationship6.kind', 'pastrelationship6.name',
+                  'pastrelationship6.name_new', 'pastrelationship6.relationship_new', 'pastrelationship6.start',
+                 
+                  'pastrelationship7.age_new', 'pastrelationship7.duration_new', 'pastrelationship7.end',
+                  'pastrelationship7.height_new', 'pastrelationship7.kind', 'pastrelationship7.name',
+                  'pastrelationship7.name_new', 'pastrelationship7.relationship_new', 'pastrelationship7.start',
+                  
+                  'pastrelationship8.age_new', 'pastrelationship8.duration_new', 'pastrelationship8.end',
+                  'pastrelationship8.height_new', 'pastrelationship8.kind', 'pastrelationship8.name',
+                  'pastrelationship8.name_new', 'pastrelationship8.relationship_new', 'pastrelationship8.start',
+                  
+                  'pastrelationship9.age_new', 'pastrelationship9.duration_new', 'pastrelationship9.end',
+                  'pastrelationship9.height_new', 'pastrelationship9.kind', 'pastrelationship9.name',
+                  'pastrelationship9.name_new', 'pastrelationship9.relationship_new', 'pastrelationship9.start',
+                  
+                  'pastrelationship10.age_new', 'pastrelationship10.duration_new', 'pastrelationship10.end',
+                  'pastrelationship10.height_new', 'pastrelationship10.kind', 'pastrelationship10.name',
+                  'pastrelationship10.name_new', 'pastrelationship10.relationship_new', 'pastrelationship10.start'),
+             timevar='var',
+        times=c('relationship1', 'relationship2', 'relationship3', 'relationship4', 'relationship5', 'relationship6',
+                'pastrelationship1', 'pastrelationship2', 'pastrelationship3', 'pastrelationship4', 'pastrelationship5',
+                'pastrelationship6', 'pastrelationship7', 'pastrelationship8', 'pastrelationship9', 'pastrelationship10'),
+        v.names=c('age_new', 'duration_new', 'end', 'height_new', 'kind', 'name', 'name_new', 'relationship_new', 'start'),
+        idvar='short_session')
+```
+
+
+Change format: 1 relationship per row, or if single whole time one row with only NAs
+```{r}
+#Dataframe with only participants who had at least one relationship between t1 and t2
+pw2015_t2_relationship_1 <- pw2015_t2_relationship %>%  filter(t2_relationship != 0 | t2_pastrelationship != 0) %>%
+            filter(!is.na(age_new)| !is.na(duration_new) | !is.na(end) | !is.na(height_new) | !is.na(kind) | 
+            !is.na(name) | !is.na(name_new) | !is.na(relationship_new) | !is.na(start)) 
+
+#Dataframe with only participants who had NONE relationship between t1 and t2
+pw2015_t2_relationship_2 <- pw2015_t2_relationship %>% 
+              filter(t2_relationship == 0 & t2_pastrelationship == 0) %>% filter(var == "relationship1") %>%
+  mutate(var = "Single")
+
+
+pw2015_t2_relationship <- bind_rows(pw2015_t2_relationship_1, pw2015_t2_relationship_2)  
+
+pw2015_t2_relationship <-  pw2015_t2_relationship %>% 
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number()) %>% # determining relationship order
+  ungroup()
+```
+
+Add variable lasting: so dataframes of t2 and t3 can be joined
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(lasting = var)
+    
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship1"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship2"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship3"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship4"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship5"] <- 1
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "relationship6"] <- 1
+ 
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship1"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship2"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship3"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship4"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship5"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship6"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship7"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship8"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship9"] <- 2
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "pastrelationship10"] <- 2
+
+pw2015_t2_relationship$lasting[pw2015_t2_relationship$lasting == "Single"] <- 0
+
+pw2015_t2_relationship$lasting <- as.integer(pw2015_t2_relationship$lasting)
+
+```
+
+Add sex variable for partners
+```{r}
+pw2015_t2_relationship <- pw2015_t2_relationship %>%
+  mutate(sex_partner = var)
+
+# 1 = female, 2 = male
+
+#based on relationship variables from t2_male & t2_female partner sheets:
+
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "relationship1"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "relationship2"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "relationship3"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "relationship4"] <- 1
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "relationship5"] <- 1
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "relationship6"] <- 1
+ 
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship1"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship2"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship3"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship4"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship5"] <- 2
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship6"] <- 1
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship7"] <- 1
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship8"] <- 1
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship9"] <- 1
+pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship10"] <- 1
+
+pw2015_t2_relationship$sex_partner <- as.integer(pw2015_t2_relationship$sex_partner)
+```
+
+# Liars in t2
+```{r}
+# Get starting date of t1
+starting_date = pw2015_demographie %>% select(session, created_t1 = created)
+
+
+#t2
+non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = "session") %>%
+  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(start), 0, 1)) %>%
+  filter(check_liars == 1)
+
+non_singles_t2_session = non_singles_t2 %>% filter(!duplicated(session))
+
+
+count(non_singles_t2_session)
+table(non_singles_t2_session$kind)  
+
+non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
+
+# t3
+non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = "session") %>%
+  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(F_t3_start), 0, 1)) %>%
+  filter(check_liars == 1)
+
+non_singles_vector_t3 = as.data.frame(non_singles_t3$session)
+
+count(non_singles_vector_t3)
+
+non_singles_vector = bind_rows(non_singles_vector_t2, non_singles_vector_t3) %>%
+  mutate(session = ifelse(is.na(`non_singles_t2_session$session`),
+                          `non_singles_t3$session`,
+                          `non_singles_t2_session$session`))
+
+non_singles_vector_unique = non_singles_vector %>% filter(!duplicated(session))
+non_singles_vector_unique = non_singles_vector_unique$`non_singles_t2_session$session`
+length(non_singles_vector_unique)
+```
+
+# Data t3
+
+```{r}
+# first we have to combine singles and partnered reports
+pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)
+# Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
+pw2015_t3_partners = pw2015_t3_partners %>% 
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, F_t3_start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number(), # determining relationship order
+         kind = ifelse(!is.na(F_t3_kind), F_t3_kind, F_t3_past_kind)) %>%
+  mutate(relationship_number = ifelse(is.na(F_t3_start), 0, relationship_number),
+         relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
+         F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
+
+
+```
+
+# Relationships at t2 and t3
+```{r}
+# Remove relationships from t2 that have information in t3 before merging based on names
+# Form Variable including name for t3
+pw2015_t3_partners = pw2015_t3_partners %>%
+  mutate(F_t3_description = F_t3_name) %>%
+# Name:
+  separate(F_t3_description,
+           into = c("F_t3_name"),
+           sep = " ",
+           remove = FALSE,
+           extra = "drop") %>%
+  mutate(F_t3_name = as.character(F_t3_name),
+         F_t3_name_new = as.character(F_t3_name_new),
+         F_t3_name = ifelse(F_t3_name == "Kommt", F_t3_name_new, F_t3_name)) %>%
+  mutate(F_t3_sex_old = ifelse(F_t3_description %contains% "<U+2642>", 2,
+                               ifelse(F_t3_description %contains% "<U+2640>", 1, NA)),
+         F_t3_sex = ifelse(is.na(F_t3_sex_old), F_t3_sex_new, F_t3_sex_old))
+
+# Remove double singles
+double_singles = pw2015_t2_relationship %>%
+  filter(lasting == 0) %>%
+  filter(session %in% pw2015_t3_partners$session)
+
+pw2015_t2_relationship = pw2015_t2_relationship %>%
+  filter(!(session %in% double_singles$session))
+
+# Remove duble relationships
+# Form matching variable for t2 and t3
+double_relationships_t3 = pw2015_t3_partners %>%
+  filter(!is.na(F_t3_name)) %>%
+  mutate(session_partnername = paste0(session, "_", F_t3_name))
+
+double_relationships_t2 = pw2015_t2_relationship %>%
+  mutate(name = ifelse(name == "Kommt nicht in dieser Liste vor", name_new, name)) %>%
+  filter(!is.na(name), lasting == 1) %>%
+  mutate(session_partnername = paste0(session, "_", name)) %>%
+  filter(session_partnername %in% double_relationships_t3$session_partnername)
+
+
+pw2015_t2_relationship = pw2015_t2_relationship %>%
+  filter(!(short_session == "hLWe0YPc9g" & is.na(name))) %>%
+  filter(!(short_session == "ocQ1e9cRL4" & is.na(name))) %>%
+  mutate(name = ifelse(name == "Kommt nicht in dieser Liste vor", name_new, name),
+         name = ifelse(is.na(name), name_new, name),
+         session_partnername = ifelse(lasting == 1, paste0(session, "_", name), NA)) %>%
+  filter(!(session_partnername %in% double_relationships_t2$session_partnername))
+
+
+t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end,
+                                                           kind, lasting, name, sex_partner)
+
+pw2015_t3_partners = pw2015_t3_partners %>%
+  mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
+
+t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start,
+                                                       F_t3_sex,F_t3_end, kind, F_t3_lasting,
+                                                       F_t3_name)
+
+t3_test <- t3_test %>% rename(
+                      start = F_t3_start, 
+                      end = F_t3_end,
+                      lasting = F_t3_lasting,
+                      name = F_t3_name,
+                      sex_partner = F_t3_sex) %>%
+  mutate(kind = as.character(kind))
+                      
+
+t2_t3_relationship <- bind_rows(t2_test, t3_test)
+
+# Remove weird cases before analysis
+t2_t3_relationship = t2_t3_relationship %>% filter(!(lasting != 0 & is.na(kind)))
+
+
+t2_t3_relationship = t2_t3_relationship %>% 
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number(),
+         # lasting = ifelse(is.na(start), 0, lasting), done earliere (hopefully)
+         relationship_order = ifelse(is.na(start), 0, relationship_order),
+         relationship_number = ifelse(is.na(start), 0, relationship_number)) 
+```
+
+# Merge Data
+
+```{r}
+#create selected data sheets
+#pw2015_demographie
+pw2015_demographie_select = pw2015_demographie %>%
+  select(session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,
+         sex_orientation, NARQ_scale, NARQ_ADM, NARQ_RIV, BFIK_open, BFIK_consc, BFIK_extra,
+         BFIK_agree, BFIK_neuro, created) %>%
+  rename(created_t1 = created)
+
+#pw2015_items
+pw2015_items_select = pw2015_items %>%
+  select(session, short_session, 
+          number_relationships, previous_relationship_ended,
+          SOI_R_scale, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
+
+
+
+# use relationship information to merge data on
+data = left_join(t2_t3_relationship, pw2015_demographie_select,
+                 by = c("session", "short_session"))
+data = left_join(data, pw2015_items_select, by = c("session", "short_session"))
+
+```
+
+## Create additional variables for survival analysis
+```{r}
+# Create event-variable
+data_x <- data %>% 
+  mutate(event = ifelse(lasting == 0, 0, 1),
+         created_t1 = as.Date(created_t1),
+         # creation of single_start, first we look at people who stayed single during the study
+         # their single_start date is the end date of their last relationship:
+         single_start = if_else(relationship_order == 0, previous_relationship_ended,
+                                previous_relationship_ended),
+         # if the information about their previous relationship is missing (was optional in t1),
+         # we can simply take the creation date of t1 - it does not make a difference for these
+         # people, because they stay single for the whole time. this is a conservative way: we
+         # can be sure that they were single at t1, we dont know how long they were single before
+         single_start = if_else(relationship_order == 0 & is.na(previous_relationship_ended),
+                                created_t1, single_start),
+         # the next step are all first relationships: their single_start date should be the end
+         # of their previous relationship as well
+         single_start = if_else(relationship_order == 1, previous_relationship_ended,
+                               single_start),
+         # we have the same problem with first relationships: missing previous_relationship_ended
+         # data. To deal with this I use the created_t1 as well. This doesnt seem adequat though,
+         # because people could have been single for a longer time. Maybe it is conservative, too?
+         # we dont know anything else about these people...
+         single_start = if_else(relationship_order == 1 & is.na(previous_relationship_ended),
+                                created_t1, single_start))
+
+# For all other information we have to bring the date back into wideformat
+data_wide = data %>%
+  ungroup() %>%
+  spread()
+##### this is where i am trying to find a way right now...
+
+
+crosstabs(~ relationship_order + lasting, data = data_x)
+
+crosstabs(~ relationship_order + is.na(single_start), data = data_x)
+
+#Create start_single variable
+#Idea: start_single-variable needs to be calculated differently for Relationship order > 1
+  # e.g. relationship no.2: start of relationship 2 - end of relationship 1
+        ### For that we might have to change back into wide format
+surv_data <- surv_data %>% mutate(
+  start_single = ifelse(relationship_order == 1, difftime(start - previous_relationship_ended, units = "days"), ifelse(
+    relationship_order == 2, difftime(ended - start, units = "days")
+  ))
+)
+```
+
+
+## Clean data set
+```{r}
+# clean data set without liars
+data_clean = data %>% filter(!(session %in% non_singles_vector_unique))
+```
+
+
+
