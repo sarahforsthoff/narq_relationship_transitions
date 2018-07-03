@@ -63,7 +63,9 @@ pw2015_demographie_select = pw2015_demographie %>%
 
 pw2015_items_select = pw2015_items %>%
   select(session, short_session, created, ended,
-         number_relationships, end_relationship_weeks, end_relationship_months, end_relationship_years,
+         number_relationships, end_relationship_weeks, end_relationship_months, 
+         end_relationship_years,
+         duration_relationship_years, duration_relationship_months,
          starts_with("global_interest_"),
          starts_with("SOI_R"),
          starts_with("longterm_"),

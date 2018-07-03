@@ -47,7 +47,7 @@ library(dplyr)
 
 ## Data Import
 ```{r}
-#setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+# setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
 #setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
 # set workingdirectory
 
@@ -286,26 +286,6 @@ pw2015_t3_ende = pw2015_t3_ende %>% filter(!(short_session == "ZV_cjcx1fj" & is.
 dupes_t3_singles = pw2015_t3_singles %>% filter(duplicated(session)) # no dupes
 ```
 
-### Non-Singles at t1
-```{r}
-# Get starting date of t1
-starting_date = pw2015_demographie %>% select(session, created_t1 = created)
-
-
-#t3
-non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = "session") %>%
-  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(F_t3_start), 0, 1)) %>%
-  filter(check_liars == 1)
-
-non_singles_t3_session = non_singles_t3 %>% filter(!duplicated(session)) %>%
-  mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
-
-count(non_singles_t3_session)
-table(non_singles_t3_session$F_t3_past_kind)         
-         
-
-```
-
 ## Data t1: 
 ### Scale Calculation: 
 #### NARQ, NARQ_Adm, NARQ_Riv
@@ -434,6 +414,11 @@ pw2015_demographie %>% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_neuro
 pw2015_items <-  pw2015_items %>%
   mutate(created = as.Date(created))
 
+# For people who have never had a relationship we need their age to calculate backwards how long they have been single
+pw2015_items = left_join(pw2015_items, pw2015_demographie %>% select(session, age), by = "session")
+
+pw2015_items = pw2015_items %>%
+  mutate(end_relationship_years = ifelse(number_relationships == 0, age, end_relationship_years))
 
 pw2015_items <- pw2015_items %>%
   mutate(previous_relationship_ended_days = end_relationship_years * 365 + 
@@ -447,6 +432,8 @@ pw2015_items <- pw2015_items %>%
                                                    end_relationship_years * 365,
                                                    previous_relationship_ended_days),
          previous_relationship_ended = created - previous_relationship_ended_days)
+
+crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw2015_items)
 
 pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years,
                                         -end_relationship_months, -end_relationship_weeks)
@@ -1798,20 +1785,24 @@ count(non_singles_t2_session)
 table(non_singles_t2_session$kind)  
 
 non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
-non_singles_vector_t3 = as.data.frame(non_singles_t3_session$session)
+
+# t3
+non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = "session") %>%
+  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(F_t3_start), 0, 1)) %>%
+  filter(check_liars == 1)
+
+non_singles_vector_t3 = as.data.frame(non_singles_t3$session)
 
 count(non_singles_vector_t3)
 
 non_singles_vector = bind_rows(non_singles_vector_t2, non_singles_vector_t3) %>%
   mutate(session = ifelse(is.na(`non_singles_t2_session$session`),
-                          `non_singles_t3_session$session`,
+                          `non_singles_t3$session`,
                           `non_singles_t2_session$session`))
 
 non_singles_vector_unique = non_singles_vector %>% filter(!duplicated(session))
 non_singles_vector_unique = non_singles_vector_unique$`non_singles_t2_session$session`
 length(non_singles_vector_unique)
-
-
 ```
 
 # Data t3
@@ -1916,10 +1907,7 @@ t2_t3_relationship = t2_t3_relationship %>%
          relationship_order = row_number(),
          # lasting = ifelse(is.na(start), 0, lasting), done earliere (hopefully)
          relationship_order = ifelse(is.na(start), 0, relationship_order),
-         relationship_number = ifelse(is.na(start), 0, relationship_number)) # determining relationship order
-
-
-#Problem: in t3_datasheet two variables for relationship kind 
+         relationship_number = ifelse(is.na(start), 0, relationship_number)) 
 ```
 
 # Merge Data
@@ -1929,8 +1917,9 @@ t2_t3_relationship = t2_t3_relationship %>%
 #pw2015_demographie
 pw2015_demographie_select = pw2015_demographie %>%
   select(session, short_session, sex, age, sex_orientation, attracted_to, occupation, education,
-         sex_orientation, NARQ_scale, NARQ_ADM, NARQ_RIV, BFIK_open, BFIK_consc, BFIK_extra, BFIK_agree,
-         BFIK_neuro) 
+         sex_orientation, NARQ_scale, NARQ_ADM, NARQ_RIV, BFIK_open, BFIK_consc, BFIK_extra,
+         BFIK_agree, BFIK_neuro, created) %>%
+  rename(created_t1 = created)
 
 #pw2015_items
 pw2015_items_select = pw2015_items %>%
@@ -1939,8 +1928,10 @@ pw2015_items_select = pw2015_items %>%
           SOI_R_scale, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
 
 
+
 # use relationship information to merge data on
-data = left_join(t2_t3_relationship, pw2015_demographie_select, by = c("session", "short_session"))
+data = left_join(t2_t3_relationship, pw2015_demographie_select,
+                 by = c("session", "short_session"))
 data = left_join(data, pw2015_items_select, by = c("session", "short_session"))
 
 ```
@@ -1948,9 +1939,40 @@ data = left_join(data, pw2015_items_select, by = c("session", "short_session"))
 ## Create additional variables for survival analysis
 ```{r}
 # Create event-variable
-data <- data %>% 
+data_x <- data %>% 
   mutate(event = ifelse(lasting == 0, 0, 1),
-         single_start = ifelse(relationship_order == 0,  previous_relationship_ended))
+         created_t1 = as.Date(created_t1),
+         # creation of single_start, first we look at people who stayed single during the study
+         # their single_start date is the end date of their last relationship:
+         single_start = if_else(relationship_order == 0, previous_relationship_ended,
+                                previous_relationship_ended),
+         # if the information about their previous relationship is missing (was optional in t1),
+         # we can simply take the creation date of t1 - it does not make a difference for these
+         # people, because they stay single for the whole time. this is a conservative way: we
+         # can be sure that they were single at t1, we dont know how long they were single before
+         single_start = if_else(relationship_order == 0 & is.na(previous_relationship_ended),
+                                created_t1, single_start),
+         # the next step are all first relationships: their single_start date should be the end
+         # of their previous relationship as well
+         single_start = if_else(relationship_order == 1, previous_relationship_ended,
+                               single_start),
+         # we have the same problem with first relationships: missing previous_relationship_ended
+         # data. To deal with this I use the created_t1 as well. This doesnt seem adequat though,
+         # because people could have been single for a longer time. Maybe it is conservative, too?
+         # we dont know anything else about these people...
+         single_start = if_else(relationship_order == 1 & is.na(previous_relationship_ended),
+                                created_t1, single_start))
+
+# For all other information we have to bring the date back into wideformat
+data_wide = data %>%
+  ungroup() %>%
+  spread()
+##### this is where i am trying to find a way right now...
+
+
+crosstabs(~ relationship_order + lasting, data = data_x)
+
+crosstabs(~ relationship_order + is.na(single_start), data = data_x)
 
 #Create start_single variable
 #Idea: start_single-variable needs to be calculated differently for Relationship order > 1
