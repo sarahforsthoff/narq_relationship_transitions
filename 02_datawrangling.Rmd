@@ -1808,6 +1808,9 @@ length(non_singles_vector_unique)
 # Data t3
 
 ```{r}
+# singles create t3
+pw2015_t3_singles$created_singles_t3 = as.Date(pw2015_t3_singles$created)
+pw2015_t3_partners$F_t3_start = as.Date(pw2015_t3_partners$F_t3_start)
 # first we have to combine singles and partnered reports
 pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)
 # Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
@@ -1822,7 +1825,9 @@ pw2015_t3_partners = pw2015_t3_partners %>%
          relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
          F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
 
-
+pw2015_t3_partners = pw2015_t3_partners %>%
+  mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %>%
+  filter(!is.na(F_t3_start))
 ```
 
 # Relationships at t2 and t3
@@ -1876,6 +1881,8 @@ pw2015_t2_relationship = pw2015_t2_relationship %>%
 
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end,
                                                            kind, lasting, name, sex_partner)
+
+t2_test$start = as.Date(t2_test$start)
 
 pw2015_t3_partners = pw2015_t3_partners %>%
   mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))

@@ -2246,7 +2246,10 @@ length(non_singles_vector_unique)</code></pre>
 </div>
 <div id="data-t3" class="section level1">
 <h1>Data t3</h1>
-<pre class="r"><code># first we have to combine singles and partnered reports
+<pre class="r"><code># singles create t3
+pw2015_t3_singles$created_singles_t3 = as.Date(pw2015_t3_singles$created)
+pw2015_t3_partners$F_t3_start = as.Date(pw2015_t3_partners$F_t3_start)
+# first we have to combine singles and partnered reports
 pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)</code></pre>
 <pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
 <pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
@@ -2282,7 +2285,11 @@ pw2015_t3_partners = pw2015_t3_partners %&gt;%
          kind = ifelse(!is.na(F_t3_kind), F_t3_kind, F_t3_past_kind)) %&gt;%
   mutate(relationship_number = ifelse(is.na(F_t3_start), 0, relationship_number),
          relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
-         F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))</code></pre>
+         F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
+
+pw2015_t3_partners = pw2015_t3_partners %&gt;%
+  mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %&gt;%
+  filter(!is.na(F_t3_start))</code></pre>
 </div>
 <div id="relationships-at-t2-and-t3" class="section level1">
 <h1>Relationships at t2 and t3</h1>
@@ -2336,6 +2343,8 @@ pw2015_t2_relationship = pw2015_t2_relationship %&gt;%
 t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, short_session, start, end,
                                                            kind, lasting, name, sex_partner)
 
+t2_test$start = as.Date(t2_test$start)
+
 pw2015_t3_partners = pw2015_t3_partners %&gt;%
   mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
 
@@ -2354,9 +2363,6 @@ t3_test &lt;- t3_test %&gt;% rename(
 
 t2_t3_relationship &lt;- bind_rows(t2_test, t3_test)</code></pre>
 <pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector
-
-## Warning in bind_rows_(x, .id): binding character and factor vector,
 ## coercing into character vector</code></pre>
 <pre class="r"><code># Remove weird cases before analysis
 t2_t3_relationship = t2_t3_relationship %&gt;% filter(!(lasting != 0 &amp; is.na(kind)))
