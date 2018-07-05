@@ -1509,7 +1509,9 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% select(-relationship_m, -re
                           -pastrelationship5_f, -pastrelationship6_m, -pastrelationship6_f,
                           -pastrelationshipmore_m, -pastrelationshipmore_f)
 
-pw2015_t2_relationship <- pw2015_t2_relationship %>% select(session, short_session, t2_relationship, t2_pastrelationship, starts_with("relationship"), starts_with("pastrelationship"))
+pw2015_t2_relationship <- pw2015_t2_relationship %>% select(session, short_session, t2_relationship, 
+                             created_singles_t2,  t2_pastrelationship, 
+                             starts_with("relationship"), starts_with("pastrelationship"))
 
 
 ```
@@ -1887,7 +1889,7 @@ pw2015_t2_relationship = pw2015_t2_relationship %>%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
 
-t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end,
+t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, created_singles_t2,
                                                            kind, lasting, name, sex_partner)
 
 pw2015_t3_partners = pw2015_t3_partners %>%
