@@ -1976,7 +1976,8 @@ data <- data %>%
          # because people could have been single for a longer time. Maybe it is conservative, too?
          # we dont know anything else about these people...
          single_start = if_else(relationship_order == 1 & is.na(previous_relationship_ended),
-                                created_t1, single_start))
+                                created_t1, single_start),
+         single_start = if_else(is.na(single_start), created_t1, single_start))
 
 data_exclusive <- data_exclusive %>% 
   mutate(event = ifelse(lasting == 0, 0, 1),
@@ -2000,7 +2001,8 @@ data_exclusive <- data_exclusive %>%
          # because people could have been single for a longer time. Maybe it is conservative, too?
          # we dont know anything else about these people...
          single_start = if_else(relationship_order == 1 & is.na(previous_relationship_ended),
-                                created_t1, single_start))
+                                created_t1, single_start),
+         single_start = if_else(is.na(single_start), created_t1, single_start))
 # For right now all people have single_start based on their very first relationship or the date of t1 We will fix this in time but for now it should work for the analysis.
 
 # For all other information we have to bring the date back into wideformat
@@ -2023,11 +2025,11 @@ data_exclusive_clean = data_exclusive %>% filter(!(session %in% non_singles_vect
 
 ## Save Data
 ```{r}
-write.csv(data, file = "data.csv")
-write.csv(data_clean, file = "data_clean.csv")
+write.csv(data, file = "ImportedData/data.csv")
+write.csv(data_clean, file = "ImportedData/data_clean.csv")
 
-write.csv(data_exclusive, file = "data_exclusive.csv")
-write.csv(data_exclusive_clean, file = "data_exclusive_clean.csv")
+write.csv(data_exclusive, file = "ImportedData/data_exclusive.csv")
+write.csv(data_exclusive_clean, file = "ImportedData/data_exclusive_clean.csv")
 
 ```
 
