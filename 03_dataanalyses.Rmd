@@ -9,6 +9,7 @@ output: html_document
 ```{r}
 library(survival)
 library(coxme)
+library(survminer)
 ```
 
 #Survival analyses with cox regression
@@ -28,6 +29,8 @@ surv_data <- data_exclusive_clean
 #surv_data <- surv_data %>% mutate(
  # event = ifelse(!is.na(kind), 1, 0))
 
+surv_data <- surv_data %>%
+  filter(!sex == 3)
 ```
 
 !!! incomplete !!!
@@ -55,12 +58,51 @@ plot(survfit(m))
 
 ```{r}
 
-surv_data$sex <- as.factor(surv_data$sex)
+surv_data$sex <- factor(surv_data$sex, levels = c("1","2"))
 
-x <- coxph(Surv(single_start_d, relationship_start_d, event) ~ sex, data = surv_data)
-summary(x)
-plot(survfit(x), mark.time = T)
+x.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ sex, data = surv_data)
+summary(x.1)
+plot(survfit(x.1), mark.time = T, col = c("blue","red"), conf.int = F)
 
+x.2 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ sex + cluster(session), data = surv_data)
+summary(x.2)
+plot(survfit(x.2), mark.time = T, col = c("blue","red"), conf.int = F)
+
+
+
+
+y.1 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ sex + cluster(session), data = surv_data)
+summary(y.1)
+plot(y.1, mark.time = T, col = c("blue","red"), conf.int = F)
+ggsurvplot(y.1, data = surv_data, conf.int = T)
+
+#age as a continuous variable only with coxph function 
+y.2 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ age + cluster(session), data = surv_data)
+summary(y.2)
+ggsurvplot(survfit(y.2), data = surv_data, conf.int = T)
+
+median_NARQ_scale = median(surv_data$NARQ_scale, na.rm = T)
+
+surv_data = surv_data %>%
+  mutate(NARQ_group = ifelse(NARQ_scale <= median_NARQ_scale, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")))
+
+y.3 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ NARQ_group + cluster(session), data = surv_data)
+summary(y.3)
+ggsurvplot(y.3, data = surv_data, conf.int = T)
+
+
+median_NARQ_ADM = median(surv_data$NARQ_ADM, na.rm = T)
+
+surv_data = surv_data %>%
+  mutate(NARQ_ADM_group = ifelse(NARQ_scale <= median_NARQ_ADM, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")))
+                             
+
+y.4 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ NARQ_ADM_group + cluster(session), data = surv_data)
+summary(y.4)
+ggsurvplot(y.4, data = surv_data, conf.int = T)
+                      
 ```
 
 
