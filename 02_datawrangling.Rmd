@@ -1960,6 +1960,13 @@ pw2015_items_select = pw2015_items %>%
           number_relationships, previous_relationship_ended,
           SOI_R_scale, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
 
+#right censoring: if single, then "created_single_t2" as "start"
+t2_t3_relationship <- t2_t3_relationship %>% mutate(
+  start = if_else(is.na(start), created_singles_t2, start))
+
+#right censoring: if single, then "created_single_t2" as "start"
+t2_t3_relationship_exclusive <- t2_t3_relationship_exclusive %>% mutate(
+  start = if_else(is.na(start), created_singles_t2, start))
 
 
 # use relationship information to merge data on
