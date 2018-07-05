@@ -1898,6 +1898,17 @@ t2_t3_relationship <- bind_rows(t2_test, t3_test)
 # Remove weird cases before analysis
 t2_t3_relationship = t2_t3_relationship %>% filter(!(lasting != 0 & is.na(kind)))
 
+t2_t3_relationship_exclusive = t2_t3_relationship %>% 
+  filter(kind == 1 | is.na(kind)) %>%
+  group_by(session) %>% # we want to look at relationships specifically for each person
+  arrange(session, start) %>% #these relationships should be arranged starting with the earliest
+                                   # starting data
+  mutate(relationship_number = n(), # counting total number of relationships
+         relationship_order = row_number(),
+         # lasting = ifelse(is.na(start), 0, lasting), done earliere (hopefully)
+         relationship_order = ifelse(is.na(start), 0, relationship_order),
+         relationship_number = ifelse(is.na(start), 0, relationship_number)) 
+
 
 t2_t3_relationship = t2_t3_relationship %>% 
   group_by(session) %>% # we want to look at relationships specifically for each person
@@ -1908,6 +1919,7 @@ t2_t3_relationship = t2_t3_relationship %>%
          # lasting = ifelse(is.na(start), 0, lasting), done earliere (hopefully)
          relationship_order = ifelse(is.na(start), 0, relationship_order),
          relationship_number = ifelse(is.na(start), 0, relationship_number)) 
+
 ```
 
 # Merge Data
@@ -1934,12 +1946,15 @@ data = left_join(t2_t3_relationship, pw2015_demographie_select,
                  by = c("session", "short_session"))
 data = left_join(data, pw2015_items_select, by = c("session", "short_session"))
 
+data_exclusive = left_join(t2_t3_relationship_exclusive, pw2015_demographie_select,
+                 by = c("session", "short_session"))
+data_exclusive = left_join(data_exclusive, pw2015_items_select, by = c("session", "short_session"))
 ```
 
 ## Create additional variables for survival analysis
 ```{r}
 # Create event-variable
-data_x <- data %>% 
+data <- data %>% 
   mutate(event = ifelse(lasting == 0, 0, 1),
          created_t1 = as.Date(created_t1),
          # creation of single_start, first we look at people who stayed single during the study
@@ -1963,26 +1978,38 @@ data_x <- data %>%
          single_start = if_else(relationship_order == 1 & is.na(previous_relationship_ended),
                                 created_t1, single_start))
 
+data_exclusive <- data_exclusive %>% 
+  mutate(event = ifelse(lasting == 0, 0, 1),
+         created_t1 = as.Date(created_t1),
+         # creation of single_start, first we look at people who stayed single during the study
+         # their single_start date is the end date of their last relationship:
+         single_start = if_else(relationship_order == 0, previous_relationship_ended,
+                                previous_relationship_ended),
+         # if the information about their previous relationship is missing (was optional in t1),
+         # we can simply take the creation date of t1 - it does not make a difference for these
+         # people, because they stay single for the whole time. this is a conservative way: we
+         # can be sure that they were single at t1, we dont know how long they were single before
+         single_start = if_else(relationship_order == 0 & is.na(previous_relationship_ended),
+                                created_t1, single_start),
+         # the next step are all first relationships: their single_start date should be the end
+         # of their previous relationship as well
+         single_start = if_else(relationship_order == 1, previous_relationship_ended,
+                               single_start),
+         # we have the same problem with first relationships: missing previous_relationship_ended
+         # data. To deal with this I use the created_t1 as well. This doesnt seem adequat though,
+         # because people could have been single for a longer time. Maybe it is conservative, too?
+         # we dont know anything else about these people...
+         single_start = if_else(relationship_order == 1 & is.na(previous_relationship_ended),
+                                created_t1, single_start))
+# For right now all people have single_start based on their very first relationship or the date of t1 We will fix this in time but for now it should work for the analysis.
+
 # For all other information we have to bring the date back into wideformat
-data_wide = data %>%
-  ungroup() %>%
-  spread()
+# data_wide = data %>%
+#   ungroup() %>%
+#   spread()
 ##### this is where i am trying to find a way right now...
 
 
-crosstabs(~ relationship_order + lasting, data = data_x)
-
-crosstabs(~ relationship_order + is.na(single_start), data = data_x)
-
-#Create start_single variable
-#Idea: start_single-variable needs to be calculated differently for Relationship order > 1
-  # e.g. relationship no.2: start of relationship 2 - end of relationship 1
-        ### For that we might have to change back into wide format
-surv_data <- surv_data %>% mutate(
-  start_single = ifelse(relationship_order == 1, difftime(start - previous_relationship_ended, units = "days"), ifelse(
-    relationship_order == 2, difftime(ended - start, units = "days")
-  ))
-)
 ```
 
 
@@ -1990,7 +2017,18 @@ surv_data <- surv_data %>% mutate(
 ```{r}
 # clean data set without liars
 data_clean = data %>% filter(!(session %in% non_singles_vector_unique))
+
+data_exclusive_clean = data_exclusive %>% filter(!(session %in% non_singles_vector_unique))
 ```
 
+## Save Data
+```{r}
+write.csv(data, file = "data.csv")
+write.csv(data_clean, file = "data_clean.csv")
+
+write.csv(data_exclusive, file = "data_exclusive.csv")
+write.csv(data_exclusive_clean, file = "data_exclusive_clean.csv")
+
+```
 
 
