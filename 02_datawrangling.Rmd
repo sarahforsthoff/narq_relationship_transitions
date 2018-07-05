@@ -11,21 +11,18 @@ output: html_document
 - Analyses of relationship dissolution after relationship start
 
 @laura:
-(DONE) - remove people who were not single at t1 --> named data_clean
-(DONE) - Pick one of t2 or t3 entries of relationships which lasted over both assessments?
-            - create sub_data with "double"-information about same relationship
-            - remove t2 - single information for people who have a relationship at t3
 - Create start_single variable (s. 03_analyses): Can you reuse previous code?
+- how to interpret survival summery?
 
 @sarah:
-- t2: shorter wrangling script 
-FERTIG (- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
-          -> remove from all data
-          -> diff: age(demographie) - years_since(items) > 10 can be included)
+- t2-alt. with updated datawrangling code
+- survival analysis for relationship end
+- how to interpret survival summery?
 
 
-- Ziel 2: erstes Analyseskript geschrieben
-
+To do: Transgression survival analysis for relationship end
+- "event"-variable
+- "end"-date for censored data (if relationship (lasting), then created t2/t3)
 
 
 
