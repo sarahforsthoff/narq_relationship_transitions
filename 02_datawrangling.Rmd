@@ -18,8 +18,7 @@ output: html_document
 - Create start_single variable (s. 03_analyses): Can you reuse previous code?
 
 @sarah:
-- aktuelles Script in alt. Format
-DONE- t2: shorter wrangling script 
+- t2: shorter wrangling script 
 FERTIG (- How long are single at t1? -> People with "funny"-entries i.ex. (single since "1914")
           -> remove from all data
           -> diff: age(demographie) - years_since(items) > 10 can be included)
@@ -874,6 +873,7 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', relatio
 
 
 ###Divide past relationships depending on sex
+
 Ended relationship(s) since T1?
 ```{r}
 #Achtung: Umgedrehte Kodierung wie bei t2_relationship!!
@@ -1488,16 +1488,6 @@ pw2015_t2_relationship$pastrelationship5_duration_new[pw2015_t2_relationship$pas
 pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_duration_new)) %>% separate(pastrelationship5_duration_new, c("pastrelationship5_duration_new","pastrelationship10_duration_new"), sep = "_")
 ```
 
-#Add created_singles_t2 variable for right censored data
-```{r}
-pw2015_t2_relationship$created.m = as.Date(pw2015_t2_relationship$created.m, origin = "1970-01-01")
-pw2015_t2_relationship$created.f = as.Date(pw2015_t2_relationship$created.f, origin = "1970-01-01")
-
-pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
-  created_singles_t2 = if_else(is.na(created.f), created.m, created.f))
-```
-
-
 Bring data with new variables in proper order
 ```{r}
 #Delete grouping-variable "grepl"
@@ -1515,8 +1505,6 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% select(session, short_sessi
 
 
 ```
-
-
 
 ```{r}
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
@@ -1781,7 +1769,6 @@ pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastre
 pw2015_t2_relationship$sex_partner <- as.integer(pw2015_t2_relationship$sex_partner)
 ```
 
-
 # Liars in t2
 ```{r}
 # Get starting date of t1
@@ -1823,6 +1810,9 @@ length(non_singles_vector_unique)
 # Data t3
 
 ```{r}
+# singles create t3
+pw2015_t3_singles$created_singles_t3 = as.Date(pw2015_t3_singles$created)
+pw2015_t3_partners$F_t3_start = as.Date(pw2015_t3_partners$F_t3_start)
 # first we have to combine singles and partnered reports
 pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)
 # Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
@@ -1837,7 +1827,9 @@ pw2015_t3_partners = pw2015_t3_partners %>%
          relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
          F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
 
-
+pw2015_t3_partners = pw2015_t3_partners %>%
+  mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %>%
+  filter(!is.na(F_t3_start)) # exclude weird cases - check this if you have time
 ```
 
 # Relationships at t2 and t3
@@ -1891,6 +1883,8 @@ pw2015_t2_relationship = pw2015_t2_relationship %>%
 
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, created_singles_t2,
                                                            kind, lasting, name, sex_partner)
+
+t2_test$start = as.Date(t2_test$start)
 
 pw2015_t3_partners = pw2015_t3_partners %>%
   mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
