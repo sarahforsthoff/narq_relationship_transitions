@@ -1488,6 +1488,16 @@ pw2015_t2_relationship$pastrelationship5_duration_new[pw2015_t2_relationship$pas
 pw2015_t2_relationship <- pw2015_t2_relationship %>% group_by(grepl('_', pastrelationship5_duration_new)) %>% separate(pastrelationship5_duration_new, c("pastrelationship5_duration_new","pastrelationship10_duration_new"), sep = "_")
 ```
 
+#Add created_singles_t2 variable for right censored data
+ 
+```{r}
+ pw2015_t2_relationship$created.m = as.Date(pw2015_t2_relationship$created.m, origin = "1970-01-01")
+pw2015_t2_relationship$created.f = as.Date(pw2015_t2_relationship$created.f, origin = "1970-01-01")
+
+pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
+  created_singles_t2 = if_else(is.na(created.f), created.m, created.f))
+```
+
 Bring data with new variables in proper order
 ```{r}
 #Delete grouping-variable "grepl"
@@ -1505,6 +1515,8 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% select(session, short_sessi
 
 
 ```
+
+
 
 ```{r}
 pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(

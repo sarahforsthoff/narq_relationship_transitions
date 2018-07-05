@@ -3,12 +3,72 @@ title: "03_dataanalyses"
 output: html_document
 ---
 
+
 # Previous test run of coxph-function
 ## Example of cox function with simulated data
 ```{r}
 library(survival)
 library(coxme)
 ```
+
+#Survival analyses with cox regression
+
+#Preperations before analyses
+  - event-variable: binary variable indicating if relationship (-> event) happened or not
+                    -> so far the data includes the variable "kind", which represents the relationship typ
+  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not  
+                      dates
+                      
+  
+Data: merged data from t1, t2, t3
+```{r}
+surv_data <- data_exclusive_clean
+
+#Create event-variable
+#surv_data <- surv_data %>% mutate(
+ # event = ifelse(!is.na(kind), 1, 0))
+
+```
+
+!!! incomplete !!!
+Create start_single variable
+```{r}
+#Idea: start_single-variable needs to be calculated differently for Relationship order > 1
+  # e.g. relationship no.2: start of relationship 2 - end of relationship 1
+        ### For that we might have to change back into wide format
+surv_data <- surv_data %>% mutate(
+  single_start_d = 0)
+
+surv_data$start <- as.Date(surv_data$start)
+
+surv_data <- surv_data %>% mutate(
+  relationship_start_d = start - single_start) %>% #still negative values, needs further checking, approx. 10
+  filter(relationship_start_d > -1 | is.na(relationship_start_d))
+
+```
+
+
+m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + NARQ_Adm, data = testdata)
+## summary of the model
+summary(m)
+plot(survfit(m))
+
+```{r}
+
+surv_data$sex <- as.factor(surv_data$sex)
+
+x <- coxph(Surv(single_start_d, relationship_start_d, event) ~ sex, data = surv_data)
+summary(x)
+plot(survfit(x), mark.time = T)
+
+```
+
+
+
+
+
+
+
 
 simulate data using proposed code
 ```{r}
@@ -110,40 +170,6 @@ m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + N
 
 summary(m)
 plot(m)
-```
-
-
-#Survival analyses with cox regression
-
-#Preperations before analyses
-  - event-variable: binary variable indicating if relationship (-> event) happened or not
-                    -> so far the data includes the variable "kind", which represents the relationship typ
-  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not  
-                      dates
-                      
-  
-Data: merged data from t1, t2, t3
-```{r}
-surv_data <- data
-
-#Create event-variable
-surv_data <- surv_data %>% mutate(
-  event = ifelse(!is.na(kind), 1, 0)
-)
-
-```
-
-!!! incomplete !!!
-Create start_single variable
-```{r}
-#Idea: start_single-variable needs to be calculated differently for Relationship order > 1
-  # e.g. relationship no.2: start of relationship 2 - end of relationship 1
-        ### For that we might have to change back into wide format
-surv_data <- surv_data %>% mutate(
-  start_single = ifelse(relationship_order == 1, difftime(start - previous_relationship_ended, units = "days"), ifelse(
-    relationship_order == 2, difftime(ended - start, units = "days")
-  ))
-)
 ```
 
 
