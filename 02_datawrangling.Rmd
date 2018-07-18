@@ -1976,7 +1976,7 @@ data_exclusive = left_join(t2_t3_relationship_exclusive, pw2015_demographie_sele
 data_exclusive = left_join(data_exclusive, pw2015_items_select, by = c("session", "short_session"))
 ```
 
-## Create additional variables for survival analysis
+## Create additional variables for survival analysis (start of relationships)
 ```{r}
 # Create event-variable
 data <- data %>% 
@@ -2037,6 +2037,15 @@ data_exclusive <- data_exclusive %>%
 ##### this is where i am trying to find a way right now...
 
 
+```
+
+##Create additional variables for survival analysis (end of relationships)
+```{r}
+data <- data %>% 
+  mutate(event_end = ifelse(lasting == 2, 1, 
+                      ifelse(lasting == 1, 0, NA)))
+
+  
 ```
 
 
