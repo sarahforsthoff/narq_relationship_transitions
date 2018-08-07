@@ -16,9 +16,8 @@ library(survminer)
 
 #Preperations before analyses
   - event-variable: binary variable indicating if relationship (-> event) happened or not
-                    -> so far the data includes the variable "kind", which represents the relationship typ
-  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not  
-                      dates
+                    -> so far the data includes the variable "kind", which represents the relationship type
+  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not                      dates
                       
   
 Data: merged data from t1, t2, t3
@@ -106,6 +105,37 @@ ggsurvplot(y.4, data = surv_data, conf.int = T)
 ```
 
 
+
+#Survival analyses of relationship transgression
+    Create necessary variables: relationship_start_d_end, relationship_end_d, event_end
+```{r}
+#create sub data: including only participants with at least one relationship
+surv_data_rel <- data_exclusive_clean %>% filter(!is.na(kind))
+
+surv_data_rel <- surv_data_rel %>% mutate(
+  relationship_start_d_end = 0, #Do we set the start of the relationship to O, similiar to the beginning of being                                   single above?
+  relationship_end_d = end - start) %>%
+  filter(relationship_end_d > -1 | is.na(relationship_end_d))
+
+```
+
+##Test analyses
+```{r}
+
+surv_data_rel$sex <- factor(surv_data_rel$sex, levels = c("1","2"))
+
+a.1 <- coxph(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ sex, data = surv_data_rel)
+summary(a.1)
+plot(survfit(a.1), mark.time = T, col = c("blue","red"), conf.int = F)
+
+b.2 <- coxph(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ sex + cluster(session), data = surv_data_rel)
+summary(b.2)
+plot(survfit(b.2), mark.time = T, col = c("blue","red"), conf.int = F)
+
+
+
+
+```
 
 
 
