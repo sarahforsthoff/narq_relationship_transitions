@@ -1898,7 +1898,7 @@ t2_test$start = as.Date(t2_test$start)
 pw2015_t3_partners = pw2015_t3_partners %>%
   mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
 
-t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, F_t3_start,
+t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, created, F_t3_start,
                                                        F_t3_sex,F_t3_end, kind, F_t3_lasting,
                                                        F_t3_name)
 
@@ -1907,7 +1907,8 @@ t3_test <- t3_test %>% rename(
                       end = F_t3_end,
                       lasting = F_t3_lasting,
                       name = F_t3_name,
-                      sex_partner = F_t3_sex) %>%
+                      sex_partner = F_t3_sex, 
+                      t3_created = created) %>%
   mutate(kind = as.character(kind))
                       
 
@@ -2041,9 +2042,31 @@ data_exclusive <- data_exclusive %>%
 
 ##Create additional variables for survival analysis (end of relationships)
 ```{r}
+#event_end variable indicates if relationship has ended. If participants were singles the whole time, NA will be assigned
 data <- data %>% 
   mutate(event_end = ifelse(lasting == 2, 1, 
                       ifelse(lasting == 1, 0, NA)))
+
+data_exclusive <- data_exclusive %>% 
+  mutate(event_end = ifelse(lasting == 2, 1, 
+                      ifelse(lasting == 1, 0, NA)))
+
+
+
+#create end variable: either the date of the relationship end or (if right-censored data) the created-date of t2/t3
+#!!!!!Why is it called created_singles_t2, wouldn't "t2_created" be more accurate?
+
+
+data <- data %>% mutate(end = as.Date(end), t3_created = as.Date(t3_created), created_singles_t2 = 
+                    as.Date(created_singles_t2),
+                  end = if_else(event_end == 0 & is.na(t3_created), created_singles_t2, end),
+                  end = if_else(event_end == 0 & !is.na(t3_created), t3_created, end))
+
+data_exclusive <- data_exclusive %>% 
+            mutate(end = as.Date(end), t3_created = as.Date(t3_created), created_singles_t2 = 
+                    as.Date(created_singles_t2),
+                  end = if_else(event_end == 0 & is.na(t3_created), created_singles_t2, end),
+                  end = if_else(event_end == 0 & !is.na(t3_created), t3_created, end))
 
   
 ```
