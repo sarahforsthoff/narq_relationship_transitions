@@ -1,0 +1,200 @@
+---
+title: "04_exanalyses"
+output: html_document
+---
+
+```{r}
+library(survival)
+library(coxme)
+library(survminer)
+```
+
+
+Data: merged data from t1, t2, t3
+```{r}
+surv_data <- data_exclusive_clean
+
+surv_data <- surv_data %>%
+  filter(!sex == 3)
+```
+
+
+#Analyses of relationship start
+
+##Prepare data for cox function
+```{r}
+#Set the start of being single for all participants to zero
+surv_data <- surv_data %>% mutate(
+  single_start_d = 0)
+
+#Now we calculate the time until the entry in a relationship with the starting date of the relationship
+surv_data$start <- as.Date(surv_data$start)
+surv_data <- surv_data %>% mutate(
+  relationship_start_d = start - single_start) %>% #still negative values, needs further checking, approx. 10
+  filter(relationship_start_d > -1 | is.na(relationship_start_d))
+
+```
+
+##Sex as Predictor
+```{r}
+
+surv_data$sex <- factor(surv_data$sex, levels = c("1","2"))
+
+start_sex.1 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ sex, data = surv_data)
+summary(start_sex.1)
+plot(start_sex.1, mark.time = T, col = c("blue","red"), conf.int = F)
+ggsurvplot(start_sex.1, data = surv_data, conf.int = T)
+
+start_sex.2 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ sex + cluster(session), data = 
+                         surv_data)
+summary(start_sex.2)
+plot(start_sex.2, mark.time = T, col = c("blue","red"), conf.int = F)
+ggsurvplot(start_sex.2, data = surv_data, conf.int = T)
+```
+
+##Age as Predictor
+```{r}
+start_age.1 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ age + cluster(session), data = 
+                         surv_data)
+summary(start_age.1)
+ggsurvplot(start_age.1, data = surv_data, conf.int = T)
+
+```
+
+##Narcissism as Predictor
+```{r}
+##as continous 
+#with coxph for continous predictor
+start_narq_con.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ NARQ_scale + cluster(session), data =
+                            surv_data)
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+#with survfit function
+start_narq_con.2 <- survfit(Surv(single_start_d, relationship_start_d, event) ~ NARQ_scale + cluster(session), data
+                            = surv_data)
+summary(start_narq_con.2)
+ggsurvplot(start_narq_con.2, data = surv_data, conf.int = T)
+
+
+##as groups
+
+median_NARQ_scale = median(surv_data$NARQ_scale, na.rm = T)
+surv_data = surv_data %>%
+  mutate(NARQ_group = ifelse(NARQ_scale <= median_NARQ_scale, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")),
+         NARQ_group = as.factor(NARQ_group))
+
+
+start_narq_gr <-  survfit(Surv(single_start_d, relationship_start_d, event) ~ NARQ_group + cluster(session), data
+                            = surv_data)
+summary(start_narq_gr)
+ggsurvplot(start_narq_gr, data = surv_data, conf.int = T)
+
+```
+
+##Admiration as Predictor
+```{r}
+median_NARQ_ADM = median(surv_data$NARQ_ADM, na.rm = T)
+
+surv_data = surv_data %>%
+  mutate(NARQ_ADM_group = ifelse(NARQ_scale <= median_NARQ_ADM, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")))
+                             
+
+start_ADM_gr <- survfit(Surv(single_start_d, relationship_start_d, event) ~ NARQ_ADM_group + cluster(session), data = surv_data)
+summary(start_ADM_gr)
+ggsurvplot(start_ADM_gr, data = surv_data, conf.int = T)
+```
+
+
+
+
+#Analyses of relationship end
+    Create necessary variables: relationship_start_d_end, relationship_end_d, event_end
+```{r}
+#create sub data: including only participants with at least one relationship
+surv_data_rel <- data_exclusive_clean %>% filter(!is.na(kind))
+
+surv_data_rel <- surv_data_rel %>% mutate(
+  relationship_start_d_end = 0, #Do we set the start of the relationship to O, similiar to the beginning of being                                   single above?
+  relationship_end_d = end - start) %>%
+  filter(relationship_end_d > -1 | is.na(relationship_end_d))
+
+```
+
+
+##Sex as Predictor
+```{r}
+
+surv_data_rel$sex <- factor(surv_data_rel$sex, levels = c("1","2"))
+
+end_sex.1 <- survfit(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ sex, data = surv_data_rel)
+summary(end_sex.1)
+plot(end_sex.1, mark.time = T, col = c("blue","red"), conf.int = F)
+ggsurvplot(end_sex.1, data = surv_data_rel, conf.int = T)
+
+end_sex.2 <- survfit(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ sex + cluster(session), data =
+                       surv_data_rel)
+summary(end_sex.2)
+plot(end_sex.2, mark.time = T, col = c("blue","red"), conf.int = F)
+ggsurvplot(end_sex.2, data = surv_data_rel, conf.int = T)
+```
+
+##Age as Predictor
+```{r}
+end_age.1 <- survfit(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ age + cluster(session), data =
+                       surv_data_rel)
+summary(end_age.1)
+ggsurvplot(end_age.1, data = surv_data_rel, conf.int = T)
+
+```
+
+##Narcissism as Predictor
+```{r}
+##as continous 
+#with coxph for continous predictor
+end_narq_con.1 <- coxph(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ NARQ_scale + 
+                          cluster(session), data = surv_data_rel)
+summary(end_narq_con.1)
+plot(survfit(end_narq_con.1))
+
+#with survfit function
+end_narq_con.2 <- survfit(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ NARQ_scale + 
+                            cluster(session), data = surv_data_rel)
+summary(end_narq_con.2)
+ggsurvplot(end_narq_con.2, data = surv_data_rel, conf.int = T)
+
+
+##as groups
+
+median_NARQ_scale = median(surv_data_rel$NARQ_scale, na.rm = T)
+surv_data_rel = surv_data_rel %>%
+  mutate(NARQ_group = ifelse(NARQ_scale <= median_NARQ_scale, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")),
+         NARQ_group = as.factor(NARQ_group))
+
+
+end_narq_gr <-  survfit(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ NARQ_group + cluster(session), data
+                            = surv_data_rel)
+summary(end_narq_gr)
+ggsurvplot(end_narq_gr, data = surv_data_rel, conf.int = T)
+
+```
+
+##Admiration as Predictor
+```{r}
+median_NARQ_ADM = median(surv_data_rel$NARQ_ADM, na.rm = T)
+
+surv_data_rel = surv_data_rel %>%
+  mutate(NARQ_ADM_group = ifelse(NARQ_scale <= median_NARQ_ADM, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")))
+                             
+
+end_ADM_gr <- survfit(Surv(relationship_start_d_end, relationship_end_d, event_end) ~ NARQ_ADM_group + 
+                        cluster(session), data = surv_data_rel)
+summary(end_ADM_gr)
+ggsurvplot(end_ADM_gr, data = surv_data_rel, conf.int = T)
+```
+
+
