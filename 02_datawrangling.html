@@ -1935,6 +1935,15 @@ pw2015_t2_relationship$pastrelationship5_duration_new[pw2015_t2_relationship$pas
 pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% group_by(grepl('_', pastrelationship5_duration_new)) %&gt;% separate(pastrelationship5_duration_new, c(&quot;pastrelationship5_duration_new&quot;,&quot;pastrelationship10_duration_new&quot;), sep = &quot;_&quot;)</code></pre>
 <pre><code>## Warning: Expected 2 pieces. Missing pieces filled with `NA` in 1 rows
 ## [822].</code></pre>
+</div>
+</div>
+<div id="add-created_singles_t2-variable-for-right-censored-data" class="section level1">
+<h1>Add created_singles_t2 variable for right censored data</h1>
+<pre class="r"><code> pw2015_t2_relationship$created.m = as.Date(pw2015_t2_relationship$created.m, origin = &quot;1970-01-01&quot;)
+pw2015_t2_relationship$created.f = as.Date(pw2015_t2_relationship$created.f, origin = &quot;1970-01-01&quot;)
+
+pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% mutate(
+  created_singles_t2 = if_else(is.na(created.f), created.m, created.f))</code></pre>
 <p>Bring data with new variables in proper order</p>
 <pre class="r"><code>#Delete grouping-variable &quot;grepl&quot;
 pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% select( -starts_with(&quot;grepl&quot;))</code></pre>
@@ -1945,7 +1954,9 @@ pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% select( -starts_with(
                           -pastrelationship5_f, -pastrelationship6_m, -pastrelationship6_f,
                           -pastrelationshipmore_m, -pastrelationshipmore_f)
 
-pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% select(session, short_session, t2_relationship, t2_pastrelationship, starts_with(&quot;relationship&quot;), starts_with(&quot;pastrelationship&quot;))</code></pre>
+pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% select(session, short_session, t2_relationship, 
+                             created_singles_t2,  t2_pastrelationship, 
+                             starts_with(&quot;relationship&quot;), starts_with(&quot;pastrelationship&quot;))</code></pre>
 <pre><code>## Adding missing grouping variables: `grepl(&quot;_&quot;, pastrelationship5_duration_new)`</code></pre>
 <pre class="r"><code>pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% mutate(
     relationship1.name = relationship1_name, relationship1.name_new = relationship1_name_new, 
@@ -2194,7 +2205,6 @@ pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == &quot;p
 pw2015_t2_relationship$sex_partner &lt;- as.integer(pw2015_t2_relationship$sex_partner)</code></pre>
 <pre><code>## Warning: NAs durch Umwandlung erzeugt</code></pre>
 </div>
-</div>
 <div id="liars-in-t2" class="section level1">
 <h1>Liars in t2</h1>
 <pre class="r"><code># Get starting date of t1
@@ -2289,7 +2299,7 @@ pw2015_t3_partners = pw2015_t3_partners %&gt;%
 
 pw2015_t3_partners = pw2015_t3_partners %&gt;%
   mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %&gt;%
-  filter(!is.na(F_t3_start))</code></pre>
+  filter(!is.na(F_t3_start)) # exclude weird cases - check this if you have time</code></pre>
 </div>
 <div id="relationships-at-t2-and-t3" class="section level1">
 <h1>Relationships at t2 and t3</h1>
@@ -2340,7 +2350,7 @@ pw2015_t2_relationship = pw2015_t2_relationship %&gt;%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
 
-t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, short_session, start, end,
+t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, short_session, start, end, created_singles_t2,
                                                            kind, lasting, name, sex_partner)
 
 t2_test$start = as.Date(t2_test$start)
@@ -2405,6 +2415,13 @@ pw2015_items_select = pw2015_items %&gt;%
           number_relationships, previous_relationship_ended,
           SOI_R_scale, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
 
+#right censoring: if single, then &quot;created_single_t2&quot; as &quot;start&quot;
+t2_t3_relationship &lt;- t2_t3_relationship %&gt;% mutate(
+  start = if_else(is.na(start), created_singles_t2, start))
+
+#right censoring: if single, then &quot;created_single_t2&quot; as &quot;start&quot;
+t2_t3_relationship_exclusive &lt;- t2_t3_relationship_exclusive %&gt;% mutate(
+  start = if_else(is.na(start), created_singles_t2, start))
 
 
 # use relationship information to merge data on
