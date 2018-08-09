@@ -1,0 +1,128 @@
+---
+title: "03_decision_data"
+author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
+date: "20 April 2018"
+output:
+  html_document
+---
+
+# Dataset Decision {.tabset}
+
+## Library
+```{r, warning=FALSE, echo=FALSE, results = 'hide', include = FALSE}
+# library(jsonlite)
+# install.packages("devtools")
+# devtools::install_github("rubenarslan/formr")
+ library(formr)
+# library(psych)
+# library(stringr)
+library(mosaic)
+library(tidyr)
+library(apaTables)
+library(dplyr)
+```
+
+## Data Import
+```{r}
+data = read.csv(file = "ImportedData/data.csv")
+```
+
+## Detect possible liars
+```{r}
+# Create Liar Variable
+data = data %>%
+  mutate(check_relationship_liars_all = ifelse(as.Date(created_t1) < as.Date(start), 0, 1),
+         check_relationship_liars_exclusive = ifelse(check_relationship_liars_all == 1 & kind == 1, 1, 0))
+
+# Create Liar Vector
+liars_all = data %>% filter(check_relationship_liars_all == 1) %>% select(session)
+liars_all = as.vector(liars_all$session)
+
+liars_exclusive = data %>% filter(check_relationship_liars_exclusive == 1) %>% select(session)
+liars_exclusive = as.vector(liars_exclusive$session)
+
+# Mark people as liars
+data = data %>%
+  mutate(check_liars_all = ifelse(session %in% liars_all, 1, 0),
+         check_liars_exclusive = ifelse(session %in% liars_exclusive, 1, 0))
+``` 
+
+## Different Dataset Possibilities {.active .tabset}
+### Sample Sizes {.active .tabset}
+#### Full Sample
+```{r}
+# Full Data
+n_relationships = data %>% filter(lasting != 0) %>% count()
+n_participants = data %>% filter(!duplicated(session)) %>% count()
+n_partner = data %>% filter(!duplicated(session)) %>% filter(lasting != 0) %>% count()
+n_single = data %>% filter(lasting == 0) %>% count()
+
+```
+
+The full sample includes `r n_participants` participants:
+
+* `r n_single` Singles
+
+* `r n_partner` who report a relationship with overall `r n_relationships` relationships
+
+#### Restriced Sample (no Liars)
+
+```{r}
+# Exclude Liars
+n_relationships_nonliars = data %>% filter(check_liars_all == 0) %>% count()
+n_participants_nonliars = data %>% filter(check_liars_all == 0) %>% filter(!duplicated(session)) %>% count()
+n_partner_nonliars = data %>% filter(check_liars_all == 0) %>% filter(!duplicated(session)) %>%
+  filter(lasting != 0) %>% count()
+n_single_nonliars = data %>% filter(check_liars_all == 0) %>% filter(lasting == 0) %>% count()
+```
+
+The restricted sample includes `r n_participants_nonliars` participants:
+
+* `r n_single` Singles
+
+* `r n_partner_nonliars` who report a relationship with overall `r n_relationships_nonliars` relationships
+
+#### Restriced Samples (exclude exclusive Liars)
+```{r}
+n_relationships_nonliars_exclusive = data %>% filter(check_liars_exclusive == 0) %>% count()
+n_participants_nonliars_exclusive = data %>% filter(check_liars_exclusive == 0) %>%
+  filter(!duplicated(session)) %>% count()
+n_partner_nonliars_exclusive = data %>% filter(check_liars_exclusive == 0) %>% filter(!duplicated(session)) %>%
+  filter(lasting != 0) %>% count()
+n_single_nonliars_exclusive = data %>% filter(check_liars_exclusive == 0) %>% filter(lasting == 0) %>% count()
+
+```
+
+The restricted sample based on exclusive relationships at t1 includes `r n_participants_nonliars_exclusive` participants:
+
+* `r n_single` Singles
+
+* `r n_partner_nonliars_exclusive` who report a relationship with overall `r n_relationships_nonliars_exclusive` relationships
+
+#### Restriced Samples (only commited relationships; exclude exclusive Liars) {.active}
+```{r}
+data_commited = data %>% filter(is.na(kind) | kind == 1)
+n_relationships_commited = data_commited %>% filter(check_liars_exclusive == 0) %>% count()
+n_participants_nonliars_commited = data_commited %>% filter(check_liars_exclusive == 0) %>%
+  filter(!duplicated(session)) %>% count()
+n_partner_nonliars_commited = data_commited %>% filter(check_liars_exclusive == 0) %>% filter(!duplicated(session)) %>%
+  filter(lasting != 0) %>% count()
+n_single_nonliars_commited = data_commited %>% filter(check_liars_exclusive == 0) %>% filter(lasting == 0) %>% count()
+
+```
+
+The restricted sample based on on comitted relationships and excluding liars at t1 includes `r n_participants_nonliars_commited` participants:
+
+* `r n_single` Singles
+
+* `r n_partner_nonliars_commited` who report a relationship with overall `r n_relationships_commited` relationships
+
+## Potential Problems with including Liars
+
+Including liars comes with the following diasadvantages:
+
+* we do not know whether they were really single at t1
+
+* we do not know the real ending of their last relationship, thus we could not calculate a good survival analysis
+
+* it is not possible to exclude only the wrong relationship because it messes up all following analyses
