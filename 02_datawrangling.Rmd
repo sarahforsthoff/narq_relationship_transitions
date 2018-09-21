@@ -5,6 +5,7 @@ date: "20 April 2018"
 output: html_document
 ---
 
+
 ## Open questions:
 - Check To-Do's for Analyses -> 03_analyses
 - Get age from t2_partners already assessed at T1 
@@ -15,14 +16,16 @@ output: html_document
 - how to interpret survival summery?
 
 @sarah:
-- t2-alt. with updated datawrangling code
-- survival analysis for relationship end
+DONE (- t2-alt. with updated datawrangling code)
+DONE (- survival analysis for relationship end)
 - how to interpret survival summery?
+- identical data with both datawrangling scripts?? I used "all.equal". Maybe check results together
 
 
-To do: Transgression survival analysis for relationship end
-- "event"-variable
-- "end"-date for censored data (if relationship (lasting), then created t2/t3)
+DONE
+    To do: Transgression survival analysis for relationship end
+    - "event"-variable
+    - "end"-date for censored data (if relationship (lasting), then created t2/t3)
 
 
 
