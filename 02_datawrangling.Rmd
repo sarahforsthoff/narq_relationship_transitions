@@ -5,6 +5,7 @@ date: "20 April 2018"
 output: html_document
 ---
 
+
 ## Open questions:
 - Check To-Do's for Analyses -> 03_analyses
 - Get age from t2_partners already assessed at T1 
@@ -15,14 +16,16 @@ output: html_document
 - how to interpret survival summery?
 
 @sarah:
-- t2-alt. with updated datawrangling code
-- survival analysis for relationship end
+DONE (- t2-alt. with updated datawrangling code)
+DONE (- survival analysis for relationship end)
 - how to interpret survival summery?
+- identical data with both datawrangling scripts?? I used "all.equal". Maybe check results together
 
 
-To do: Transgression survival analysis for relationship end
-- "event"-variable
-- "end"-date for censored data (if relationship (lasting), then created t2/t3)
+DONE
+    To do: Transgression survival analysis for relationship end
+    - "event"-variable
+    - "end"-date for censored data (if relationship (lasting), then created t2/t3)
 
 
 
@@ -104,7 +107,7 @@ t1_age <- pw2015_demographie %>% select(session, short_session, age)
 
 table(pw2015_items$end_relationship_weeks)
 table(pw2015_items$end_relationship_months) 
-#No entries exceeding 52 (weeks) or 12 (months), therefore only years will checked
+#No entries exceeding 52 (weeks) or 12 (months), therefore only years will be checked
 t1_time_single <- pw2015_items %>% select(session, short_session, end_relationship_years)
 
 t1_time_single_test <- left_join(t1_age, t1_time_single)
@@ -411,11 +414,16 @@ pw2015_demographie %>% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_neuro
 pw2015_items <-  pw2015_items %>%
   mutate(created = as.Date(created))
 
-# For people who have never had a relationship we need their age to calculate backwards how long they have been single
+# For people who never had a relationship we need their age to calculate backwards how long they have been single
 pw2015_items = left_join(pw2015_items, pw2015_demographie %>% select(session, age), by = "session")
 
+#################################################################### 
+##########Is it accurate to calculate with age, if always single?
 pw2015_items = pw2015_items %>%
   mutate(end_relationship_years = ifelse(number_relationships == 0, age, end_relationship_years))
+####################################################################
+
+
 
 pw2015_items <- pw2015_items %>%
   mutate(previous_relationship_ended_days = end_relationship_years * 365 + 
@@ -430,6 +438,8 @@ pw2015_items <- pw2015_items %>%
                                                    previous_relationship_ended_days),
          previous_relationship_ended = created - previous_relationship_ended_days)
 
+
+#################### Why still so many participants with without "previous_relationship_ended"?? 
 crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw2015_items)
 
 pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years,
@@ -1889,7 +1899,7 @@ pw2015_t2_relationship = pw2015_t2_relationship %>%
          session_partnername = ifelse(lasting == 1, paste0(session, "_", name), NA)) %>%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
-
+############################ Maybe rename data -> t2_test / t3_test
 t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, created_singles_t2,
                                                            kind, lasting, name, sex_partner)
 
@@ -2052,7 +2062,7 @@ data_exclusive <- data_exclusive %>%
                       ifelse(lasting == 1, 0, NA)))
 
 
-
+################################
 #create end variable: either the date of the relationship end or (if right-censored data) the created-date of t2/t3
 #!!!!!Why is it called created_singles_t2, wouldn't "t2_created" be more accurate?
 
