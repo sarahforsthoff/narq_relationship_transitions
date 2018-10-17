@@ -3,6 +3,20 @@ title: "03_dataanalyses"
 output: html_document
 ---
 
+## TODO before
+- data is sound?
+- How to interpret results? (continous vs. groups)
+
+## Planned Analysis:
+### Relationship Entry
+- Model 1: rel_entry ~ NARQ + cluster(session)
+- Model 2: rel_entry ~ NARQ_ADM + NARQ_RIV + cluster(session)
+- Model 3: rel_entry ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
+### Relationship End
+- Model 1: rel_end ~ NARQ + cluster(session)
+- Model 2: rel_end ~ NARQ_ADM + NARQ_RIV + cluster(session)
+- Model 3: rel_end ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
+
 
 # Previous test run of coxph-function
 ## Example of cox function with simulated data

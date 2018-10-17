@@ -109,6 +109,9 @@ n_partner_nonliars_commited = data_commited %>% filter(check_liars_exclusive == 
   filter(lasting != 0) %>% count()
 n_single_nonliars_commited = data_commited %>% filter(check_liars_exclusive == 0) %>% filter(lasting == 0) %>% count()
 
+x = data_commited %>% filter(number_relationships == 0) %>% filter(lasting == 0)
+y = data_commited %>% filter(number_relationships == 0) %>% filter(lasting != 0)
+
 ```
 
 The restricted sample based on on comitted relationships and excluding liars at t1 includes `r n_participants_nonliars_commited` participants:
