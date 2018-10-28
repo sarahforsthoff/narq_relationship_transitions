@@ -1,0 +1,49 @@
+---
+title: "04_Mail2Therneau"
+author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
+date: "28 October 2018"
+output: word_document
+---
+
+##Mail address:
+therneau@mayo.edu
+
+Dear Mr. Therneau,
+
+We are contacting you as two student assistants at the Georg-August University in Göttingen (Germany). At the moment we are investigating how narcissism is associated with the entry and the dissolution of romantic relationships. To analyze our longitudinal data , we are using survival analyses or. the coxph-function. 
+
+Because our main predictors (narcissism and its sub-dimensions based on the NARQ-questionnaire) are continous we are struggling with interpreting our results. 
+
+1. Is our interpretation correct based on the given output?
+
+###############################
+Call:
+coxph(formula = Surv(single_start_d, relationship_start_d, event) ~ 
+    NARQ_ADM + cluster(session), data = surv_data)
+
+  n= 935, number of events= 371 
+
+            coef exp(coef) se(coef) robust se     z Pr(>|z|)    
+NARQ_ADM 0.28334   1.32755  0.08085   0.07998 3.542 0.000396 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+         exp(coef) exp(-coef) lower .95 upper .95
+NARQ_ADM     1.328     0.7533     1.135     1.553
+
+Concordance= 0.528  (se = 0.017 )
+Rsquare= 0.013   (max possible= 0.992 )
+Likelihood ratio test= 12.17  on 1 df,   p=5e-04
+Wald test            = 12.55  on 1 df,   p=4e-04
+Score (logrank) test = 12.3  on 1 df,   p=5e-04,   Robust = 11.66  p=6e-04
+##################################
+
+"One raised unit of NARQ_ADM is associated with 1.33 higher probability of the event (i.g. starting a relationship)."
+
+
+2. Would you recommend a different approach for continous data?
+
+3. Can you recommend a good way of plotting our results (because Kaplan-Meier-curves are hard to interpret)?
+
+Best regards,
+Laura Botzet & Sarah Forsthoff

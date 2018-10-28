@@ -1,6 +1,8 @@
 ---
 title: "03_dataanalyses"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ## TODO before
@@ -18,15 +20,13 @@ output: html_document
 - Model 3: rel_end ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
 
 
-# Previous test run of coxph-function
-## Example of cox function with simulated data
 ```{r}
 library(survival)
 library(coxme)
 library(survminer)
 ```
 
-#Survival analyses with cox regression
+
 
 #Preperations before analyses
   - event-variable: binary variable indicating if relationship (-> event) happened or not
@@ -63,9 +63,101 @@ surv_data <- surv_data %>% mutate(
 
 ```
 
+  Create necessary variables: relationship_start_d_end, relationship_end_d, event_end
+```{r}
+#create sub data: including only participants with at least one relationship
+surv_data_rel <- data_exclusive_clean %>% filter(!is.na(kind))
 
-m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + NARQ_Adm, data = testdata)
-## summary of the model
+surv_data_rel <- surv_data_rel %>% mutate(
+  relationship_start_d_end = 0, #Do we set the start of the relationship to O, similiar to the beginning of being                                   single above?
+  relationship_end_d = end - start) %>%
+  filter(relationship_end_d > -1 | is.na(relationship_end_d))
+
+```
+
+
+#Relationship start
+- Model 1: rel_entry ~ NARQ + cluster(session)
+- Model 2: rel_entry ~ NARQ_ADM + NARQ_RIV + cluster(session)
+- Model 3: rel_entry ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
+
+###continous
+```{r}
+start_narq_con.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+                            NARQ_scale + cluster(session), data = surv_data)
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+
+start_narq_con.2 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+                            NARQ_ADM + NARQ_RIV + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+
+
+start_narq_con.3 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+                            NARQ_ADM + NARQ_RIV + sex + age + cluster(session), data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+```
+
+###groups
+```{r}
+#NARQ_scale
+median_NARQ_scale = median(surv_data$NARQ_scale, na.rm = T)
+surv_data = surv_data %>%
+  mutate(NARQ_group = ifelse(NARQ_scale <= median_NARQ_scale, "low", 
+                             ifelse(is.na(NARQ_scale), NA, "high")),
+         NARQ_group = as.factor(NARQ_group))
+
+#NARQ_ADM
+median_NARQ_ADM = median(surv_data$NARQ_ADM, na.rm = T)
+surv_data = surv_data %>%
+  mutate(NARQ_ADM_group = ifelse(NARQ_ADM <= median_NARQ_ADM, "low", 
+                             ifelse(is.na(NARQ_ADM), NA, "high")),
+         NARQ_ADM_group = as.factor(NARQ_ADM_group))
+
+#NARQ_RIV
+median_NARQ_RIV = median(surv_data$NARQ_RIV, na.rm = T)
+surv_data = surv_data %>%
+  mutate(NARQ_RIV_group = ifelse(NARQ_RIV <= median_NARQ_RIV, "low", 
+                             ifelse(is.na(NARQ_RIV), NA, "high")),
+         NARQ_RIV_group = as.factor(NARQ_RIV_group))
+
+```
+
+```{r}
+start_narq_gr.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+                            NARQ_group + cluster(session), data= surv_data)
+summary(start_narq_gr.1)
+plot(survfit(start_narq_gr.1))
+
+start_narq_gr.2 <-  coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + cluster(session), data= surv_data)
+summary(start_narq_gr.2)
+plot(survfit(start_narq_gr.2))
+
+start_narq_gr.3 <-  coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session), data= surv_data)
+summary(start_narq_gr.3)
+plot(survfit(start_narq_gr.3))
+```
+
+
+# Relationship End
+- Model 1: rel_end ~ NARQ + cluster(session)
+- Model 2: rel_end ~ NARQ_ADM + NARQ_RIV + cluster(session)
+- Model 3: rel_end ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
+
+...to be continued...
+
+
+
+#Test Analyses
+Probably useless, I just did not want to delete them without looking at them together.
+
+
+"m <- coxph(Surv(Single_Start, Beziehung_Start, Beziehung_event) ~ Age + Male + NARQ_Adm, data = testdata)"
 summary(m)
 plot(survfit(m))
 
@@ -120,20 +212,8 @@ ggsurvplot(y.4, data = surv_data, conf.int = T)
 
 
 
-#Survival analyses of relationship transgression
-    Create necessary variables: relationship_start_d_end, relationship_end_d, event_end
-```{r}
-#create sub data: including only participants with at least one relationship
-surv_data_rel <- data_exclusive_clean %>% filter(!is.na(kind))
-
-surv_data_rel <- surv_data_rel %>% mutate(
-  relationship_start_d_end = 0, #Do we set the start of the relationship to O, similiar to the beginning of being                                   single above?
-  relationship_end_d = end - start) %>%
-  filter(relationship_end_d > -1 | is.na(relationship_end_d))
-
-```
-
-##Test analyses
+###Survival analyses of relationship transgression
+  
 ```{r}
 
 surv_data_rel$sex <- factor(surv_data_rel$sex, levels = c("1","2"))
@@ -156,7 +236,7 @@ plot(survfit(b.2), mark.time = T, col = c("blue","red"), conf.int = F)
 
 
 
-simulate data using proposed code
+###simulate data using proposed code
 ```{r}
 ########## simulate data ##########
 set.seed(10)
@@ -236,7 +316,7 @@ summary(m2)
 plot(survfit(m2))
 ```
 
-## Test function with our own test data
+###Test function with our own test data
 ```{r}
 testdata <- read.csv("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions/testdata.csv")
 
