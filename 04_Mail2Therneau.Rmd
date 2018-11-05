@@ -4,13 +4,33 @@ author: "Laura Botzet, Sarah Forsthoff, Tanja Gerlach"
 date: "28 October 2018"
 output: word_document
 ---
+#How to interpret continous predictors in CoxPH?
+* We need to interpret them by unit: e.g. one raised unit is (or not) associated with the giving likelihood (see output: exp(coef) which is the hazard ratio, which is hazard over observed time interval)
+* How do we scale our data, so we can interpret results neatly? 
 
+#CoxPH refers to the assumption of proportional hazard over different intervals. Does our data fit to this assumption?
+check "https://www.mwsug.org/proceedings/2006/stats/MWSUG-2006-SD08.pdf"
+*Narcissism's influence declines by age? 
+*Test with Schoenfeld residuals --> cox.zph() (see also "https://www.r-bloggers.com/cox-model-assumptions/")
+  -> see 03_dataanalyses, I tested this examplatory for one model
+*Or graphically with ggcoxzph() in survminer-package
+* if violated, try Weighted Cox Regression
+("https://www.jstatsoft.org/article/view/v084i02/v84i02.pdf")
+
+#How can we plot results nicely?
+*found little about plotting continous predictors (in survival analyses) nicely
+*We propably need to bin data, any good ideas? 
+*With enough we could use coxPH function on continous and on latent classes, and then plot results for latent classes
+
+
+
+#Contacting Mr. Therneau
 ##Mail address:
 therneau@mayo.edu
 
 Dear Mr. Therneau,
 
-We are contacting you as two student assistants at the Georg-August University in Göttingen (Germany). At the moment we are investigating how narcissism is associated with the entry and the dissolution of romantic relationships. To analyze our longitudinal data , we are using survival analyses or. the coxph-function. 
+We are contacting you as two student assistants working for the department of biological personality psychology at the Georg-August University in Göttingen (Germany). At the moment we are investigating how narcissism is associated with the entry into and the dissolution of romantic relationships. To analyze our longitudinal data, we are using survival analyses or. the coxph-function. 
 
 Because our main predictors (narcissism and its sub-dimensions based on the NARQ-questionnaire) are continous we are struggling with interpreting our results. 
 
@@ -42,8 +62,10 @@ Score (logrank) test = 12.3  on 1 df,   p=5e-04,   Robust = 11.66  p=6e-04
 
 
 2. Would you recommend a different approach for continous data?
+Either a different analysis or would you recommend to group our continous data?
 
 3. Can you recommend a good way of plotting our results (because Kaplan-Meier-curves are hard to interpret)?
+
 
 Best regards,
 Laura Botzet & Sarah Forsthoff
