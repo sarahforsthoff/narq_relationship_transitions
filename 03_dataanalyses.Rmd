@@ -93,7 +93,8 @@ start_narq_con.2 <- coxph(Surv(single_start_d, relationship_start_d, event) ~
                             NARQ_ADM + NARQ_RIV + cluster(session), data = surv_data)
 summary(start_narq_con.2)
 plot(survfit(start_narq_con.2))
-
+testPH_start_narq_con.2 <- ggcoxzph(start_narq_con.2)
+ggcoxzph(testPH_start_narq_con.2)
 
 start_narq_con.3 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
                             NARQ_ADM + NARQ_RIV + sex + age + cluster(session), data = surv_data)
