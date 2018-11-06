@@ -1238,16 +1238,16 @@ pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% mutate(
 </div>
 </div>
 </div>
-<div id="add-created_singles_t2-variable-for-right-censored-data" class="section level1">
-<h1>Add created_singles_t2 variable for right censored data</h1>
+<div id="add-t2_created-variable-for-right-censored-data" class="section level1">
+<h1>Add t2_created variable for right censored data</h1>
 <pre class="r"><code>pw2015_t2_relationship$created.m = as.Date(pw2015_t2_relationship$created.m, origin = &quot;1970-01-01&quot;)
 pw2015_t2_relationship$created.f = as.Date(pw2015_t2_relationship$created.f, origin = &quot;1970-01-01&quot;)
 
 pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% mutate(
-  created_singles_t2 = if_else(is.na(created.f), created.m, created.f))</code></pre>
+  t2_created = if_else(is.na(created.f), created.m, created.f))</code></pre>
 <p>Select only relationship variables independent from sex</p>
 <pre class="r"><code>pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% 
-  select(session, short_session, t2_relationship, t2_pastrelationship, created_singles_t2,
+  select(session, short_session, t2_relationship, t2_pastrelationship, t2_created,
          starts_with(&quot;relationship1.&quot;), starts_with(&quot;relationship2.&quot;), 
          starts_with(&quot;relationship3.&quot;), starts_with(&quot;relationship4.&quot;),
          starts_with(&quot;relationship5.&quot;), starts_with(&quot;relationship6.&quot;),
@@ -1430,6 +1430,7 @@ non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = &quot;ses
 <pre class="r"><code>non_singles_t2_session = non_singles_t2 %&gt;% filter(!duplicated(session))
 
 
+
 count(non_singles_t2_session)</code></pre>
 <pre><code>## # A tibble: 1 x 1
 ##       n
@@ -1441,28 +1442,19 @@ count(non_singles_t2_session)</code></pre>
 ## 38 80 95</code></pre>
 <pre class="r"><code>non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
 
+
 # t3
 non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = &quot;session&quot;) %&gt;%
   mutate(check_liars = ifelse(as.Date(created_t1) &lt; as.Date(F_t3_start), 0, 1)) %&gt;%
   filter(check_liars == 1)</code></pre>
 <pre><code>## Warning: Column `session` joining factors with different levels, coercing
 ## to character vector</code></pre>
-<pre class="r"><code>non_singles_vector_t3 = as.data.frame(non_singles_t3$session)
+<pre class="r"><code>non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
 
-count(non_singles_vector_t3)</code></pre>
-<pre><code>## # A tibble: 1 x 1
-##       n
-##   &lt;int&gt;
-## 1   137</code></pre>
-<pre class="r"><code>non_singles_vector = bind_rows(non_singles_vector_t2, non_singles_vector_t3) %&gt;%
-  mutate(session = ifelse(is.na(`non_singles_t2_session$session`),
-                          `non_singles_t3$session`,
-                          `non_singles_t2_session$session`))
-
-non_singles_vector_unique = non_singles_vector %&gt;% filter(!duplicated(session))
-non_singles_vector_unique = non_singles_vector_unique$`non_singles_t2_session$session`
-length(non_singles_vector_unique)</code></pre>
-<pre><code>## [1] 213</code></pre>
+table(non_singles_vector == &quot;--N__ZtqyajgoxEV6gE3mkStbJ-msvAOiCn2N_UkgOLj1T3JgBVkz1S1jroCaGzE&quot;)</code></pre>
+<pre><code>## 
+## FALSE  TRUE 
+##   405     1</code></pre>
 </div>
 <div id="data-t3" class="section level1">
 <h1>Data t3</h1>
@@ -1560,7 +1552,7 @@ pw2015_t2_relationship = pw2015_t2_relationship %&gt;%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
 ############################ Maybe rename data -&gt; t2_test / t3_test
-t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, short_session, start, end, created_singles_t2,
+t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, short_session, start, end, t2_created,
                                                            kind, lasting, name, sex_partner)
 
 t2_test$start = as.Date(t2_test$start)
@@ -1626,13 +1618,16 @@ pw2015_items_select = pw2015_items %&gt;%
           number_relationships, previous_relationship_ended,
           SOI_R_scale, global_interest_LT, global_interest_ST,  longterm_f, longterm_m)
 
+
 #right censoring: if single, then &quot;created_single_t2&quot; as &quot;start&quot;
 t2_t3_relationship &lt;- t2_t3_relationship %&gt;% mutate(
-  start = if_else(is.na(start), created_singles_t2, start))
+  start = if_else(is.na(start), t2_created, start),
+  start = if_else(is.na(start), as.Date(t3_created), start))
 
 #right censoring: if single, then &quot;created_single_t2&quot; as &quot;start&quot;
 t2_t3_relationship_exclusive &lt;- t2_t3_relationship_exclusive %&gt;% mutate(
-  start = if_else(is.na(start), created_singles_t2, start))
+  start = if_else(is.na(start), t2_created, start),
+  start = if_else(is.na(start), as.Date(t3_created), start))
 
 
 # use relationship information to merge data on
@@ -1660,8 +1655,7 @@ data = left_join(t2_t3_relationship, pw2015_demographie_select,
 <pre class="r"><code>data = data %&gt;%
   ungroup() %&gt;%
   arrange(session, start) %&gt;%
-  mutate(event = ifelse(lasting == 0, 0, 1),
-         created_t1 = as.Date(created_t1),
+  mutate(created_t1 = as.Date(created_t1),
          # first we are using the end date of the last relationship to create the single_start 
          # variable
          single_start = head(as.Date(c(NA, data$end), origin = &quot;1970-01-01&quot;), -1),
@@ -1685,24 +1679,37 @@ data = left_join(t2_t3_relationship, pw2015_demographie_select,
          # we dont know anything else about these people...
          single_start = if_else(relationship_order == 1 &amp; is.na(previous_relationship_ended),
                                 created_t1, single_start),
-         # and now we still have some missings if people started two new relationships after being single
+         # and now we still have some missings if people started two new relationships after being
+         # single
          single_start = if_else(is.na(single_start), previous_relationship_ended, single_start),
          single_start = if_else(is.na(single_start), created_t1, single_start),
          # we still have some cases where one relationship started while the other one was still
          # going on. I am nor sure how we should deal with those....
          # for the end date of being single we can just use the start date of relationship
          single_end = start,
-         single_start_prob = ifelse(single_start &gt; start, 1, 0))
+         single_start_prob = ifelse(single_end &lt; single_start, 1, 0))
 
+# We need to add single time for the people who had a last relationship that ended before the end of the study
+data_singles_after_relationship_till_end = data %&gt;%
+  mutate(last_entry = if_else(is.na(t3_created), t2_created, as.Date(t3_created))) %&gt;%
+  # only last relationships
+  filter(relationship_number == relationship_order) %&gt;%
+  filter(end &lt; last_entry) %&gt;%
+  mutate(event_start = 0) %&gt;%
+  mutate(single_start = end,
+         single_end = last_entry) %&gt;%
+  select(-start, -end, -kind, -lasting, -name, -sex_partner, -relationship_number, -relationship_order,
+         -single_start_prob) %&gt;%
+  mutate(single_start_prob = ifelse(single_end &lt; single_start, 1, 0))
 
-practice_data = data %&gt;% select(session, start, end, previous_relationship_ended, created_t1, single_start, single_end, single_start_prob)
+# Combine full data and singles_after_relationship_till_end
+data = bind_rows(data, data_singles_after_relationship_till_end)
 
 
 data_exclusive = data_exclusive %&gt;%
   ungroup() %&gt;%
   arrange(session, start) %&gt;%
-  mutate(event = ifelse(lasting == 0, 0, 1),
-         created_t1 = as.Date(created_t1),
+  mutate(created_t1 = as.Date(created_t1),
          # first we are using the end date of the last relationship to create the single_start 
          # variable
          single_start = head(as.Date(c(NA, data_exclusive$end), origin = &quot;1970-01-01&quot;), -1),
@@ -1726,52 +1733,85 @@ data_exclusive = data_exclusive %&gt;%
          # we dont know anything else about these people...
          single_start = if_else(relationship_order == 1 &amp; is.na(previous_relationship_ended),
                                 created_t1, single_start),
-         # and now we still have some missings if people started two new relationships after being single
+         # and now we still have some missings if people started two new relationships after being
+         # single
          single_start = if_else(is.na(single_start), previous_relationship_ended, single_start),
          single_start = if_else(is.na(single_start), created_t1, single_start),
          # we still have some cases where one relationship started while the other one was still
          # going on. I am nor sure how we should deal with those....
          # for the end date of being single we can just use the start date of relationship
          single_end = start,
-         single_start_prob = ifelse(single_start &gt; start, 1, 0))
+         single_start_prob = ifelse(single_end &lt; single_start, 1, 0))
+
+# We need to add single time for the people who had a last relationship that ended before the end of the study
+data_exclusive_singles_after_relationship_till_end = data_exclusive %&gt;%
+  mutate(last_entry = if_else(is.na(t3_created), t2_created, as.Date(t3_created))) %&gt;%
+  # only last relationships
+  filter(relationship_number == relationship_order) %&gt;%
+  filter(end &lt; last_entry) %&gt;%
+  mutate(event_start = 0) %&gt;%
+  mutate(single_start = end,
+         single_end = last_entry) %&gt;%
+  select(-start, -end, -kind, -lasting, -name, -sex_partner, -relationship_number, -relationship_order,
+         -single_start_prob) %&gt;%
+  mutate(single_start_prob = ifelse(single_end &lt; single_start, 1, 0))
+
+# Combine full data and singles_after_relationship_till_end
+data_exclusive = bind_rows(data_exclusive, data_exclusive_singles_after_relationship_till_end)
 
 
-practice_data = data_exclusive %&gt;% select(session, start, end, previous_relationship_ended, created_t1, single_start, single_end, single_start_prob)</code></pre>
+table(data_exclusive$single_start_prob)</code></pre>
+<pre><code>## 
+##    0    1 
+## 1078   44</code></pre>
+<pre class="r"><code>data_x = data_exclusive %&gt;% select(short_session, start, end, previous_relationship_ended, created_t1,  t2_created, t3_created, single_end, single_start, single_start_prob)
+
+problem_people = data_exclusive %&gt;% filter(single_start_prob == 1)</code></pre>
 </div>
 <div id="create-additional-variables-for-survival-analysis-end-of-relationships" class="section level2">
 <h2>Create additional variables for survival analysis (end of relationships)</h2>
 <pre class="r"><code>#event_end variable indicates if relationship has ended. If participants were singles the whole time, NA will be assigned
 data &lt;- data %&gt;% 
   mutate(event_end = ifelse(lasting == 2, 1, 
-                      ifelse(lasting == 1, 0, NA)))
+                      ifelse(lasting == 1, 0, NA)),
+         event_start = ifelse(!is.na(event_start), event_start,
+                              ifelse(lasting == 0, 0, 1)))
 
 data_exclusive &lt;- data_exclusive %&gt;% 
   mutate(event_end = ifelse(lasting == 2, 1, 
-                      ifelse(lasting == 1, 0, NA)))
+                      ifelse(lasting == 1, 0, NA)),
+         event_start = ifelse(!is.na(event_start), event_start,
+                              ifelse(lasting == 0, 0, 1)))
 
 
 ################################
 #create end variable: either the date of the relationship end or (if right-censored data) the created-date of t2/t3
-#!!!!!Why is it called created_singles_t2, wouldn't &quot;t2_created&quot; be more accurate?
 
 
-data &lt;- data %&gt;% mutate(end = as.Date(end), t3_created = as.Date(t3_created), created_singles_t2 = 
-                    as.Date(created_singles_t2),
-                  end = if_else(event_end == 0 &amp; is.na(t3_created), created_singles_t2, end),
+data &lt;- data %&gt;% mutate(end = as.Date(end), t3_created = as.Date(t3_created), t2_created = 
+                    as.Date(t2_created),
+                  end = if_else(event_end == 0 &amp; is.na(t3_created), t2_created, end),
                   end = if_else(event_end == 0 &amp; !is.na(t3_created), t3_created, end))
 
 data_exclusive &lt;- data_exclusive %&gt;% 
-            mutate(end = as.Date(end), t3_created = as.Date(t3_created), created_singles_t2 = 
-                    as.Date(created_singles_t2),
-                  end = if_else(event_end == 0 &amp; is.na(t3_created), created_singles_t2, end),
+            mutate(end = as.Date(end), t3_created = as.Date(t3_created), t2_created = 
+                    as.Date(t2_created),
+                  end = if_else(event_end == 0 &amp; is.na(t3_created), t2_created, end),
                   end = if_else(event_end == 0 &amp; !is.na(t3_created), t3_created, end))</code></pre>
 </div>
 <div id="clean-data-set" class="section level2">
 <h2>Clean data set</h2>
 <pre class="r"><code># clean data set without liars
-data_clean = data %&gt;% filter(!(session %in% non_singles_vector_unique))
+data_clean = data %&gt;% filter(!(session %in% non_singles_vector))
 
-data_exclusive_clean = data_exclusive %&gt;% filter(!(session %in% non_singles_vector_unique))</code></pre>
+data_exclusive_clean = data_exclusive %&gt;% filter(!(session %in% non_singles_vector))
+
+
+# Exclude people who had more than one relationship at a time in data_exclusive_clean
+data_exclusive_clean = data_exclusive_clean %&gt;% filter(short_session != &quot;dbFHNbYgCS&quot;,
+                                                       short_session !=  &quot;gg-RdHOFeq&quot;,
+                                                       short_session != &quot;vg4uK203LH&quot;)
+# For Analysis we only want to use data from data_exclusive_clean (no liars, only commited relationships, one relationship at a time)</code></pre>
 </div>
 <div id="save-data" class="section level2">
 <h2>Save Data</h2>
