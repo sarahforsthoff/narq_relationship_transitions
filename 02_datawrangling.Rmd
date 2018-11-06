@@ -16,6 +16,7 @@ Current Open questions and tasks (last updated 09/21/18)
 - Check new data_wrangling + marked by Sarah
 - Create start_single variable (s. 03_analyses): Can you reuse previous code?
     IDEA: ended variable as verctor, and "versetzen"
+    --> What about last relationships end date?
 - how to interpret survival summery?
 
 @sarah:
