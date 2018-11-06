@@ -137,9 +137,8 @@ $(document).ready(function () {
 <li>Get age from t2_partners already assessed at T1</li>
 <li>Analyses of relationship dissolution after relationship start</li>
 </ul>
-<p><span class="citation">@laura</span>: - Create start_single variable (s. 03_analyses): Can you reuse previous code? - how to interpret survival summery?</p>
-<p><span class="citation">@sarah</span>: DONE (- t2-alt. with updated datawrangling code) DONE (- survival analysis for relationship end) - how to interpret survival summery? - identical data with both datawrangling scripts?? I used “all.equal”. Maybe check results together</p>
-<p>DONE To do: Transgression survival analysis for relationship end - “event”-variable - “end”-date for censored data (if relationship (lasting), then created t2/t3)</p>
+<p><span class="citation">@laura</span>: - Check new data_wrangling + marked by Sarah - Create start_single variable (s. 03_analyses): Can you reuse previous code? IDEA: ended variable as verctor, and “versetzen” - how to interpret survival summery?</p>
+<p><span class="citation">@sarah</span>: - how to interpret survival summery? How to deal with continous predictors? (+ write e-mail to cox-guy) - identical data with both datawrangling scripts?? I used “all.equal”. Maybe check results together.</p>
 </div>
 <div id="library" class="section level2">
 <h2>Library</h2>
@@ -165,6 +164,12 @@ library(mosaic)</code></pre>
 <pre><code>## Loading required package: lattice</code></pre>
 <pre><code>## Loading required package: ggformula</code></pre>
 <pre><code>## Loading required package: ggplot2</code></pre>
+<pre><code>## Loading required package: ggstance</code></pre>
+<pre><code>## 
+## Attaching package: 'ggstance'</code></pre>
+<pre><code>## The following objects are masked from 'package:ggplot2':
+## 
+##     geom_errorbarh, GeomErrorbarh</code></pre>
 <pre><code>## 
 ## New to ggformula?  Try the tutorials: 
 ##  learnr::run_tutorial(&quot;introduction&quot;, package = &quot;ggformula&quot;)
@@ -208,7 +213,7 @@ library(dplyr)</code></pre>
 </div>
 <div id="data-import" class="section level2">
 <h2>Data Import</h2>
-<pre class="r"><code># setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)
+<pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)
 #setwd(&quot;/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions&quot;)
 # set workingdirectory
 
@@ -758,7 +763,7 @@ pw2015_demographie %&gt;% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_ne
 ##   Variable        M    SD   1          2          3           4         
 ##   1. BFIK_neuro   2.72 0.96                                             
 ##                                                                         
-##   2. BFIK_neuro_1 2.80 1.42 .84**                                       
+##   2. BFIK_neuro_1 2.80 1.43 .84**                                       
 ##                             [.83, .85]                                  
 ##                                                                         
 ##   3. BFIK_neuro_2 2.06 1.29 .37**      .07**                            
@@ -823,7 +828,7 @@ crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw
 ##                 7       20   11
 ##                 8       15    7
 ##                 9        4    4
-##                 10      10    7
+##                 10       9    7
 ##                 11       1    0
 ##                 12       1    1
 ##                 13       0    1
@@ -832,7 +837,7 @@ crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw
 ##                 16       2    0
 ##                 18       0    1
 ##                 20       3    1
-##                 &lt;NA&gt;     0  496</code></pre>
+##                 &lt;NA&gt;     0  495</code></pre>
 <pre class="r"><code>pw2015_items &lt;- pw2015_items %&gt;% select(-previous_relationship_ended_days,  -end_relationship_years,
                                         -end_relationship_months, -end_relationship_weeks)</code></pre>
 </div>
@@ -1652,14 +1657,18 @@ data = left_join(t2_t3_relationship, pw2015_demographie_select,
 ## coercing into character vector</code></pre>
 <div id="create-additional-variables-for-survival-analysis-start-of-relationships" class="section level2">
 <h2>Create additional variables for survival analysis (start of relationships)</h2>
-<pre class="r"><code># Create event-variable
-data &lt;- data %&gt;% 
+<pre class="r"><code>data = data %&gt;%
+  ungroup() %&gt;%
+  arrange(session, start) %&gt;%
   mutate(event = ifelse(lasting == 0, 0, 1),
          created_t1 = as.Date(created_t1),
+         # first we are using the end date of the last relationship to create the single_start 
+         # variable
+         single_start = head(as.Date(c(NA, data$end), origin = &quot;1970-01-01&quot;), -1),
          # creation of single_start, first we look at people who stayed single during the study
          # their single_start date is the end date of their last relationship:
          single_start = if_else(relationship_order == 0, previous_relationship_ended,
-                                previous_relationship_ended),
+                                single_start),
          # if the information about their previous relationship is missing (was optional in t1),
          # we can simply take the creation date of t1 - it does not make a difference for these
          # people, because they stay single for the whole time. this is a conservative way: we
@@ -1676,15 +1685,31 @@ data &lt;- data %&gt;%
          # we dont know anything else about these people...
          single_start = if_else(relationship_order == 1 &amp; is.na(previous_relationship_ended),
                                 created_t1, single_start),
-         single_start = if_else(is.na(single_start), created_t1, single_start))
+         # and now we still have some missings if people started two new relationships after being single
+         single_start = if_else(is.na(single_start), previous_relationship_ended, single_start),
+         single_start = if_else(is.na(single_start), created_t1, single_start),
+         # we still have some cases where one relationship started while the other one was still
+         # going on. I am nor sure how we should deal with those....
+         # for the end date of being single we can just use the start date of relationship
+         single_end = start,
+         single_start_prob = ifelse(single_start &gt; start, 1, 0))
 
-data_exclusive &lt;- data_exclusive %&gt;% 
+
+practice_data = data %&gt;% select(session, start, end, previous_relationship_ended, created_t1, single_start, single_end, single_start_prob)
+
+
+data_exclusive = data_exclusive %&gt;%
+  ungroup() %&gt;%
+  arrange(session, start) %&gt;%
   mutate(event = ifelse(lasting == 0, 0, 1),
          created_t1 = as.Date(created_t1),
+         # first we are using the end date of the last relationship to create the single_start 
+         # variable
+         single_start = head(as.Date(c(NA, data_exclusive$end), origin = &quot;1970-01-01&quot;), -1),
          # creation of single_start, first we look at people who stayed single during the study
          # their single_start date is the end date of their last relationship:
          single_start = if_else(relationship_order == 0, previous_relationship_ended,
-                                previous_relationship_ended),
+                                single_start),
          # if the information about their previous relationship is missing (was optional in t1),
          # we can simply take the creation date of t1 - it does not make a difference for these
          # people, because they stay single for the whole time. this is a conservative way: we
@@ -1701,14 +1726,17 @@ data_exclusive &lt;- data_exclusive %&gt;%
          # we dont know anything else about these people...
          single_start = if_else(relationship_order == 1 &amp; is.na(previous_relationship_ended),
                                 created_t1, single_start),
-         single_start = if_else(is.na(single_start), created_t1, single_start))
-# For right now all people have single_start based on their very first relationship or the date of t1 We will fix this in time but for now it should work for the analysis.
+         # and now we still have some missings if people started two new relationships after being single
+         single_start = if_else(is.na(single_start), previous_relationship_ended, single_start),
+         single_start = if_else(is.na(single_start), created_t1, single_start),
+         # we still have some cases where one relationship started while the other one was still
+         # going on. I am nor sure how we should deal with those....
+         # for the end date of being single we can just use the start date of relationship
+         single_end = start,
+         single_start_prob = ifelse(single_start &gt; start, 1, 0))
 
-# For all other information we have to bring the date back into wideformat
-# data_wide = data %&gt;%
-#   ungroup() %&gt;%
-#   spread()
-##### this is where i am trying to find a way right now...</code></pre>
+
+practice_data = data_exclusive %&gt;% select(session, start, end, previous_relationship_ended, created_t1, single_start, single_end, single_start_prob)</code></pre>
 </div>
 <div id="create-additional-variables-for-survival-analysis-end-of-relationships" class="section level2">
 <h2>Create additional variables for survival analysis (end of relationships)</h2>
@@ -1752,6 +1780,11 @@ write.csv(data_clean, file = &quot;ImportedData/data_clean.csv&quot;)
 
 write.csv(data_exclusive, file = &quot;ImportedData/data_exclusive.csv&quot;)
 write.csv(data_exclusive_clean, file = &quot;ImportedData/data_exclusive_clean.csv&quot;)</code></pre>
+</div>
+<div id="compare-with-data-created-by-alt.-script" class="section level2">
+<h2>Compare with data created by alt. script</h2>
+<pre class="r"><code># alt_data_clean$kind &lt;- as.integer(alt_data_clean$kind) #Different classes in dataframes
+# all.equal(data_clean, alt_data_clean)</code></pre>
 </div>
 </div>
 
