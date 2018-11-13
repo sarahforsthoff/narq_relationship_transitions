@@ -37,6 +37,7 @@ library(mosaic)
 library(tidyr)
 library(apaTables)
 library(dplyr)
+select <- dplyr::select
 ```
 
 
@@ -1057,8 +1058,12 @@ starting_date = pw2015_demographie %>% select(session, created_t1 = created)
 
 #t2
 non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = "session") %>%
-  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(start), 0, 1)) %>%
+  mutate(check_liars_start = ifelse(as.Date(created_t1) > as.Date(start), 1, 0),
+         check_liars_end = ifelse(as.Date(t2_created) < as.Date(start), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %>%
   filter(check_liars == 1)
+
+
 
 non_singles_t2_session = non_singles_t2 %>% filter(!duplicated(session))
 
@@ -1072,8 +1077,13 @@ non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
 
 # t3
 non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = "session") %>%
-  mutate(check_liars = ifelse(as.Date(created_t1) < as.Date(F_t3_start), 0, 1)) %>%
+  mutate(check_liars_start = ifelse(as.Date(created_t1) > as.Date(F_t3_start), 1, 0),
+         check_liars_end = ifelse(as.Date(created) < as.Date(F_t3_start), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %>%
   filter(check_liars == 1)
+
+non_singles_t3_session = non_singles_t3 %>% filter(!duplicated(session))
+
 
 non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
 
@@ -1400,10 +1410,14 @@ data_exclusive <- data_exclusive %>%
 
 ## Clean data set
 ```{r}
-# clean data set without liars
-data_clean = data %>% filter(!(session %in% non_singles_vector))
+# clean data set without liars and exclude one person who mixed up start and end variable "AUe1MJGOoE""
+data_clean = data %>% filter(!(session %in% non_singles_vector)) %>%
+  filter(short_session != "AUe1MJGOoE") %>%
+  filter(short_session != "BGA9-p9C_K")
 
-data_exclusive_clean = data_exclusive %>% filter(!(session %in% non_singles_vector))
+data_exclusive_clean = data_exclusive %>% filter(!(session %in% non_singles_vector)) %>%
+  filter(short_session != "AUe1MJGOoE") %>%
+  filter(short_session != "BGA9-p9C_K")
 
 
 # Exclude people who had more than one relationship at a time in data_exclusive_clean

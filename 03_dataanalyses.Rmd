@@ -19,60 +19,48 @@ editor_options:
 - Model 2: rel_end ~ NARQ_ADM + NARQ_RIV + cluster(session)
 - Model 3: rel_end ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
 
-
+## Packages
 ```{r}
 library(survival)
 library(coxme)
 library(survminer)
+library(formr)
+library(dplyr)
+select = dplyr::select
+```
+
+## Data
+```{r}
+surv_data = read.csv("ImportedData/data_exclusive_clean.csv")
+```
+
+## Clean Data
+```{r}
+#Exlude sex == 3
+surv_data = surv_data %>%
+  filter(sex != 3)
 ```
 
 
-
-#Preperations before analyses
-  - event-variable: binary variable indicating if relationship (-> event) happened or not
-                    -> so far the data includes the variable "kind", which represents the relationship type
-  - start-variables: it appears as the coxph-function needs numeric time information (e.g. number of days) and not                      dates
-                      
-  
-Data: merged data from t1, t2, t3
+### Preperations before analyses
+Time of relationship/being single has to be in days
 ```{r}
-surv_data <- data_exclusive_clean
-
-#Create event-variable
-#surv_data <- surv_data %>% mutate(
- # event = ifelse(!is.na(kind), 1, 0))
-
-surv_data <- surv_data %>%
-  filter(!sex == 3)
-```
-
-!!! incomplete !!!
-Create start_single variable
-```{r}
-#Idea: start_single-variable needs to be calculated differently for Relationship order > 1
-  # e.g. relationship no.2: start of relationship 2 - end of relationship 1
-        ### For that we might have to change back into wide format
-surv_data <- surv_data %>% mutate(
-  single_start_d = 0)
-
-surv_data$start <- as.Date(surv_data$start)
-
-surv_data <- surv_data %>% mutate(
-  relationship_start_d = start - single_start) %>% #still negative values, needs further checking, approx. 10
-  filter(relationship_start_d > -1 | is.na(relationship_start_d))
+surv_data = surv_data %>%
+  mutate(single_start = as.Date(single_start),
+         single_end = as.Date(single_end),
+         start = as.Date(start),
+         end = as.Date(end),
+         single_start_d = 0,
+         single_end_d = single_end - single_start,
+         rel_start_d = 0,
+         rel_end_d = end - start)
 
 ```
 
-  Create necessary variables: relationship_start_d_end, relationship_end_d, event_end
+Some people show negative days for rel_end_d
 ```{r}
-#create sub data: including only participants with at least one relationship
-surv_data_rel <- data_exclusive_clean %>% filter(!is.na(kind))
-
-surv_data_rel <- surv_data_rel %>% mutate(
-  relationship_start_d_end = 0, #Do we set the start of the relationship to O, similiar to the beginning of being                                   single above?
-  relationship_end_d = end - start) %>%
-  filter(relationship_end_d > -1 | is.na(relationship_end_d))
-
+qplot(surv_data$rel_end_d)
+table(surv_data$rel_end_d)
 ```
 
 
