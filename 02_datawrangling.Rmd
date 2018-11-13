@@ -5,19 +5,16 @@ date: "20 April 2018"
 output: html_document
 ---
 
-Current Open questions and tasks (last updated 09/21/18)
+Current Open questions and tasks (last updated 11/13/18)
 
 ## Open questions:
-- Check To-Do's for Analyses -> 03_analyses
+- rename "start"/"end"-variable
 - Get age from t2_partners already assessed at T1 
-- Analyses of relationship dissolution after relationship start
+
 
 @laura:
 - Check new data_wrangling + marked by Sarah
-- Create start_single variable (s. 03_analyses): Can you reuse previous code?
-    IDEA: ended variable as verctor, and "versetzen"
-    --> What about last relationships end date?
-- how to interpret survival summery?
+
 
 @sarah:
 - how to interpret survival summery? How to deal with continous predictors?
@@ -44,7 +41,7 @@ library(dplyr)
 
 ## Data Import
 ```{r}
-setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+#setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
 #setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
 # set workingdirectory
 
