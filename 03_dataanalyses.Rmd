@@ -112,7 +112,27 @@ cox.zph(start_narq_con.3)
 testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
 
 
+
+############# Plotting Method by cox guy
+
+#tfit <- coxph(Surv(time, status) ~ pspline(pat.karno) + sex + age, lung)
+#termplot(tfit, term=1, se=T)
+
+test <-  coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            pspline(NARQ_ADM) + NARQ_RIV + sex + age + cluster(session),
+                          data = surv_data)
+summary(test)
+termplot(test, term = 1, se = T)
+
+test2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM + pspline(NARQ_RIV) + sex + age + cluster(session),
+                          data = surv_data)
+summary(test2)
+termplot(test2, term = 2, se = T)
+
 ```
+
+
 
 
 ###Standardized NARQ Data
