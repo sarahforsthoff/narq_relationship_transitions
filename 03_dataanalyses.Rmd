@@ -21,6 +21,7 @@ editor_options:
 
 ## Packages
 ```{r}
+library(lm.beta)
 library(survival)
 library(coxme)
 library(survminer)
@@ -55,42 +56,196 @@ surv_data = surv_data %>%
          rel_start_d = 0,
          rel_end_d = end - start)
 
+
+surv_data = surv_data %>%
+  mutate(NARQ_scale_z = as.numeric(scale(NARQ_scale, center = T, scale = T)),
+         NARQ_ADM_z = as.numeric(scale(NARQ_ADM, center = T, scale = T)),
+         NARQ_RIV_z = as.numeric(scale(NARQ_RIV, center = T, scale = T)))
+
+
+
+
 ```
 
-Some people show negative days for rel_end_d
-```{r}
-qplot(surv_data$rel_end_d)
-table(surv_data$rel_end_d)
-```
-
-
-#Relationship start
+# Continous NARQ
+##Relationship start
 - Model 1: rel_entry ~ NARQ + cluster(session)
 - Model 2: rel_entry ~ NARQ_ADM + NARQ_RIV + cluster(session)
 - Model 3: rel_entry ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
 
-###continous
+###Raw NARQ Data
 ```{r}
-start_narq_con.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_scale + cluster(session), data = surv_data)
+
+
+
 summary(start_narq_con.1)
 plot(survfit(start_narq_con.1))
 
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
 
-start_narq_con.2 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+
+
+
+
+start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_ADM + NARQ_RIV + cluster(session), data = surv_data)
 summary(start_narq_con.2)
 plot(survfit(start_narq_con.2))
-testPH_start_narq_con.2 <- ggcoxzph(start_narq_con.2)
-ggcoxzph(testPH_start_narq_con.2)
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
 
-start_narq_con.3 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
-                            NARQ_ADM + NARQ_RIV + sex + age + cluster(session), data = surv_data)
+
+
+
+start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM + NARQ_RIV + sex + age + cluster(session),
+                          data = surv_data)
 summary(start_narq_con.3)
 plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+
+
 ```
 
-###groups
+
+###Standardized NARQ Data
+```{r}
+start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_scale_z + cluster(session), data = surv_data)
+
+
+
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
+
+
+
+
+
+start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
+
+
+
+
+start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_z + NARQ_RIV_z + sex + age + cluster(session),
+                          data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+```
+
+
+##Relationship end
+- Model 1: rel_end ~ NARQ + cluster(session)
+- Model 2: rel_end ~ NARQ_ADM + NARQ_RIV + cluster(session)
+- Model 3: rel_end ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
+
+###Raw NARQ Data
+```{r}
+start_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_scale + cluster(session), data = surv_data)
+
+
+
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
+
+
+
+
+
+start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM + NARQ_RIV + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
+
+
+
+
+start_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM + NARQ_RIV + sex + age + cluster(session),
+                          data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+
+
+```
+
+
+###Standardized NARQ Data
+```{r}
+start_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_scale_z + cluster(session), data = surv_data)
+
+
+
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
+
+
+
+
+
+start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
+
+
+
+
+start_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_z + NARQ_RIV_z + sex + age + cluster(session),
+                          data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+```
+
+
+
+
+
+# Categorical NARQ
 ```{r}
 #NARQ_scale
 median_NARQ_scale = median(surv_data$NARQ_scale, na.rm = T)
@@ -114,6 +269,127 @@ surv_data = surv_data %>%
          NARQ_RIV_group = as.factor(NARQ_RIV_group))
 
 ```
+
+
+##Relationship start
+- Model 1: rel_entry ~ NARQ_group + cluster(session)
+- Model 2: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + cluster(session)
+- Model 3: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
+
+###Raw NARQ Data
+```{r}
+start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_group + cluster(session), data = surv_data)
+
+
+
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
+
+
+
+
+
+start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
+
+
+
+
+start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                          data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+
+
+```
+
+
+
+##Relationship end
+- Model 1: rel_end ~ NARQ_group + cluster(session)
+- Model 2: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + cluster(session)
+- Model 3: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
+
+###Raw NARQ Data
+```{r}
+start_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_group + cluster(session), data = surv_data)
+
+
+
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
+
+
+
+
+
+start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
+
+
+
+
+start_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                          data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+```
+
+## Plots
+```{r}
+plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                          data = surv_data)
+ggsurvplot(plot_model1, data = surv_data, conf.int = T)
+
+plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                          data = surv_data)
+ggsurvplot(plot_model2, data = surv_data, conf.int = T)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ```{r}
 start_narq_gr.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 

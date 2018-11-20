@@ -38,24 +38,33 @@ Because our main predictors (narcissism and its sub-dimensions based on the NARQ
 
 ###############################
 Call:
-coxph(formula = Surv(single_start_d, relationship_start_d, event) ~ 
-    NARQ_ADM + cluster(session), data = surv_data)
+coxph(formula = Surv(single_start_d, single_end_d, event_start) ~ 
+    NARQ_ADM + NARQ_RIV + sex + age + cluster(session), data = surv_data)
 
-  n= 935, number of events= 371 
+  n= 848, number of events= 305 
 
-            coef exp(coef) se(coef) robust se     z Pr(>|z|)    
-NARQ_ADM 0.28334   1.32755  0.08085   0.07998 3.542 0.000396 ***
+              coef exp(coef)  se(coef) robust se      z Pr(>|z|)    
+NARQ_ADM  0.347611  1.415681  0.096927  0.104591  3.324 0.000889 ***
+NARQ_RIV -0.167863  0.845469  0.098916  0.114159 -1.470 0.141445    
+sex      -0.139808  0.869525  0.125437  0.129171 -1.082 0.279095    
+age      -0.057734  0.943901  0.008379  0.008411 -6.864 6.71e-12 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
          exp(coef) exp(-coef) lower .95 upper .95
-NARQ_ADM     1.328     0.7533     1.135     1.553
+NARQ_ADM    1.4157     0.7064    1.1533    1.7378
+NARQ_RIV    0.8455     1.1828    0.6760    1.0575
+sex         0.8695     1.1501    0.6750    1.1200
+age         0.9439     1.0594    0.9285    0.9596
 
-Concordance= 0.528  (se = 0.017 )
-Rsquare= 0.013   (max possible= 0.992 )
-Likelihood ratio test= 12.17  on 1 df,   p=5e-04
-Wald test            = 12.55  on 1 df,   p=4e-04
-Score (logrank) test = 12.3  on 1 df,   p=5e-04,   Robust = 11.66  p=6e-04
+Concordance= 0.624  (se = 0.018 )
+Rsquare= 0.096   (max possible= 0.987 )
+Likelihood ratio test= 85.27  on 4 df,   p=<2e-16
+Wald test            = 71.19  on 4 df,   p=1e-14
+Score (logrank) test = 69.36  on 4 df,   p=3e-14,   Robust = 73.8  p=4e-15
+
+  (Note: the likelihood ratio and score tests assume independence of
+     observations within a cluster, the Wald and robust score tests do not).
 ##################################
 
 "One raised unit of NARQ_ADM is associated with 1.33 higher probability of the event (i.g. starting a relationship)."
