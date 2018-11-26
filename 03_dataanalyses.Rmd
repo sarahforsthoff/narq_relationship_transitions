@@ -6,8 +6,9 @@ editor_options:
 ---
 
 ## TODO before
-- data is sound?
-- How to interpret results? (continous vs. groups)
+- Plot quartile, plot extreme groups, plot relative hazard (control!)
+- check analyses if controlling for quartile 
+- analyses with future prospects
 
 ## Planned Analysis:
 ### Relationship Entry
@@ -366,7 +367,7 @@ testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
 ## Plots
 ```{r}
 plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                            NARQ_ADM_group,
                           data = surv_data)
 ggsurvplot(plot_model1, data = surv_data, conf.int = T)
 
