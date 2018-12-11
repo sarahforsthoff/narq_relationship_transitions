@@ -9,8 +9,6 @@ Current Open questions and tasks (last updated 11/13/18)
 
 ## Open questions:
 - rename "start"/"end"-variable
-- Get age from t2_partners already assessed at T1 
-
 
 @laura:
 - Check new data_wrangling + marked by Sarah

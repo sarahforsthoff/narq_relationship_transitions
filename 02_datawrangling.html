@@ -129,15 +129,13 @@ $(document).ready(function () {
 </div>
 
 
-<p>Current Open questions and tasks (last updated 09/21/18)</p>
+<p>Current Open questions and tasks (last updated 11/13/18)</p>
 <div id="open-questions" class="section level2">
 <h2>Open questions:</h2>
 <ul>
-<li>Check To-Do’s for Analyses -&gt; 03_analyses</li>
-<li>Get age from t2_partners already assessed at T1</li>
-<li>Analyses of relationship dissolution after relationship start</li>
+<li>rename “start”/“end”-variable</li>
 </ul>
-<p><span class="citation">@laura</span>: - Check new data_wrangling + marked by Sarah - Create start_single variable (s. 03_analyses): Can you reuse previous code? IDEA: ended variable as verctor, and “versetzen” - how to interpret survival summery?</p>
+<p><span class="citation">@laura</span>: - Check new data_wrangling + marked by Sarah</p>
 <p><span class="citation">@sarah</span>: - how to interpret survival summery? How to deal with continous predictors? (+ write e-mail to cox-guy) - identical data with both datawrangling scripts?? I used “all.equal”. Maybe check results together.</p>
 </div>
 <div id="library" class="section level2">
@@ -209,11 +207,12 @@ library(mosaic)</code></pre>
 ## 
 ##     expand</code></pre>
 <pre class="r"><code>library(apaTables)
-library(dplyr)</code></pre>
+library(dplyr)
+select &lt;- dplyr::select</code></pre>
 </div>
 <div id="data-import" class="section level2">
 <h2>Data Import</h2>
-<pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)
+<pre class="r"><code>#setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)
 #setwd(&quot;/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions&quot;)
 # set workingdirectory
 
@@ -1423,7 +1422,9 @@ starting_date = pw2015_demographie %&gt;% select(session, created_t1 = created)
 
 #t2
 non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = &quot;session&quot;) %&gt;%
-  mutate(check_liars = ifelse(as.Date(created_t1) &lt; as.Date(start), 0, 1)) %&gt;%
+  mutate(check_liars_start = ifelse(as.Date(created_t1) &gt; as.Date(start), 1, 0),
+         check_liars_end = ifelse(as.Date(t2_created) &lt; as.Date(start), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %&gt;%
   filter(check_liars == 1)</code></pre>
 <pre><code>## Warning: Column `session` joining character vector and factor, coercing
 ## into character vector</code></pre>
@@ -1435,26 +1436,31 @@ count(non_singles_t2_session)</code></pre>
 <pre><code>## # A tibble: 1 x 1
 ##       n
 ##   &lt;int&gt;
-## 1   213</code></pre>
+## 1   216</code></pre>
 <pre class="r"><code>table(non_singles_t2_session$kind)  </code></pre>
 <pre><code>## 
 ##  1  2  3 
-## 38 80 95</code></pre>
+## 38 81 97</code></pre>
 <pre class="r"><code>non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
 
 
 # t3
 non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = &quot;session&quot;) %&gt;%
-  mutate(check_liars = ifelse(as.Date(created_t1) &lt; as.Date(F_t3_start), 0, 1)) %&gt;%
+  mutate(check_liars_start = ifelse(as.Date(created_t1) &gt; as.Date(F_t3_start), 1, 0),
+         check_liars_end = ifelse(as.Date(created) &lt; as.Date(F_t3_start), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %&gt;%
   filter(check_liars == 1)</code></pre>
 <pre><code>## Warning: Column `session` joining factors with different levels, coercing
 ## to character vector</code></pre>
-<pre class="r"><code>non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
+<pre class="r"><code>non_singles_t3_session = non_singles_t3 %&gt;% filter(!duplicated(session))
+
+
+non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
 
 table(non_singles_vector == &quot;--N__ZtqyajgoxEV6gE3mkStbJ-msvAOiCn2N_UkgOLj1T3JgBVkz1S1jroCaGzE&quot;)</code></pre>
 <pre><code>## 
 ## FALSE  TRUE 
-##   405     1</code></pre>
+##   462     1</code></pre>
 </div>
 <div id="data-t3" class="section level1">
 <h1>Data t3</h1>
@@ -1801,11 +1807,22 @@ data_exclusive &lt;- data_exclusive %&gt;%
 </div>
 <div id="clean-data-set" class="section level2">
 <h2>Clean data set</h2>
-<pre class="r"><code># clean data set without liars
-data_clean = data %&gt;% filter(!(session %in% non_singles_vector))
+<pre class="r"><code># clean data set without liars and exclude one person who mixed up start and end variable &quot;AUe1MJGOoE&quot;&quot;
+data_clean = data %&gt;% filter(!(session %in% non_singles_vector)) %&gt;%
+  filter(short_session != &quot;AUe1MJGOoE&quot;) %&gt;%
+  filter(short_session != &quot;BGA9-p9C_K&quot;) 
 
-data_exclusive_clean = data_exclusive %&gt;% filter(!(session %in% non_singles_vector))
+# additionally cleaning: people who never had a relationship (number_relationships are the number of previos relationships)
+data_clean = data_clean %&gt;%
+  filter(number_relationships != 0 | is.na(number_relationships))
 
+data_exclusive_clean = data_exclusive %&gt;% filter(!(session %in% non_singles_vector)) %&gt;%
+  filter(short_session != &quot;AUe1MJGOoE&quot;) %&gt;%
+  filter(short_session != &quot;BGA9-p9C_K&quot;)
+
+# additionally cleaning: people who never had a relationship (number_relationships are the number of previos relationships)
+data_exclusive_clean = data_exclusive_clean %&gt;%
+  filter(number_relationships != 0 | is.na(number_relationships))
 
 # Exclude people who had more than one relationship at a time in data_exclusive_clean
 data_exclusive_clean = data_exclusive_clean %&gt;% filter(short_session != &quot;dbFHNbYgCS&quot;,
