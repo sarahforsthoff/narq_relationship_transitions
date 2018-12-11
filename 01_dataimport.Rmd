@@ -130,6 +130,8 @@ pw2015_t3_ende_select = pw2015_t3_ende %>%
 ```{r}
 setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions/ImportedData")
 
+options(encoding = "utf8")
+write_json(pw2015_t2_select, "pw2015_t2_select.json")
 
 write.csv2(pw2015_demographie_select, file = "pw2015_demographie_select.csv")
 write.csv2(pw2015_items_select, file = "pw2015_items_select.csv")

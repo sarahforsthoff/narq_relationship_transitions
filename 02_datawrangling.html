@@ -248,7 +248,11 @@ test_items = pw2015_items %&gt;%
          session != &quot;aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ&quot;)
 test_items_vector = as.character(test_items$session)
 
-## notes to us
+x = pw2015_items %&gt;% filter(notes_to_us %contains% &quot;Hi Eva und Tabea&quot;)
+x$notes_to_us</code></pre>
+<pre><code>## [1] Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja
+## 241 Levels: - ...</code></pre>
+<pre class="r"><code>## notes to us
 comments_pw2015_items = pw2015_items %&gt;%
   filter(notes_to_us %contains% &quot;Cyril Test&quot;|
            notes_to_us %contains% &quot;Tabea Test!&quot;|
@@ -262,6 +266,7 @@ comments_pw2015_items = pw2015_items %&gt;%
            notes_to_us %contains% &quot;thank the formr monkey\nmany times&quot; |
            notes_to_us == &quot;Test Silvia&quot; |
            notes_to_us == &quot;Test Silvi&quot;)
+
 
 comments_pw2015_items_vector = as.character(comments_pw2015_items$session)</code></pre>
 <p>“When was your last relationship?”: Exclude participants with “funny” answers = last relationshin when younger than 10</p>

@@ -23,7 +23,9 @@ Current Open questions and tasks (last updated 11/13/18)
 
 ## Library
 ```{r}
-# library(jsonlite)
+library(psych)
+library(stringr)
+library(jsonlite)
 # install.packages("devtools")
 # devtools::install_github("rubenarslan/formr")
  library(formr)
@@ -40,12 +42,14 @@ select <- dplyr::select
 
 ## Data Import
 ```{r}
-#setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+# setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
 #setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
 # set workingdirectory
 
 pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
 pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
+pw2015_t2 = as.data.frame(fromJSON("ImportedData/pw2015_t2_select.json"))
+
 pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
 pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
 pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
@@ -55,6 +59,15 @@ pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = 
 pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
 # pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
 pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+```
+
+
+## Test
+```{r}
+x = pw2015_t2 %>% filter(short_session == "q1up64lH9t")
+y = pw2015_t3_partners %>% filter(short_session == "q1up64lH9t")
+
+
 ```
 
 ## Clean Data (Testpeople, Duplicates, Liars, etc.)
@@ -75,13 +88,16 @@ test_items = pw2015_items %>%
          session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
 test_items_vector = as.character(test_items$session)
 
+x = pw2015_items %>% filter(notes_to_us %contains% "Hi Eva und Tabea")
+x$notes_to_us
+
 ## notes to us
 comments_pw2015_items = pw2015_items %>%
   filter(notes_to_us %contains% "Cyril Test"|
            notes_to_us %contains% "Tabea Test!"|
            notes_to_us == "Test!" |
            notes_to_us %contains% "Test, test, test." |
-           notes_to_us == "Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja" |
+           notes_to_us %contains% "Hi Eva und Tabea" |
            notes_to_us == "Test Eva" |
            notes_to_us == "Test, Eva" |
            notes_to_us == "Test!!! Silvia B." |
@@ -89,6 +105,7 @@ comments_pw2015_items = pw2015_items %>%
            notes_to_us %contains% "thank the formr monkey\nmany times" |
            notes_to_us == "Test Silvia" |
            notes_to_us == "Test Silvi")
+
 
 comments_pw2015_items_vector = as.character(comments_pw2015_items$session)
 ```
