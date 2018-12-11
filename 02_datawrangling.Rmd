@@ -28,9 +28,7 @@ library(stringr)
 library(jsonlite)
 # install.packages("devtools")
 # devtools::install_github("rubenarslan/formr")
- library(formr)
-# library(psych)
-# library(stringr)
+library(formr)
 library(mosaic)
 library(tidyr)
 library(apaTables)
@@ -42,33 +40,34 @@ select <- dplyr::select
 
 ## Data Import
 ```{r}
-# setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
+setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions")
 #setwd("/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions")
 # set workingdirectory
 
-pw2015_demographie =  read.csv("ImportedData/pw2015_demographie_select.csv", sep = ";")
-pw2015_items = read.csv("ImportedData/pw2015_items_select.csv", sep = ";")
+pw2015_demographie = as.data.frame(fromJSON("ImportedData/pw2015_demographie_select.json"))
+pw2015_items = as.data.frame(fromJSON("ImportedData/pw2015_items_select.json"))
 pw2015_t2 = as.data.frame(fromJSON("ImportedData/pw2015_t2_select.json"))
+pw2015_t2_frauen = as.data.frame(fromJSON("ImportedData/pw2015_t2_frauen_select.json"))
 
-pw2015_t2 = read.csv("ImportedData/pw2015_t2_select.csv", sep = ";")
-pw2015_t2_frauen = read.csv("ImportedData/pw2015_t2_frauen_select.csv", sep = ";")
-pw2015_t2_ende = read.csv("ImportedData/pw2015_t2_ende_select.csv", sep = ";")
-#pw2015_t3_start = read.csv("ImportedData/pw2015_t3_start_select.csv", sep = ";")
-pw2015_t3_singles = read.csv("ImportedData/pw2015_t3_singles_select.csv", sep = ";")
-# pw2015_t3_relationship_number = read.csv("ImportedData/pw2015_t3_relationship_number_select.csv", sep = ";")
-pw2015_t3_partners = read.csv("ImportedData/pw2015_t3_partners_select.csv", sep = ";")
-# pw2015_t3_mainrelation = read.csv("ImportedData/pw2015_t3_mainrelation_select.csv", sep = ";")
-pw2015_t3_ende = read.csv("ImportedData/pw2015_t3_ende_select.csv", sep = ";")
+pw2015_t2_frauen = pw2015_t2_frauen %>%
+  mutate(pastrelationship5_f_name = NA,
+         pastrelationship5_name_f_new = NA,
+         pastrelationship5_age_f_new = NA,
+         pastrelationship5_height_f_new = NA,
+         pastrelationship5_relationship_f_new = NA,
+         pastrelationship5_duration_f_new = NA,
+         pastrelationship5_kind_f = NA,
+         pastrelationship5_start_f = NA,
+         pastrelationship5_end_f = NA,
+         pastrelationship6_f = NA,
+         pastrelationshipmore_f = NA)
+
+pw2015_t2_ende = as.data.frame(fromJSON("ImportedData/pw2015_t2_ende_select.json"))
+pw2015_t3_singles = as.data.frame(fromJSON("ImportedData/pw2015_t3_singles_select.json"))
+pw2015_t3_partners = as.data.frame(fromJSON("ImportedData/pw2015_t3_partners_select.json"))
+pw2015_t3_ende = as.data.frame(fromJSON("ImportedData/pw2015_t3_ende_select.json"))
 ```
 
-
-## Test
-```{r}
-x = pw2015_t2 %>% filter(short_session == "q1up64lH9t")
-y = pw2015_t3_partners %>% filter(short_session == "q1up64lH9t")
-
-
-```
 
 ## Clean Data (Testpeople, Duplicates, Liars, etc.)
 ### Testperson and missing session
@@ -1121,7 +1120,7 @@ pw2015_t3_partners = pw2015_t3_partners %>%
          kind = ifelse(!is.na(F_t3_kind), F_t3_kind, F_t3_past_kind)) %>%
   mutate(relationship_number = ifelse(is.na(F_t3_start), 0, relationship_number),
          relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
-         F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
+         F_t3_lasting = ifelse(is.na(F_t3_start), 0, as.numeric(F_t3_lasting)))
 
 pw2015_t3_partners = pw2015_t3_partners %>%
   mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %>%
@@ -1183,7 +1182,7 @@ t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_sessio
 t2_test$start = as.Date(t2_test$start)
 
 pw2015_t3_partners = pw2015_t3_partners %>%
-  mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
+  mutate(kind = ifelse(is.na(F_t3_kind), as.factor(F_t3_past_kind), as.factor(F_t3_kind)))
 
 t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, created, F_t3_start,
                                                        F_t3_sex,F_t3_end, kind, F_t3_lasting,

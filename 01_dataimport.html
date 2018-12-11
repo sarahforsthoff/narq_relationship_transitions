@@ -91,6 +91,9 @@ img {
 .tabbed-pane {
   padding-top: 12px;
 }
+.html-widget {
+  margin-bottom: 20px;
+}
 button.code-folding-btn:focus {
   outline: none;
 }
@@ -129,9 +132,8 @@ $(document).ready(function () {
 <pre class="r"><code>library(jsonlite)
 library(formr)
 library(psych)
-library(stringr)</code></pre>
-<pre><code>## Warning: package 'stringr' was built under R version 3.4.3</code></pre>
-<pre class="r"><code>library(dplyr)</code></pre>
+library(stringr)
+library(dplyr)</code></pre>
 <pre><code>## 
 ## Attaching package: 'dplyr'</code></pre>
 <pre><code>## The following objects are masked from 'package:formr':
@@ -164,7 +166,7 @@ pw2015_t3_ende = as.data.frame(fromJSON(&quot;Data/pw2015_t3_ende.json&quot;))</
 </div>
 <div id="data-wrangling" class="section level2">
 <h2>Data Wrangling</h2>
-<p>Kurzvariable für erste 10 Zeichen des Session-Codes erstellen</p>
+<p>Kurzvariable fÃ¼r erste 10 Zeichen des Session-Codes erstellen</p>
 <pre class="r"><code>pw2015_demographie$short_session = str_sub(pw2015_demographie$session,1,10)
 pw2015_items$short_session = str_sub(pw2015_items$session,1,10)
 pw2015_t2$short_session = str_sub(pw2015_t2$session,1,10)
@@ -178,9 +180,9 @@ pw2015_t3_partners$short_session = str_sub(pw2015_t3_partners$session,1,10)
 pw2015_t3_mainrelation$short_session = str_sub(pw2015_t3_mainrelation$session,1,10)
 pw2015_t3_ende$short_session = str_sub(pw2015_t3_ende$session,1,10)</code></pre>
 </div>
-<div id="zusammenstellen-der-benotigten-variablen" class="section level2">
-<h2>Zusammenstellen der benötigten Variablen</h2>
-<p>Die System- bzw. neu gebildeten Variablen Variablen “session”, “short_session” und “ended” macht immer Sinn drin zu lassen. Erstere werden für die Zuordnung gebraucht, letztere erlaubt es Abbrecher herauszunehmen. Falls es in dem Sheet eine Variable gibt die “notes_to_us” oder “comment” heisst auch drin lassen. Die brauchen wir später, um z.B. Fälle, bei denen es technische Probleme oder Verständnisschwierigkeiten gab, herauszufiltern</p>
+<div id="zusammenstellen-der-benatigten-variablen" class="section level2">
+<h2>Zusammenstellen der benÃ¶tigten Variablen</h2>
+<p>Die System- bzw. neu gebildeten Variablen Variablen “session”, “short_session” und “ended” macht immer Sinn drin zu lassen. Erstere werden fÃ¼r die Zuordnung gebraucht, letztere erlaubt es Abbrecher herauszunehmen. Falls es in dem Sheet eine Variable gibt die “notes_to_us” oder “comment” heisst auch drin lassen. Die brauchen wir spÃ¤ter, um z.B. FÃ¤lle, bei denen es technische Probleme oder VerstÃ¤ndnisschwierigkeiten gab, herauszufiltern</p>
 <div id="t1" class="section level3">
 <h3>t1</h3>
 <pre class="r"><code>pw2015_demographie_select = pw2015_demographie %&gt;%
@@ -190,11 +192,14 @@ pw2015_t3_ende$short_session = str_sub(pw2015_t3_ende$session,1,10)</code></pre>
 
 pw2015_items_select = pw2015_items %&gt;%
   select(session, short_session, created, ended,
-         number_relationships, end_relationship_weeks, end_relationship_months, end_relationship_years,
+         number_relationships, end_relationship_weeks, end_relationship_months, 
+         end_relationship_years,
+         duration_relationship_years, duration_relationship_months,
          starts_with(&quot;global_interest_&quot;),
          starts_with(&quot;SOI_R&quot;),
          starts_with(&quot;longterm_&quot;),
-         notes_to_us)</code></pre>
+         notes_to_us,
+         email2)</code></pre>
 </div>
 <div id="t2" class="section level3">
 <h3>t2</h3>
@@ -228,8 +233,9 @@ pw2015_t3_relationship_number_select = pw2015_t3_relationship_number %&gt;%
 
 
 pw2015_t3_partners_select = pw2015_t3_partners %&gt;%
-  select(session, short_session, created, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup, F_t3_kind,
-         F_t3_past_kind, F_t3_closeup_kind)
+  select(session, short_session, created, ended, F_t3_start, F_t3_lasting, F_t3_end, F_t3_breakup,
+         F_t3_kind, F_t3_past_kind, F_t3_closeup_kind, F_t3_name, F_t3_name_new, F_t3_age_new,
+         F_t3_sex_new)
 
 
 pw2015_t3_mainrelation_select = pw2015_t3_mainrelation %&gt;%
@@ -247,18 +253,19 @@ pw2015_t3_ende_select = pw2015_t3_ende %&gt;%
 <h2>Abspeichern von Datenfiles</h2>
 <pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions/ImportedData&quot;)
 
+options(encoding = &quot;utf8&quot;)
 
-write.csv2(pw2015_demographie_select, file = &quot;pw2015_demographie_select.csv&quot;)
-write.csv2(pw2015_items_select, file = &quot;pw2015_items_select.csv&quot;)
-write.csv2(pw2015_t2_select, file = &quot;pw2015_t2_select.csv&quot;)
-write.csv2(pw2015_t2_frauen_select, file = &quot;pw2015_t2_frauen_select.csv&quot;)
-write.csv2(pw2015_t2_ende_select, file = &quot;pw2015_t2_ende_select.csv&quot;)
-write.csv2(pw2015_t3_start_select, file = &quot;pw2015_t3_start_select.csv&quot;)
-write.csv2(pw2015_t3_singles_select, file = &quot;pw2015_t3_singles_select.csv&quot;)
-write.csv2(pw2015_t3_relationship_number_select, file = &quot;pw2015_t3_relationship_number_select.csv&quot;)
-write.csv2(pw2015_t3_partners_select, file = &quot;pw2015_t3_partners_select.csv&quot;)
-write.csv2(pw2015_t3_mainrelation_select, file = &quot;pw2015_t3_mainrelation_select.csv&quot;)
-write.csv2(pw2015_t3_ende_select, file = &quot;pw2015_t3_ende_select.csv&quot;)</code></pre>
+write_json(pw2015_demographie_select, &quot;pw2015_demographie_select.json&quot;)
+write_json(pw2015_items_select, &quot;pw2015_items_select.json&quot;)
+write_json(pw2015_t2_select, &quot;pw2015_t2_select.json&quot;)
+write_json(pw2015_t2_frauen_select, &quot;pw2015_t2_frauen_select.json&quot;)
+write_json(pw2015_t2_ende_select, &quot;pw2015_t2_ende_select.json&quot;)
+write_json(pw2015_t3_start_select, &quot;pw2015_t3_start_select.json&quot;)
+write_json(pw2015_t3_singles_select, &quot;pw2015_t3_singles_select.json&quot;)
+write_json(pw2015_t3_relationship_number_select, &quot;pw2015_t3_relationship_number_select.json&quot;)
+write_json(pw2015_t3_partners_select, &quot;pw2015_t3_partners_select.json&quot;)
+write_json(pw2015_t3_mainrelation_select, &quot;pw2015_t3_mainrelation_select.json&quot;)
+write_json(pw2015_t3_ende_select, &quot;pw2015_t3_ende_select.json&quot;)</code></pre>
 </div>
 
 

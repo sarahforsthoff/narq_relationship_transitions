@@ -140,12 +140,12 @@ $(document).ready(function () {
 </div>
 <div id="library" class="section level2">
 <h2>Library</h2>
-<pre class="r"><code># library(jsonlite)
+<pre class="r"><code>library(psych)
+library(stringr)
+library(jsonlite)
 # install.packages(&quot;devtools&quot;)
 # devtools::install_github(&quot;rubenarslan/formr&quot;)
- library(formr)
-# library(psych)
-# library(stringr)
+library(formr)
 library(mosaic)</code></pre>
 <pre><code>## Loading required package: dplyr</code></pre>
 <pre><code>## 
@@ -162,6 +162,11 @@ library(mosaic)</code></pre>
 <pre><code>## Loading required package: lattice</code></pre>
 <pre><code>## Loading required package: ggformula</code></pre>
 <pre><code>## Loading required package: ggplot2</code></pre>
+<pre><code>## 
+## Attaching package: 'ggplot2'</code></pre>
+<pre><code>## The following objects are masked from 'package:psych':
+## 
+##     %+%, alpha</code></pre>
 <pre><code>## Loading required package: ggstance</code></pre>
 <pre><code>## 
 ## Attaching package: 'ggstance'</code></pre>
@@ -193,6 +198,9 @@ library(mosaic)</code></pre>
 <pre><code>## The following objects are masked from 'package:formr':
 ## 
 ##     n_missing, props</code></pre>
+<pre><code>## The following objects are masked from 'package:psych':
+## 
+##     logit, read.file, rescale</code></pre>
 <pre><code>## The following objects are masked from 'package:stats':
 ## 
 ##     binom.test, cor, cor.test, cov, fivenum, IQR, median,
@@ -212,21 +220,32 @@ select &lt;- dplyr::select</code></pre>
 </div>
 <div id="data-import" class="section level2">
 <h2>Data Import</h2>
-<pre class="r"><code>#setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)
+<pre class="r"><code>setwd(&quot;C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions&quot;)
 #setwd(&quot;/Users/sarahforsthoff/Documents/Bachelor Arbeit/Hiwi/narq_relationship_transitions&quot;)
 # set workingdirectory
 
-pw2015_demographie =  read.csv(&quot;ImportedData/pw2015_demographie_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_items = read.csv(&quot;ImportedData/pw2015_items_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_t2 = read.csv(&quot;ImportedData/pw2015_t2_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_t2_frauen = read.csv(&quot;ImportedData/pw2015_t2_frauen_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_t2_ende = read.csv(&quot;ImportedData/pw2015_t2_ende_select.csv&quot;, sep = &quot;;&quot;)
-#pw2015_t3_start = read.csv(&quot;ImportedData/pw2015_t3_start_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_t3_singles = read.csv(&quot;ImportedData/pw2015_t3_singles_select.csv&quot;, sep = &quot;;&quot;)
-# pw2015_t3_relationship_number = read.csv(&quot;ImportedData/pw2015_t3_relationship_number_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_t3_partners = read.csv(&quot;ImportedData/pw2015_t3_partners_select.csv&quot;, sep = &quot;;&quot;)
-# pw2015_t3_mainrelation = read.csv(&quot;ImportedData/pw2015_t3_mainrelation_select.csv&quot;, sep = &quot;;&quot;)
-pw2015_t3_ende = read.csv(&quot;ImportedData/pw2015_t3_ende_select.csv&quot;, sep = &quot;;&quot;)</code></pre>
+pw2015_demographie = as.data.frame(fromJSON(&quot;ImportedData/pw2015_demographie_select.json&quot;))
+pw2015_items = as.data.frame(fromJSON(&quot;ImportedData/pw2015_items_select.json&quot;))
+pw2015_t2 = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t2_select.json&quot;))
+pw2015_t2_frauen = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t2_frauen_select.json&quot;))
+
+pw2015_t2_frauen = pw2015_t2_frauen %&gt;%
+  mutate(pastrelationship5_f_name = NA,
+         pastrelationship5_name_f_new = NA,
+         pastrelationship5_age_f_new = NA,
+         pastrelationship5_height_f_new = NA,
+         pastrelationship5_relationship_f_new = NA,
+         pastrelationship5_duration_f_new = NA,
+         pastrelationship5_kind_f = NA,
+         pastrelationship5_start_f = NA,
+         pastrelationship5_end_f = NA,
+         pastrelationship6_f = NA,
+         pastrelationshipmore_f = NA)
+
+pw2015_t2_ende = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t2_ende_select.json&quot;))
+pw2015_t3_singles = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t3_singles_select.json&quot;))
+pw2015_t3_partners = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t3_partners_select.json&quot;))
+pw2015_t3_ende = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t3_ende_select.json&quot;))</code></pre>
 </div>
 <div id="clean-data-testpeople-duplicates-liars-etc." class="section level2">
 <h2>Clean Data (Testpeople, Duplicates, Liars, etc.)</h2>
@@ -250,15 +269,14 @@ test_items_vector = as.character(test_items$session)
 
 x = pw2015_items %&gt;% filter(notes_to_us %contains% &quot;Hi Eva und Tabea&quot;)
 x$notes_to_us</code></pre>
-<pre><code>## [1] Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja
-## 241 Levels: - ...</code></pre>
+<pre><code>## [1] &quot;Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja&quot;</code></pre>
 <pre class="r"><code>## notes to us
 comments_pw2015_items = pw2015_items %&gt;%
   filter(notes_to_us %contains% &quot;Cyril Test&quot;|
            notes_to_us %contains% &quot;Tabea Test!&quot;|
            notes_to_us == &quot;Test!&quot; |
            notes_to_us %contains% &quot;Test, test, test.&quot; |
-           notes_to_us == &quot;Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja&quot; |
+           notes_to_us %contains% &quot;Hi Eva und Tabea&quot; |
            notes_to_us == &quot;Test Eva&quot; |
            notes_to_us == &quot;Test, Eva&quot; |
            notes_to_us == &quot;Test!!! Silvia B.&quot; |
@@ -286,10 +304,6 @@ t1_time_single &lt;- pw2015_items %&gt;% select(session, short_session, end_rela
 
 t1_time_single_test &lt;- left_join(t1_age, t1_time_single)</code></pre>
 <pre><code>## Joining, by = c(&quot;session&quot;, &quot;short_session&quot;)</code></pre>
-<pre><code>## Warning: Column `session` joining factors with different levels, coercing
-## to character vector</code></pre>
-<pre><code>## Warning: Column `short_session` joining factors with different levels,
-## coercing to character vector</code></pre>
 <pre class="r"><code>t1_time_single_test &lt;- t1_time_single_test %&gt;% filter((age - end_relationship_years) &lt; 10) #three cases detected
 
 vec_time_single_test &lt;- t1_time_single_test$session #vector with session code of the three cases
@@ -793,10 +807,9 @@ pw2015_demographie %&gt;% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_ne
   mutate(created = as.Date(created))
 
 # For people who never had a relationship we need their age to calculate backwards how long they have been single
-pw2015_items = left_join(pw2015_items, pw2015_demographie %&gt;% select(session, age), by = &quot;session&quot;)</code></pre>
-<pre><code>## Warning: Column `session` joining factors with different levels, coercing
-## to character vector</code></pre>
-<pre class="r"><code>#################################################################### 
+pw2015_items = left_join(pw2015_items, pw2015_demographie %&gt;% select(session, age), by = &quot;session&quot;)
+
+#################################################################### 
 ##########Is it accurate to calculate with age, if always single?
 pw2015_items = pw2015_items %&gt;%
   mutate(end_relationship_years = ifelse(number_relationships == 0, age, end_relationship_years))
@@ -1430,10 +1443,11 @@ non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = &quot;ses
   mutate(check_liars_start = ifelse(as.Date(created_t1) &gt; as.Date(start), 1, 0),
          check_liars_end = ifelse(as.Date(t2_created) &lt; as.Date(start), 1, 0),
          check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %&gt;%
-  filter(check_liars == 1)</code></pre>
-<pre><code>## Warning: Column `session` joining character vector and factor, coercing
-## into character vector</code></pre>
-<pre class="r"><code>non_singles_t2_session = non_singles_t2 %&gt;% filter(!duplicated(session))
+  filter(check_liars == 1)
+
+
+
+non_singles_t2_session = non_singles_t2 %&gt;% filter(!duplicated(session))
 
 
 
@@ -1454,10 +1468,9 @@ non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = &quot;session
   mutate(check_liars_start = ifelse(as.Date(created_t1) &gt; as.Date(F_t3_start), 1, 0),
          check_liars_end = ifelse(as.Date(created) &lt; as.Date(F_t3_start), 1, 0),
          check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %&gt;%
-  filter(check_liars == 1)</code></pre>
-<pre><code>## Warning: Column `session` joining factors with different levels, coercing
-## to character vector</code></pre>
-<pre class="r"><code>non_singles_t3_session = non_singles_t3 %&gt;% filter(!duplicated(session))
+  filter(check_liars == 1)
+
+non_singles_t3_session = non_singles_t3 %&gt;% filter(!duplicated(session))
 
 
 non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
@@ -1473,32 +1486,8 @@ table(non_singles_vector == &quot;--N__ZtqyajgoxEV6gE3mkStbJ-msvAOiCn2N_UkgOLj1T
 pw2015_t3_singles$created_singles_t3 = as.Date(pw2015_t3_singles$created)
 pw2015_t3_partners$F_t3_start = as.Date(pw2015_t3_partners$F_t3_start)
 # first we have to combine singles and partnered reports
-pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector
-
-## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector
-
-## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector
-
-## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character</code></pre>
-<pre><code>## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector
-
-## Warning in bind_rows_(x, .id): binding character and factor vector,
-## coercing into character vector</code></pre>
-<pre class="r"><code># Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
+pw2015_t3_partners = bind_rows(pw2015_t3_partners, pw2015_t3_singles)
+# Relationships for t3 are already stored in the right format. We just have to count total relationship for every person and order and count relationships.
 pw2015_t3_partners = pw2015_t3_partners %&gt;% 
   group_by(session) %&gt;% # we want to look at relationships specifically for each person
   arrange(session, F_t3_start) %&gt;% #these relationships should be arranged starting with the earliest
@@ -1508,7 +1497,7 @@ pw2015_t3_partners = pw2015_t3_partners %&gt;%
          kind = ifelse(!is.na(F_t3_kind), F_t3_kind, F_t3_past_kind)) %&gt;%
   mutate(relationship_number = ifelse(is.na(F_t3_start), 0, relationship_number),
          relationship_order = ifelse(is.na(F_t3_start), 0, relationship_order),
-         F_t3_lasting = ifelse(is.na(F_t3_start), 0, F_t3_lasting))
+         F_t3_lasting = ifelse(is.na(F_t3_start), 0, as.numeric(F_t3_lasting)))
 
 pw2015_t3_partners = pw2015_t3_partners %&gt;%
   mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %&gt;%
@@ -1569,7 +1558,7 @@ t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, sho
 t2_test$start = as.Date(t2_test$start)
 
 pw2015_t3_partners = pw2015_t3_partners %&gt;%
-  mutate(kind = ifelse(is.na(F_t3_kind), F_t3_past_kind, F_t3_kind))
+  mutate(kind = ifelse(is.na(F_t3_kind), as.factor(F_t3_past_kind), as.factor(F_t3_kind)))
 
 t3_test &lt;- pw2015_t3_partners %&gt;% ungroup() %&gt;% select(session, short_session, created, F_t3_start,
                                                        F_t3_sex,F_t3_end, kind, F_t3_lasting,
@@ -1643,24 +1632,12 @@ t2_t3_relationship_exclusive &lt;- t2_t3_relationship_exclusive %&gt;% mutate(
 
 # use relationship information to merge data on
 data = left_join(t2_t3_relationship, pw2015_demographie_select,
-                 by = c(&quot;session&quot;, &quot;short_session&quot;))</code></pre>
-<pre><code>## Warning: Column `session` joining character vector and factor, coercing
-## into character vector</code></pre>
-<pre><code>## Warning: Column `short_session` joining character vector and factor,
-## coercing into character vector</code></pre>
-<pre class="r"><code>data = left_join(data, pw2015_items_select, by = c(&quot;session&quot;, &quot;short_session&quot;))</code></pre>
-<pre><code>## Warning: Column `short_session` joining character vector and factor,
-## coercing into character vector</code></pre>
-<pre class="r"><code>data_exclusive = left_join(t2_t3_relationship_exclusive, pw2015_demographie_select,
-                 by = c(&quot;session&quot;, &quot;short_session&quot;))</code></pre>
-<pre><code>## Warning: Column `session` joining character vector and factor, coercing
-## into character vector
+                 by = c(&quot;session&quot;, &quot;short_session&quot;))
+data = left_join(data, pw2015_items_select, by = c(&quot;session&quot;, &quot;short_session&quot;))
 
-## Warning: Column `short_session` joining character vector and factor,
-## coercing into character vector</code></pre>
-<pre class="r"><code>data_exclusive = left_join(data_exclusive, pw2015_items_select, by = c(&quot;session&quot;, &quot;short_session&quot;))</code></pre>
-<pre><code>## Warning: Column `short_session` joining character vector and factor,
-## coercing into character vector</code></pre>
+data_exclusive = left_join(t2_t3_relationship_exclusive, pw2015_demographie_select,
+                 by = c(&quot;session&quot;, &quot;short_session&quot;))
+data_exclusive = left_join(data_exclusive, pw2015_items_select, by = c(&quot;session&quot;, &quot;short_session&quot;))</code></pre>
 <div id="create-additional-variables-for-survival-analysis-start-of-relationships" class="section level2">
 <h2>Create additional variables for survival analysis (start of relationships)</h2>
 <pre class="r"><code>data = data %&gt;%
@@ -1774,7 +1751,7 @@ data_exclusive = bind_rows(data_exclusive, data_exclusive_singles_after_relation
 table(data_exclusive$single_start_prob)</code></pre>
 <pre><code>## 
 ##    0    1 
-## 1078   44</code></pre>
+## 1636  146</code></pre>
 <pre class="r"><code>data_x = data_exclusive %&gt;% select(short_session, start, end, previous_relationship_ended, created_t1,  t2_created, t3_created, single_end, single_start, single_start_prob)
 
 problem_people = data_exclusive %&gt;% filter(single_start_prob == 1)</code></pre>

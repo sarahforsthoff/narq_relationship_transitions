@@ -131,17 +131,30 @@ pw2015_t3_ende_select = pw2015_t3_ende %>%
 setwd("C:/Users/q/Desktop/Speicherung/Arbeit/3/Narc_Relationship/narq_relationship_transitions/ImportedData")
 
 options(encoding = "utf8")
+
+write_json(pw2015_demographie_select, "pw2015_demographie_select.json")
+write_json(pw2015_items_select, "pw2015_items_select.json")
 write_json(pw2015_t2_select, "pw2015_t2_select.json")
 
-write.csv2(pw2015_demographie_select, file = "pw2015_demographie_select.csv")
-write.csv2(pw2015_items_select, file = "pw2015_items_select.csv")
-write.csv2(pw2015_t2_select, file = "pw2015_t2_select.csv")
-write.csv2(pw2015_t2_frauen_select, file = "pw2015_t2_frauen_select.csv")
-write.csv2(pw2015_t2_ende_select, file = "pw2015_t2_ende_select.csv")
-write.csv2(pw2015_t3_start_select, file = "pw2015_t3_start_select.csv")
-write.csv2(pw2015_t3_singles_select, file = "pw2015_t3_singles_select.csv")
-write.csv2(pw2015_t3_relationship_number_select, file = "pw2015_t3_relationship_number_select.csv")
-write.csv2(pw2015_t3_partners_select, file = "pw2015_t3_partners_select.csv")
-write.csv2(pw2015_t3_mainrelation_select, file = "pw2015_t3_mainrelation_select.csv")
-write.csv2(pw2015_t3_ende_select, file = "pw2015_t3_ende_select.csv")
+pw2015_t2_frauen_select = pw2015_t2_frauen_select %>%
+  mutate(pastrelationship5_f_name = "missing",
+         pastrelationship5_name_f_new = "missing",
+         pastrelationship5_age_f_new = "missing",
+         pastrelationship5_height_f_new = "missing",
+         pastrelationship5_relationship_f_new = "missing",
+         pastrelationship5_duration_f_new = "missing",
+         pastrelationship5_kind_f = "missing",
+         pastrelationship5_start_f = "missing",
+         pastrelationship5_end_f = "missing",
+         pastrelationship6_f = "missing",
+         pastrelationshipmore_f = "missing")
+
+write_json(pw2015_t2_frauen_select, "pw2015_t2_frauen_select.json")
+write_json(pw2015_t2_ende_select, "pw2015_t2_ende_select.json")
+write_json(pw2015_t3_start_select, "pw2015_t3_start_select.json")
+write_json(pw2015_t3_singles_select, "pw2015_t3_singles_select.json")
+write_json(pw2015_t3_relationship_number_select, "pw2015_t3_relationship_number_select.json")
+write_json(pw2015_t3_partners_select, "pw2015_t3_partners_select.json")
+write_json(pw2015_t3_mainrelation_select, "pw2015_t3_mainrelation_select.json")
+write_json(pw2015_t3_ende_select, "pw2015_t3_ende_select.json")
 ```
