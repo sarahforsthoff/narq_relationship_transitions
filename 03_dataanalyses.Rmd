@@ -5,15 +5,20 @@ editor_options:
   chunk_output_type: console
 ---
 
+Why are there n = 34 for which single_start > single_end???
+
 ## TODO before
-- Analysis with quartiles
+DONE(- Analysis with quartiles) --> Rename models!!!
 - check analyses if controlling for quartile 
 
-- plot quartiles
+DONE(- plot quartiles)
 
 - plot extreme groups
+    *Plot subgroups with ggsurvplot_list()
+    *How to specifiy extreme groups though with list()-function?
 
-- plot relative hazard
+Example(- plot relative hazard) --> s. below
+
 
 - analyses including future prospects
 
@@ -41,6 +46,7 @@ select = dplyr::select
 ## Data
 ```{r}
 surv_data = read.csv("ImportedData/data_exclusive_clean.csv")
+
 ```
 
 ## Clean Data
@@ -70,8 +76,9 @@ surv_data = surv_data %>%
          NARQ_ADM_z = as.numeric(scale(NARQ_ADM, center = T, scale = T)),
          NARQ_RIV_z = as.numeric(scale(NARQ_RIV, center = T, scale = T)))
 
-
-
+##################
+#x = surv_data %>% 
+#  filter(single_start > single_end)
 
 ```
 
@@ -391,10 +398,144 @@ cox.zph(start_narq_con.3)
 testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
 ```
 
+
+
+#Quartil NARQ
+```{r}
+
+#NARQ_scale
+NARQ_qu_25 <- quantile(surv_data$NARQ_scale, c(0.25), na.rm = T)
+NARQ_qu_50 <- quantile(surv_data$NARQ_scale, c(0.50), na.rm = T)
+NARQ_qu_75 <- quantile(surv_data$NARQ_scale, c(0.75), na.rm = T)
+
+surv_data = surv_data %>%
+  mutate(NARQ_quartil = ifelse(NARQ_scale <= NARQ_qu_25, 1, 
+                            ifelse(NARQ_scale <= NARQ_qu_50 & NARQ_scale > NARQ_qu_25, 2,
+                                   ifelse(NARQ_scale <= NARQ_qu_75 & NARQ_scale > NARQ_qu_50, 3,
+                                       ifelse(is.na(NARQ_scale), NA, 4)))),
+         NARQ_quartil = as.factor(NARQ_quartil))
+
+#NARQ_ADM
+ADM_qu_25 <- quantile(surv_data$NARQ_ADM, c(0.25), na.rm = T)
+ADM_qu_50 <- quantile(surv_data$NARQ_ADM, c(0.50), na.rm = T)
+ADM_qu_75 <- quantile(surv_data$NARQ_ADM, c(0.75), na.rm = T)
+
+surv_data = surv_data %>%
+  mutate(NARQ_ADM_quartil = ifelse(NARQ_ADM <= ADM_qu_25, 1, 
+                              ifelse(NARQ_ADM <= ADM_qu_50 & NARQ_ADM > ADM_qu_25, 2,
+                                   ifelse(NARQ_ADM <= ADM_qu_75 & NARQ_ADM > ADM_qu_50, 3,
+                                       ifelse(is.na(NARQ_ADM), NA, 4)))),
+         NARQ_ADM_quartil = as.factor(NARQ_ADM_quartil))
+
+#NARQ_RIV
+RIV_qu_25 <- quantile(surv_data$NARQ_RIV, c(0.25), na.rm = T)
+RIV_qu_50 <- quantile(surv_data$NARQ_RIV, c(0.50), na.rm = T)
+RIV_qu_75 <- quantile(surv_data$NARQ_RIV, c(0.75), na.rm = T)
+
+surv_data = surv_data %>%
+mutate(NARQ_RIV_quartil = ifelse(NARQ_RIV <= RIV_qu_25, 1, 
+                              ifelse(NARQ_RIV <= RIV_qu_50 & NARQ_RIV > RIV_qu_25, 2,
+                                   ifelse(NARQ_RIV <= RIV_qu_75 & NARQ_RIV > RIV_qu_50, 3,
+                                       ifelse(is.na(NARQ_RIV), NA, 4)))),
+         NARQ_RIV_quartil = as.factor(NARQ_RIV_quartil))
+
+```
+
+
+###Relationship start
+- Model 1: rel_entry ~ NARQ_quartil + cluster(session)
+- Model 2: rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session)
+- Model 3: rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
+
+####Raw NARQ Data
+```{r}
+start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_quartil + cluster(session), data = surv_data)
+
+summary(start_narq_con.1)
+plot(survfit(start_narq_con.1))
+
+## Should not be significant
+cox.zph(start_narq_con.1)
+testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
+
+
+
+start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session), data = surv_data)
+summary(start_narq_con.2)
+plot(survfit(start_narq_con.2))
+## Should not be significant
+cox.zph(start_narq_con.2)
+testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
+
+
+
+
+start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_quartil + NARQ_RIV_quartil + sex + age + cluster(session),
+                          data = surv_data)
+summary(start_narq_con.3)
+plot(survfit(start_narq_con.3))
+## Should not be significant
+cox.zph(start_narq_con.3)
+testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
+
+
+```
+
+
+
+###Relationship end
+- Model 1: rel_end ~ NARQ_quartil + cluster(session)
+- Model 2: rel_end ~ NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session)
+- Model 3: rel_end ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
+
+####Raw NARQ Data
+```{r}
+end_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_quartil + cluster(session), data = surv_data)
+
+
+
+summary(end_narq_con.1)
+plot(survfit(end_narq_con.1))
+
+## Should not be significant
+cox.zph(end_narq_con.1)
+testPH_end_narq_con.1 <- ggcoxzph(cox.zph(end_narq_con.1))
+
+
+
+
+
+end_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session), data = surv_data)
+summary(end_narq_con.2)
+plot(survfit(end_narq_con.2))
+## Should not be significant
+cox.zph(end_narq_con.2)
+testPH_end_narq_con.2 <- ggcoxzph(cox.zph(end_narq_con.2))
+
+
+
+
+end_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_quartil + NARQ_RIV_quartil + sex + age + cluster(session),
+                          data = surv_data)
+summary(end_narq_con.3)
+plot(survfit(end_narq_con.3))
+## Should not be significant
+cox.zph(end_narq_con.3)
+testPH_end_narq_con.3 <- ggcoxzph(cox.zph(end_narq_con.3))
+```
+
+
 ## Plots
 ```{r}
+##Dichotom
 plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_group,
+                            NARQ_ADM_group + cluster(session),
                           data = surv_data)
 ggsurvplot(plot_model1, data = surv_data, conf.int = T)
 
@@ -402,9 +543,51 @@ plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~
                             NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
                           data = surv_data)
 ggsurvplot(plot_model2, data = surv_data, conf.int = T)
+
+
+##Quartil
+plot_model3 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session),
+                          data = surv_data)
+fits <- list(NARQ_ADM_quartil = plot_model3)
+
+
+ggsurvplot_list(fits, data = surv_data, conf.int = T)
+#ggsurvplot(plot_model3, data = surv_data, conf.int = T)
+
+
+plot_model4 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_RIV_quartil + cluster(session),
+                          data = surv_data)
+ggsurvplot(plot_model4, data = surv_data, conf.int = T)
+
 ```
 
 
+##Plot Relative Hazards
+
+Sim1 <- coxsimLinear(M1, b = "AgeMed", Xj = seq(-15, 19, by = 1),
++                      nsim = 100)
+```{r}
+#install.packages("simPH")
+library(simPH)
+
+#Raw
+#Erst Surv-Modell berechnen
+mod.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_scale + cluster(session), data = surv_data)
+
+#Funktion benutzt: Modell, interessante Variable mit "b", Xj = fitted values
+Sim1 <- coxsimLinear(mod.1, b = "NARQ_scale", Xj = seq(0, 5, by = 0.5), nsim = 100)
+simGG(Sim1)
+
+#z-stand.
+mod.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_scale_z + cluster(session), data = surv_data)
+Sim2 <- coxsimLinear(mod.2, b = "NARQ_scale_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+simGG(Sim2, xlab = "Units of narcissism from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+```
 
 
 
