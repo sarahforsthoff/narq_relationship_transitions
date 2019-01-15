@@ -54,8 +54,8 @@ surv_data = read.csv("ImportedData/data_exclusive_clean.csv")
 ```{r}
 
 surv_data = surv_data %>%
-  filter(sex != 3) %>% #Exlude sex == 3
-  mutate(single_end_d = ifelse(single_end_d == 0, 1, single_end_d)) # two people started a new relationship at the same day they ended their old one, survival analyses can not believe that --> so we set it at 1 day
+  filter(sex != 3) #Exlude sex == 3
+  
 ```
 
 
@@ -70,17 +70,15 @@ surv_data = surv_data %>%
          single_start_d = 0,
          single_end_d = single_end - single_start,
          rel_start_d = 0,
-         rel_end_d = end - start)
+         rel_end_d = end - start,
+ single_end_d = ifelse(single_end_d == 0, 1, single_end_d), # two people started a new relationship at the same day they ended their old one, survival analyses can not believe that --> so we set it at 1 day)
+  rel_end_d = ifelse(rel_end_d == 0, 1, rel_end_d)) # 27 people had started and filled out survey the same day (so right censored data) --> that's why we had to add 1 (day) to "rel_end_d"
 
 
 surv_data = surv_data %>%
   mutate(NARQ_scale_z = as.numeric(scale(NARQ_scale, center = T, scale = T)),
          NARQ_ADM_z = as.numeric(scale(NARQ_ADM, center = T, scale = T)),
          NARQ_RIV_z = as.numeric(scale(NARQ_RIV, center = T, scale = T)))
-
-##################
-surv_data = surv_data %>%
-  mutate(single_end_d = ifelse(single_end_d == 0, 1, single_end_d))
 
 
 
@@ -514,7 +512,8 @@ testPH_end_narq_con.1 <- ggcoxzph(cox.zph(end_narq_con.1))
 
 
 end_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session), data = surv_data)
+                            NARQ_RIV_quartil + NARQ_ADM_quartil + cluster(session), 
+                        data = surv_data)
 summary(end_narq_con.2)
 plot(survfit(end_narq_con.2))
 ## Should not be significant
