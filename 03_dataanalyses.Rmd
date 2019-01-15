@@ -14,6 +14,7 @@ DONE(- Analysis with quartiles) --> Rename models!!!
 DONE(- plot quartiles)
 
 - plot extreme groups
+    *Extreme groups: Mean +- SD
     *Plot subgroups with ggsurvplot_list()
     *How to specifiy extreme groups though with list()-function?
 
@@ -77,8 +78,8 @@ surv_data = surv_data %>%
          NARQ_RIV_z = as.numeric(scale(NARQ_RIV, center = T, scale = T)))
 
 ##################
-#x = surv_data %>% 
-#  filter(single_start > single_end)
+x = surv_data %>% 
+  filter(single_start > single_end)
 
 ```
 
@@ -547,12 +548,12 @@ ggsurvplot(plot_model2, data = surv_data, conf.int = T)
 
 ##Quartil
 plot_model3 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session),
+                            NARQ_ADM_quartil + cluster(session),
                           data = surv_data)
 fits <- list(NARQ_ADM_quartil = plot_model3)
 
 
-ggsurvplot_list(fits, data = surv_data, conf.int = T)
+ggsurvplot_list(plot_model3, data = surv_data, conf.int = T)
 #ggsurvplot(plot_model3, data = surv_data, conf.int = T)
 
 
@@ -586,6 +587,12 @@ mod.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~
                             NARQ_scale_z + cluster(session), data = surv_data)
 Sim2 <- coxsimLinear(mod.2, b = "NARQ_scale_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
 simGG(Sim2, xlab = "Units of narcissism from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+##ADM
+mod.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_z + cluster(session), data = surv_data)
+Sim3 <- coxsimLinear(mod.3, b = "NARQ_ADM_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+simGG(Sim3, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
 
 ```
 
