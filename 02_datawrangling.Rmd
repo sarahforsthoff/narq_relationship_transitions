@@ -26,8 +26,6 @@ Current Open questions and tasks (last updated 11/13/18)
 library(psych)
 library(stringr)
 library(jsonlite)
-# install.packages("devtools")
-# devtools::install_github("rubenarslan/formr")
 library(formr)
 library(mosaic)
 library(tidyr)
@@ -49,6 +47,7 @@ pw2015_items = as.data.frame(fromJSON("ImportedData/pw2015_items_select.json"))
 pw2015_t2 = as.data.frame(fromJSON("ImportedData/pw2015_t2_select.json"))
 pw2015_t2_frauen = as.data.frame(fromJSON("ImportedData/pw2015_t2_frauen_select.json"))
 
+#json delets all missing data, that why we have to add them here
 pw2015_t2_frauen = pw2015_t2_frauen %>%
   mutate(pastrelationship5_f_name = NA,
          pastrelationship5_name_f_new = NA,
@@ -87,9 +86,6 @@ test_items = pw2015_items %>%
          session != "aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ")
 test_items_vector = as.character(test_items$session)
 
-x = pw2015_items %>% filter(notes_to_us %contains% "Hi Eva und Tabea")
-x$notes_to_us
-
 ## notes to us
 comments_pw2015_items = pw2015_items %>%
   filter(notes_to_us %contains% "Cyril Test"|
@@ -109,7 +105,7 @@ comments_pw2015_items = pw2015_items %>%
 comments_pw2015_items_vector = as.character(comments_pw2015_items$session)
 ```
 
-"When was your last relationship?": Exclude participants with "funny" answers = last relationshin when younger than 10
+"When was your last relationship?": Exclude participants with "funny" answers = last relationship when younger than 10
 ```{r}
 #merge t1 files including age and time since last relationship
 t1_age <- pw2015_demographie %>% select(session, short_session, age)
@@ -123,31 +119,6 @@ t1_time_single_test <- left_join(t1_age, t1_time_single)
 t1_time_single_test <- t1_time_single_test %>% filter((age - end_relationship_years) < 10) #three cases detected
 
 vec_time_single_test <- t1_time_single_test$session #vector with session code of the three cases
-
-#exclude from all data
-pw2015_demographie =  pw2015_demographie %>%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_items =  pw2015_items %>%
-  filter(!(session %in% vec_time_single_test))  
-
-pw2015_t2 =  pw2015_t2 %>%
-  filter(!(session %in% vec_time_single_test))
-  
-pw2015_t2_frauen =  pw2015_t2_frauen %>%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t2_ende =  pw2015_t2_ende %>%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t3_singles =  pw2015_t3_singles %>%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t3_partners =  pw2015_t3_partners %>%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t3_ende =  pw2015_t3_ende %>%
-  filter(!(session %in% vec_time_single_test))
 
 ```
 
@@ -220,7 +191,9 @@ comments_pw2015_t3_ende_vector = as.character(comments_pw2015_t3_ende$session)
 #### Combine vectors and clean all data sets
 ```{r}
 # Combine all vectors
-cleaning_vector = c(test_demographie_vector, test_items_vector, comments_pw2015_items_vector, test_pw2015_t2_vector, test_pw2015_t2_frauen_vector, test_pw2015_t2_ende_vector, comments_pw2015_t2_ende_vector, test_pw2015_t3_singles_vector, test_pw2015_t3_partners_vector,  test_pw2015_t3_ende_vector, dishonest_pw2015_t3_ende_vector, comments_pw2015_t3_ende_vector, NA)
+cleaning_vector = c(test_demographie_vector, test_items_vector, comments_pw2015_items_vector, vec_time_single_test, test_pw2015_t2_vector, test_pw2015_t2_frauen_vector, test_pw2015_t2_ende_vector, comments_pw2015_t2_ende_vector, test_pw2015_t3_singles_vector, test_pw2015_t3_partners_vector,  test_pw2015_t3_ende_vector, dishonest_pw2015_t3_ende_vector, comments_pw2015_t3_ende_vector, NA)
+
+cleaning_vector = unique(cleaning_vector)
 
 # Remove these people in all datasets and remove missing sessions (NA)
 pw2015_demographie =  pw2015_demographie %>%
@@ -254,52 +227,61 @@ pw2015_t3_ende =  pw2015_t3_ende %>%
 dupes_demographie = pw2015_demographie %>% filter(duplicated(session)) #no dupes
 dupes_items = pw2015_items %>% filter(duplicated(session)) #no dupes
 dupes_t2 = pw2015_t2 %>% filter(duplicated(session))
-duplicats = as.character(dupes_t2$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
-pw2015_demographie =  pw2015_demographie %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
-pw2015_items =  pw2015_items %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))  
-
-pw2015_t2 =  pw2015_t2 %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
-pw2015_t2_frauen =  pw2015_t2_frauen %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
-pw2015_t2_ende =  pw2015_t2_ende %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
-pw2015_t3_singles =  pw2015_t3_singles %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
-pw2015_t3_partners =  pw2015_t3_partners %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
-pw2015_t3_ende =  pw2015_t3_ende %>%
-  filter(!(session == "3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf"))
-
+duplicats_t2 = as.character(dupes_t2$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
 dupes_t2_frauen = pw2015_t2_frauen %>% filter(duplicated(session)) # no dupes
-dupes_t2_ende = pw2015_t2_ende %>% filter(duplicated(session)) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
+dupes_t2_ende = pw2015_t2_ende %>% filter(duplicated(session))
 
+duplicats_t2_ende = as.character(dupes_t2_ende$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
 
 dupes_t3_ende = pw2015_t3_ende %>% filter(duplicated(session))
 dupes_t3_ende = pw2015_t3_ende %>% filter(short_session == "ZV_cjcx1fj" | short_session == "BDu_KSxo6P")
+
 dupes_t3_partners = pw2015_t3_partners %>% filter(short_session == "ZV_cjcx1fj" | short_session == "BDu_KSxo6P") # both reported partners for only one date, remove double information from ended dataset, but not from every dataset
+
 pw2015_t3_ende = pw2015_t3_ende %>% filter(!(short_session == "ZV_cjcx1fj" & is.na(ended)) &
                                              !(short_session == "BDu_KSxo6P" & is.na(ended)))
 
 dupes_t3_singles = pw2015_t3_singles %>% filter(duplicated(session)) # no dupes
+
+## Remove duplicats from all datasets
+cleaning_vector = c(duplicats_t2, duplicats_t2_ende)
+
+cleaning_vector = unique(cleaning_vector)
+
+# Remove these people in all datasets and remove missing sessions (NA)
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_items =  pw2015_items %>%
+  filter(!(session %in% cleaning_vector))  
+
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session %in% cleaning_vector))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session %in% cleaning_vector))
 ```
 
 ## Data t1: 
 ### Scale Calculation: 
 #### NARQ, NARQ_Adm, NARQ_Riv
 ```{r}
-pw2015_demographie[11:28] <-lapply(pw2015_demographie[11:28], as.numeric)
+pw2015_demographie[11:28] <- lapply(pw2015_demographie[11:28], as.numeric)
 pw2015_demographie <- pw2015_demographie %>% rowwise () %>%  
   mutate("NARQ_ADM" = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3),
                            na.rm = TRUE)) %>% 
@@ -308,6 +290,8 @@ pw2015_demographie <- pw2015_demographie %>% rowwise () %>%
   mutate("NARQ_scale" = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3,
                                 NARQ_17, NARQ_11, NARQ_13,  NARQ_6, NARQ_14, NARQ_9, NARQ_10, NARQ_12,
                                 NARQ_4 ), na.rm = TRUE)) 
+
+table(pw2015_demographie$NARQ_RIV)
 ```
 
 
@@ -362,7 +346,7 @@ pw2015_items = pw2015_items %>%
          longterm_m =  rowMeans(pw2015_items[,longterm_items_m], na.rm = T),
          longterm_m = ifelse(is.na(z_longterm_3_M), NA, longterm_m))
          
-#crosstabs(~ is.na(longterm_f) + is.na(longterm_m), data = pw2015_items)
+# crosstabs(~ is.na(longterm_f) + is.na(longterm_m), data = pw2015_items)
 ```
 
 ###BFI items: scale
@@ -426,30 +410,79 @@ pw2015_items <-  pw2015_items %>%
 # For people who never had a relationship we need their age to calculate backwards how long they have been single
 pw2015_items = left_join(pw2015_items, pw2015_demographie %>% select(session, age), by = "session")
 
-#################################################################### 
-##########Is it accurate to calculate with age, if always single?
-pw2015_items = pw2015_items %>%
-  mutate(end_relationship_years = ifelse(number_relationships == 0, age, end_relationship_years))
-####################################################################
+# exclude 21 participants who never had a relationship in their life
+pw2015_items_foreveralone = pw2015_items %>% filter(number_relationships == 0)
+cleaning_vector = as.character(pw2015_items_foreveralone$session)
 
+# Remove these people in all datasets and remove missing sessions (NA)
+pw2015_demographie =  pw2015_demographie %>%
+  filter(!(session %in% cleaning_vector))
 
+pw2015_items =  pw2015_items %>%
+  filter(!(session %in% cleaning_vector))  
+
+pw2015_t2 =  pw2015_t2 %>%
+  filter(!(session %in% cleaning_vector))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t2_ende =  pw2015_t2_ende %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_singles =  pw2015_t3_singles %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_partners =  pw2015_t3_partners %>%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_ende =  pw2015_t3_ende %>%
+  filter(!(session %in% cleaning_vector))
 
 pw2015_items <- pw2015_items %>%
   mutate(previous_relationship_ended_days = end_relationship_years * 365 + 
                                             end_relationship_months * 30 + 
                                             end_relationship_weeks * 7,
-         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(!is.na(end_relationship_weeks) &
+                                                     !is.na(end_relationship_months) &
+                                                     is.na(end_relationship_years),
+                                                   end_relationship_months * 30 + 
+                                                     end_relationship_weeks * 7,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(!is.na(end_relationship_weeks) &
+                                                     is.na(end_relationship_months) &
+                                                     is.na(end_relationship_years),
+                                                   end_relationship_weeks * 7,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(!is.na(end_relationship_weeks) &
+                                                     is.na(end_relationship_months) &
+                                                     !is.na(end_relationship_years),
+                                                   end_relationship_years * 365 + 
+                                                     end_relationship_weeks * 7,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(end_relationship_weeks) &
+                                                     !is.na(end_relationship_months) &
+                                                     !is.na(end_relationship_years),
                                                    end_relationship_years * 365 + 
                                                      end_relationship_months * 30,
                                                    previous_relationship_ended_days),
-         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(end_relationship_weeks) &
+                                                     !is.na(end_relationship_months) &
+                                                     is.na(end_relationship_years),
+                                                   end_relationship_months * 30,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(end_relationship_weeks) &
+                                                     is.na(end_relationship_months) &
+                                                     !is.na(end_relationship_years),
                                                    end_relationship_years * 365,
                                                    previous_relationship_ended_days),
          previous_relationship_ended = created - previous_relationship_ended_days)
+         
+pw2015_items = pw2015_items %>%
+  mutate(age_last_relationship = age - previous_relationship_ended_days/365)
 
-
-#################### Why still so many participants with without "previous_relationship_ended"?? 
-crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw2015_items)
+# no liars about last relationship
+table(pw2015_items$age_last_relationship)         
 
 pw2015_items <- pw2015_items %>% select(-previous_relationship_ended_days,  -end_relationship_years,
                                         -end_relationship_months, -end_relationship_weeks)
@@ -582,8 +615,6 @@ pw2015_t2_frauen$pastrelationship5_end_f =
 
 Join t2 data
 ```{r}
-# pw2015_t2_relationship <- bind_rows(pw2015_t2, pw2015_t2_frauen) @Sarah: check if we can change to this version
-
 pw2015_t2_relationship <- left_join(pw2015_t2, pw2015_t2_frauen, by=c("session", "short_session"), suffix = c(".m", ".f"))
 ```
 
@@ -867,8 +898,7 @@ pw2015_t2_relationship <- pw2015_t2_relationship %>% mutate(
   "relationship4.end" = as.Date(NA), "relationship5.end" = as.Date(NA), "relationship6.end" = as.Date(NA))
 ```
 
-###################################
-#Add t2_created variable for right censored data
+## Add t2_created variable for right censored data
 ```{r}
 pw2015_t2_relationship$created.m = as.Date(pw2015_t2_relationship$created.m, origin = "1970-01-01")
 pw2015_t2_relationship$created.f = as.Date(pw2015_t2_relationship$created.f, origin = "1970-01-01")
@@ -982,8 +1012,9 @@ pw2015_t2_relationship <- reshape(pw2015_t2_relationship, direction='long',
  1 relationship per row, or if single whole time one row with only NAs
 ```{r}
 #Dataframe with only participants who had at least one relationship between t1 and t2
-pw2015_t2_relationship_1 <- pw2015_t2_relationship %>%  filter(t2_relationship != 0 | t2_pastrelationship != 0) %>%
-            filter(!is.na(age_new)| !is.na(duration_new) | !is.na(end) | !is.na(height_new) | !is.na(kind) | 
+pw2015_t2_relationship_1 <- pw2015_t2_relationship %>%
+  filter(t2_relationship != 0 | t2_pastrelationship != 0) %>%
+            filter(!is.na(age_new) | !is.na(duration_new) | !is.na(end) | !is.na(height_new) | !is.na(kind) | 
             !is.na(name) | !is.na(name_new) | !is.na(relationship_new) | !is.na(start)) 
 
 #Dataframe with only participants who had NONE relationship between t1 and t2
@@ -1060,6 +1091,7 @@ pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastre
 pw2015_t2_relationship$sex_partner[pw2015_t2_relationship$sex_partner == "pastrelationship10"] <- 1
 
 pw2015_t2_relationship$sex_partner <- as.integer(pw2015_t2_relationship$sex_partner)
+
 ```
 
 # Liars in t2
@@ -1072,7 +1104,9 @@ starting_date = pw2015_demographie %>% select(session, created_t1 = created)
 non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = "session") %>%
   mutate(check_liars_start = ifelse(as.Date(created_t1) > as.Date(start), 1, 0),
          check_liars_end = ifelse(as.Date(t2_created) < as.Date(start), 1, 0),
-         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %>%
+         check_liars_idiots = ifelse(as.Date(start) > as.Date(end), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1 |
+                                check_liars_idiots == 1, 1, 0)) %>%
   filter(check_liars == 1)
 
 
@@ -1091,15 +1125,15 @@ non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
 non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = "session") %>%
   mutate(check_liars_start = ifelse(as.Date(created_t1) > as.Date(F_t3_start), 1, 0),
          check_liars_end = ifelse(as.Date(created) < as.Date(F_t3_start), 1, 0),
-         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %>%
+         check_liars_idiots = ifelse(as.Date(F_t3_start) > as.Date(F_t3_end), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1 |
+                                check_liars_idiots == 1, 1, 0)) %>%
   filter(check_liars == 1)
 
 non_singles_t3_session = non_singles_t3 %>% filter(!duplicated(session))
 
-
 non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
-
-table(non_singles_vector == "--N__ZtqyajgoxEV6gE3mkStbJ-msvAOiCn2N_UkgOLj1T3JgBVkz1S1jroCaGzE")
+non_singles_vector = unique(non_singles_vector)
 ```
 
 # Data t3
@@ -1124,7 +1158,7 @@ pw2015_t3_partners = pw2015_t3_partners %>%
 
 pw2015_t3_partners = pw2015_t3_partners %>%
   mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %>%
-  filter(!is.na(F_t3_start)) # exclude weird cases - check this if you have time
+  filter(!is.na(F_t3_start)) # exclude people who didnt finish the survey
 ```
 
 # Relationships at t2 and t3
@@ -1424,6 +1458,7 @@ data_exclusive <- data_exclusive %>%
 ```{r}
 # clean data set without liars and exclude one person who mixed up start and end variable "AUe1MJGOoE""
 data_clean = data %>% filter(!(session %in% non_singles_vector)) %>%
+  filter(single_start_prob != 1) %>%
   filter(short_session != "AUe1MJGOoE") %>%
   filter(short_session != "BGA9-p9C_K") 
 
@@ -1432,6 +1467,7 @@ data_clean = data_clean %>%
   filter(number_relationships != 0 | is.na(number_relationships))
 
 data_exclusive_clean = data_exclusive %>% filter(!(session %in% non_singles_vector)) %>%
+  filter(single_start_prob != 1) %>%
   filter(short_session != "AUe1MJGOoE") %>%
   filter(short_session != "BGA9-p9C_K")
 

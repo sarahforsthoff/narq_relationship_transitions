@@ -52,9 +52,10 @@ surv_data = read.csv("ImportedData/data_exclusive_clean.csv")
 
 ## Clean Data
 ```{r}
-#Exlude sex == 3
+
 surv_data = surv_data %>%
-  filter(sex != 3)
+  filter(sex != 3) %>% #Exlude sex == 3
+  mutate(single_end_d = ifelse(single_end_d == 0, 1, single_end_d)) # two people started a new relationship at the same day they ended their old one, survival analyses can not believe that --> so we set it at 1 day
 ```
 
 
@@ -78,8 +79,10 @@ surv_data = surv_data %>%
          NARQ_RIV_z = as.numeric(scale(NARQ_RIV, center = T, scale = T)))
 
 ##################
-x = surv_data %>% 
-  filter(single_start > single_end)
+surv_data = surv_data %>%
+  mutate(single_end_d = ifelse(single_end_d == 0, 1, single_end_d))
+
+
 
 ```
 
