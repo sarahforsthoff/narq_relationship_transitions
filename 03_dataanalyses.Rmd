@@ -592,9 +592,35 @@ simGG(Sim2, xlab = "Units of narcissism from mean in SD", ylab = "Relative Hazar
 
 ##ADM
 mod.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_z + cluster(session), data = surv_data)
+                            NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
 Sim3 <- coxsimLinear(mod.3, b = "NARQ_ADM_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
 simGG(Sim3, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim3 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+simGG(Sim3, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+
+##ADM
+mod.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_RIV_z + cluster(session), data = surv_data)
+Sim3 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+simGG(Sim3, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+##ADM
+mod.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_z * NARQ_RIV_z + cluster(session), data = surv_data)
+sim3 = coxsimInteract(mod.3, b1 = "NARQ_ADM_z", b2 = "NARQ_RIV_z", X2 = seq(-4, 4, by = 1), spin = TRUE)
+simGG(sim3, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim3 <- coxsimLinear(mod.3, b = "NARQ_ADM_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+Sim4 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+
+
+
++ simGG(Sim4, xlab = "Units of admiration and rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim3 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
+simGG(Sim3, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
 
 ```
 
@@ -617,7 +643,7 @@ start_narq_gr.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~
 summary(start_narq_gr.1)
 plot(survfit(start_narq_gr.1))
 
-start_narq_gr.2 <-  coxph(Surv(single_start_d, relationship_start_d, event) ~ 
+start_narq_gr.2 <-  coxph(Surv(single_start_d, single_end_d, event) ~ 
                             NARQ_ADM_group + NARQ_RIV_group + cluster(session), data= surv_data)
 summary(start_narq_gr.2)
 plot(survfit(start_narq_gr.2))
