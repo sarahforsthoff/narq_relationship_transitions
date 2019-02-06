@@ -129,22 +129,11 @@ $(document).ready(function () {
 </div>
 
 
-<p>Current Open questions and tasks (last updated 11/13/18)</p>
-<div id="open-questions" class="section level2">
-<h2>Open questions:</h2>
-<ul>
-<li>rename “start”/“end”-variable</li>
-</ul>
-<p><span class="citation">@laura</span>: - Check new data_wrangling + marked by Sarah</p>
-<p><span class="citation">@sarah</span>: - how to interpret survival summery? How to deal with continous predictors? (+ write e-mail to cox-guy) - identical data with both datawrangling scripts?? I used “all.equal”. Maybe check results together.</p>
-</div>
 <div id="library" class="section level2">
 <h2>Library</h2>
 <pre class="r"><code>library(psych)
 library(stringr)
 library(jsonlite)
-# install.packages(&quot;devtools&quot;)
-# devtools::install_github(&quot;rubenarslan/formr&quot;)
 library(formr)
 library(mosaic)</code></pre>
 <pre><code>## Loading required package: dplyr</code></pre>
@@ -229,6 +218,7 @@ pw2015_items = as.data.frame(fromJSON(&quot;ImportedData/pw2015_items_select.jso
 pw2015_t2 = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t2_select.json&quot;))
 pw2015_t2_frauen = as.data.frame(fromJSON(&quot;ImportedData/pw2015_t2_frauen_select.json&quot;))
 
+#json delets all missing data, that why we have to add them here
 pw2015_t2_frauen = pw2015_t2_frauen %&gt;%
   mutate(pastrelationship5_f_name = NA,
          pastrelationship5_name_f_new = NA,
@@ -267,10 +257,7 @@ test_items = pw2015_items %&gt;%
          session != &quot;aldt4TnU6Yj8G_EP8PuXXXkLfBmn-03L_NRLpKrR0IRNqKlxIWGQA7ED3yvWF-rZ&quot;)
 test_items_vector = as.character(test_items$session)
 
-x = pw2015_items %&gt;% filter(notes_to_us %contains% &quot;Hi Eva und Tabea&quot;)
-x$notes_to_us</code></pre>
-<pre><code>## [1] &quot;Hi Eva und Tabea, schubst mich mal weiter :), damit ich morgen früh gleich an T2 teilnehmen kann. \nIch bin mir ziemlich sicher, dass ich diesmal ausschliesslich heterosexuell ausgefüllt habe - trotzdem musste ich gerade das Frauennetzwerk ausfüllen. Vielleicht prüft ihr das nochmal. \nLG, Tanja&quot;</code></pre>
-<pre class="r"><code>## notes to us
+## notes to us
 comments_pw2015_items = pw2015_items %&gt;%
   filter(notes_to_us %contains% &quot;Cyril Test&quot;|
            notes_to_us %contains% &quot;Tabea Test!&quot;|
@@ -287,7 +274,7 @@ comments_pw2015_items = pw2015_items %&gt;%
 
 
 comments_pw2015_items_vector = as.character(comments_pw2015_items$session)</code></pre>
-<p>“When was your last relationship?”: Exclude participants with “funny” answers = last relationshin when younger than 10</p>
+<p>“When was your last relationship?”: Exclude participants with “funny” answers = last relationship when younger than 10</p>
 <pre class="r"><code>#merge t1 files including age and time since last relationship
 t1_age &lt;- pw2015_demographie %&gt;% select(session, short_session, age)
 
@@ -306,32 +293,7 @@ t1_time_single_test &lt;- left_join(t1_age, t1_time_single)</code></pre>
 <pre><code>## Joining, by = c(&quot;session&quot;, &quot;short_session&quot;)</code></pre>
 <pre class="r"><code>t1_time_single_test &lt;- t1_time_single_test %&gt;% filter((age - end_relationship_years) &lt; 10) #three cases detected
 
-vec_time_single_test &lt;- t1_time_single_test$session #vector with session code of the three cases
-
-#exclude from all data
-pw2015_demographie =  pw2015_demographie %&gt;%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_items =  pw2015_items %&gt;%
-  filter(!(session %in% vec_time_single_test))  
-
-pw2015_t2 =  pw2015_t2 %&gt;%
-  filter(!(session %in% vec_time_single_test))
-  
-pw2015_t2_frauen =  pw2015_t2_frauen %&gt;%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t2_ende =  pw2015_t2_ende %&gt;%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t3_singles =  pw2015_t3_singles %&gt;%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t3_partners =  pw2015_t3_partners %&gt;%
-  filter(!(session %in% vec_time_single_test))
-
-pw2015_t3_ende =  pw2015_t3_ende %&gt;%
-  filter(!(session %in% vec_time_single_test))</code></pre>
+vec_time_single_test &lt;- t1_time_single_test$session #vector with session code of the three cases</code></pre>
 </div>
 <div id="t2" class="section level4">
 <h4>t2</h4>
@@ -398,7 +360,9 @@ comments_pw2015_t3_ende_vector = as.character(comments_pw2015_t3_ende$session)</
 <div id="combine-vectors-and-clean-all-data-sets" class="section level4">
 <h4>Combine vectors and clean all data sets</h4>
 <pre class="r"><code># Combine all vectors
-cleaning_vector = c(test_demographie_vector, test_items_vector, comments_pw2015_items_vector, test_pw2015_t2_vector, test_pw2015_t2_frauen_vector, test_pw2015_t2_ende_vector, comments_pw2015_t2_ende_vector, test_pw2015_t3_singles_vector, test_pw2015_t3_partners_vector,  test_pw2015_t3_ende_vector, dishonest_pw2015_t3_ende_vector, comments_pw2015_t3_ende_vector, NA)
+cleaning_vector = c(test_demographie_vector, test_items_vector, comments_pw2015_items_vector, vec_time_single_test, test_pw2015_t2_vector, test_pw2015_t2_frauen_vector, test_pw2015_t2_ende_vector, comments_pw2015_t2_ende_vector, test_pw2015_t3_singles_vector, test_pw2015_t3_partners_vector,  test_pw2015_t3_ende_vector, dishonest_pw2015_t3_ende_vector, comments_pw2015_t3_ende_vector, NA)
+
+cleaning_vector = unique(cleaning_vector)
 
 # Remove these people in all datasets and remove missing sessions (NA)
 pw2015_demographie =  pw2015_demographie %&gt;%
@@ -431,45 +395,54 @@ pw2015_t3_ende =  pw2015_t3_ende %&gt;%
 <pre class="r"><code>dupes_demographie = pw2015_demographie %&gt;% filter(duplicated(session)) #no dupes
 dupes_items = pw2015_items %&gt;% filter(duplicated(session)) #no dupes
 dupes_t2 = pw2015_t2 %&gt;% filter(duplicated(session))
-duplicats = as.character(dupes_t2$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
-pw2015_demographie =  pw2015_demographie %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
-pw2015_items =  pw2015_items %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))  
-
-pw2015_t2 =  pw2015_t2 %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
-pw2015_t2_frauen =  pw2015_t2_frauen %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
-pw2015_t2_ende =  pw2015_t2_ende %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
-pw2015_t3_singles =  pw2015_t3_singles %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
-pw2015_t3_partners =  pw2015_t3_partners %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
-pw2015_t3_ende =  pw2015_t3_ende %&gt;%
-  filter(!(session == &quot;3iL0HgCploxC8r7zZxden74E1Z9QmMwkbUw--OsjMp40jStipVrI8aO4Dgc3nngf&quot;))
-
+duplicats_t2 = as.character(dupes_t2$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
 dupes_t2_frauen = pw2015_t2_frauen %&gt;% filter(duplicated(session)) # no dupes
-dupes_t2_ende = pw2015_t2_ende %&gt;% filter(duplicated(session)) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
+dupes_t2_ende = pw2015_t2_ende %&gt;% filter(duplicated(session))
 
+duplicats_t2_ende = as.character(dupes_t2_ende$session) # remove 3iL0HgCplo from all datasets because of multiple reports of t2 relationships
 
 
 dupes_t3_ende = pw2015_t3_ende %&gt;% filter(duplicated(session))
 dupes_t3_ende = pw2015_t3_ende %&gt;% filter(short_session == &quot;ZV_cjcx1fj&quot; | short_session == &quot;BDu_KSxo6P&quot;)
+
 dupes_t3_partners = pw2015_t3_partners %&gt;% filter(short_session == &quot;ZV_cjcx1fj&quot; | short_session == &quot;BDu_KSxo6P&quot;) # both reported partners for only one date, remove double information from ended dataset, but not from every dataset
+
 pw2015_t3_ende = pw2015_t3_ende %&gt;% filter(!(short_session == &quot;ZV_cjcx1fj&quot; &amp; is.na(ended)) &amp;
                                              !(short_session == &quot;BDu_KSxo6P&quot; &amp; is.na(ended)))
 
-dupes_t3_singles = pw2015_t3_singles %&gt;% filter(duplicated(session)) # no dupes</code></pre>
+dupes_t3_singles = pw2015_t3_singles %&gt;% filter(duplicated(session)) # no dupes
+
+## Remove duplicats from all datasets
+cleaning_vector = c(duplicats_t2, duplicats_t2_ende)
+
+cleaning_vector = unique(cleaning_vector)
+
+# Remove these people in all datasets and remove missing sessions (NA)
+pw2015_demographie =  pw2015_demographie %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_items =  pw2015_items %&gt;%
+  filter(!(session %in% cleaning_vector))  
+
+pw2015_t2 =  pw2015_t2 %&gt;%
+  filter(!(session %in% cleaning_vector))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t2_ende =  pw2015_t2_ende %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_singles =  pw2015_t3_singles %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_partners =  pw2015_t3_partners %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_ende =  pw2015_t3_ende %&gt;%
+  filter(!(session %in% cleaning_vector))</code></pre>
 </div>
 </div>
 <div id="data-t1" class="section level2">
@@ -478,7 +451,7 @@ dupes_t3_singles = pw2015_t3_singles %&gt;% filter(duplicated(session)) # no dup
 <h3>Scale Calculation:</h3>
 <div id="narq-narq_adm-narq_riv" class="section level4">
 <h4>NARQ, NARQ_Adm, NARQ_Riv</h4>
-<pre class="r"><code>pw2015_demographie[11:28] &lt;-lapply(pw2015_demographie[11:28], as.numeric)
+<pre class="r"><code>pw2015_demographie[11:28] &lt;- lapply(pw2015_demographie[11:28], as.numeric)
 pw2015_demographie &lt;- pw2015_demographie %&gt;% rowwise () %&gt;%  
   mutate(&quot;NARQ_ADM&quot; = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3),
                            na.rm = TRUE)) %&gt;% 
@@ -486,7 +459,36 @@ pw2015_demographie &lt;- pw2015_demographie %&gt;% rowwise () %&gt;%
                            na.rm = TRUE)) %&gt;%
   mutate(&quot;NARQ_scale&quot; = mean(c(NARQ_7, NARQ_8, NARQ_1, NARQ_18, NARQ_15, NARQ_16, NARQ_2, NARQ_5, NARQ_3,
                                 NARQ_17, NARQ_11, NARQ_13,  NARQ_6, NARQ_14, NARQ_9, NARQ_10, NARQ_12,
-                                NARQ_4 ), na.rm = TRUE)) </code></pre>
+                                NARQ_4 ), na.rm = TRUE)) 
+
+table(pw2015_demographie$NARQ_RIV)</code></pre>
+<pre><code>## 
+##                 0 0.111111111111111 0.222222222222222 0.333333333333333 
+##               104                16                12                10 
+## 0.444444444444444 0.555555555555556 0.666666666666667 0.777777777777778 
+##                 9                 5                 8                 7 
+## 0.888888888888889                 1  1.11111111111111  1.22222222222222 
+##                 8                77                90               141 
+##  1.33333333333333  1.44444444444444  1.55555555555556  1.66666666666667 
+##               177               181               170               183 
+##  1.77777777777778  1.83333333333333  1.88888888888889                 2 
+##               175                 1               210               193 
+##  2.11111111111111  2.22222222222222  2.33333333333333  2.44444444444444 
+##               154               164               150               139 
+##  2.55555555555556  2.66666666666667              2.75  2.77777777777778 
+##               126               100                 1                74 
+##  2.83333333333333  2.88888888888889                 3  3.11111111111111 
+##                 1                99                76                55 
+##  3.22222222222222              3.25  3.33333333333333  3.44444444444444 
+##                40                 1                30                17 
+##  3.55555555555556  3.66666666666667              3.75  3.77777777777778 
+##                10                18                 3                 9 
+##  3.88888888888889                 4  4.11111111111111  4.22222222222222 
+##                10                 7                 7                 6 
+##  4.33333333333333  4.44444444444444  4.55555555555556  4.66666666666667 
+##                 2                 1                 1                 4 
+##  4.88888888888889 
+##                 1</code></pre>
 </div>
 <div id="soi_r" class="section level4">
 <h4>SOI_R</h4>
@@ -538,7 +540,7 @@ pw2015_items = pw2015_items %&gt;%
          longterm_m =  rowMeans(pw2015_items[,longterm_items_m], na.rm = T),
          longterm_m = ifelse(is.na(z_longterm_3_M), NA, longterm_m))
          
-#crosstabs(~ is.na(longterm_f) + is.na(longterm_m), data = pw2015_items)</code></pre>
+# crosstabs(~ is.na(longterm_f) + is.na(longterm_m), data = pw2015_items)</code></pre>
 </div>
 </div>
 <div id="bfi-items-scale" class="section level3">
@@ -809,52 +811,360 @@ pw2015_demographie %&gt;% select(BFIK_neuro, BFIK_neuro_1, BFIK_neuro_2, BFIK_ne
 # For people who never had a relationship we need their age to calculate backwards how long they have been single
 pw2015_items = left_join(pw2015_items, pw2015_demographie %&gt;% select(session, age), by = &quot;session&quot;)
 
-#################################################################### 
-##########Is it accurate to calculate with age, if always single?
-pw2015_items = pw2015_items %&gt;%
-  mutate(end_relationship_years = ifelse(number_relationships == 0, age, end_relationship_years))
-####################################################################
+# exclude 21 participants who never had a relationship in their life
+pw2015_items_foreveralone = pw2015_items %&gt;% filter(number_relationships == 0)
+cleaning_vector = as.character(pw2015_items_foreveralone$session)
 
+# Remove these people in all datasets and remove missing sessions (NA)
+pw2015_demographie =  pw2015_demographie %&gt;%
+  filter(!(session %in% cleaning_vector))
 
+pw2015_items =  pw2015_items %&gt;%
+  filter(!(session %in% cleaning_vector))  
+
+pw2015_t2 =  pw2015_t2 %&gt;%
+  filter(!(session %in% cleaning_vector))
+  
+pw2015_t2_frauen =  pw2015_t2_frauen %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t2_ende =  pw2015_t2_ende %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_singles =  pw2015_t3_singles %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_partners =  pw2015_t3_partners %&gt;%
+  filter(!(session %in% cleaning_vector))
+
+pw2015_t3_ende =  pw2015_t3_ende %&gt;%
+  filter(!(session %in% cleaning_vector))
 
 pw2015_items &lt;- pw2015_items %&gt;%
   mutate(previous_relationship_ended_days = end_relationship_years * 365 + 
                                             end_relationship_months * 30 + 
                                             end_relationship_weeks * 7,
-         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(!is.na(end_relationship_weeks) &amp;
+                                                     !is.na(end_relationship_months) &amp;
+                                                     is.na(end_relationship_years),
+                                                   end_relationship_months * 30 + 
+                                                     end_relationship_weeks * 7,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(!is.na(end_relationship_weeks) &amp;
+                                                     is.na(end_relationship_months) &amp;
+                                                     is.na(end_relationship_years),
+                                                   end_relationship_weeks * 7,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(!is.na(end_relationship_weeks) &amp;
+                                                     is.na(end_relationship_months) &amp;
+                                                     !is.na(end_relationship_years),
+                                                   end_relationship_years * 365 + 
+                                                     end_relationship_weeks * 7,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(end_relationship_weeks) &amp;
+                                                     !is.na(end_relationship_months) &amp;
+                                                     !is.na(end_relationship_years),
                                                    end_relationship_years * 365 + 
                                                      end_relationship_months * 30,
                                                    previous_relationship_ended_days),
-         previous_relationship_ended_days = ifelse(is.na(previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(end_relationship_weeks) &amp;
+                                                     !is.na(end_relationship_months) &amp;
+                                                     is.na(end_relationship_years),
+                                                   end_relationship_months * 30,
+                                                   previous_relationship_ended_days),
+         previous_relationship_ended_days = ifelse(is.na(end_relationship_weeks) &amp;
+                                                     is.na(end_relationship_months) &amp;
+                                                     !is.na(end_relationship_years),
                                                    end_relationship_years * 365,
                                                    previous_relationship_ended_days),
          previous_relationship_ended = created - previous_relationship_ended_days)
+         
+pw2015_items = pw2015_items %&gt;%
+  mutate(age_last_relationship = age - previous_relationship_ended_days/365)
 
-
-#################### Why still so many participants with without &quot;previous_relationship_ended&quot;?? 
-crosstabs(~ number_relationships + is.na(previous_relationship_ended), data = pw2015_items)</code></pre>
-<pre><code>##                     is.na(previous_relationship_ended)
-## number_relationships FALSE TRUE
-##                 0       21    0
-##                 1      302  148
-##                 2      237  161
-##                 3      202  126
-##                 4      110   72
-##                 5       78   44
-##                 6       34   25
-##                 7       20   11
-##                 8       15    7
-##                 9        4    4
-##                 10       9    7
-##                 11       1    0
-##                 12       1    1
-##                 13       0    1
-##                 14       1    0
-##                 15       2    1
-##                 16       2    0
-##                 18       0    1
-##                 20       3    1
-##                 &lt;NA&gt;     0  495</code></pre>
+# no liars about last relationship
+table(pw2015_items$age_last_relationship)         </code></pre>
+<pre><code>## 
+##               12 12.2602739726027               13 13.6958904109589 
+##                1                1                2                1 
+##               14 14.5068493150685               15 15.1205479452055 
+##                1                1                6                1 
+## 15.2602739726027 15.4876712328767 15.5068493150685 15.5698630136986 
+##                2                1                1                1 
+## 15.6328767123288 15.7534246575342 15.8986301369863               16 
+##                1                1                1               10 
+## 16.3424657534247 16.5068493150685 16.5506849315069 16.5890410958904 
+##                1                3                1                1 
+## 16.6712328767123 16.7150684931507 16.8356164383562 16.9178082191781 
+##                1                1                4                3 
+## 16.9616438356164               17 17.0767123287671 17.0958904109589 
+##                1               22                1                1 
+## 17.1780821917808 17.2602739726027 17.3424657534247 17.4054794520548 
+##                1                3                2                1 
+## 17.5068493150685 17.5315068493151 17.5506849315069 17.5890410958904 
+##                6                2                1                1 
+##  17.613698630137 17.6712328767123 17.7150684931507 17.7534246575342 
+##                1                4                1                6 
+## 17.7780821917808 17.8356164383562 17.8986301369863 17.9178082191781 
+##                2                1                1                4 
+## 17.9616438356164 17.9808219178082               18 18.0383561643836 
+##                1                1               25                1 
+## 18.0958904109589 18.1780821917808 18.2219178082192 18.2602739726027 
+##                4                4                1                5 
+## 18.2849315068493 18.3232876712329 18.3424657534247  18.386301369863 
+##                2                1                3                1 
+## 18.4246575342466 18.4493150684931 18.4684931506849 18.4876712328767 
+##                7                1                1                1 
+## 18.5068493150685 18.5315068493151 18.5890410958904  18.613698630137 
+##                8                1                3                1 
+## 18.6328767123288 18.6520547945205 18.6712328767123 18.7150684931507 
+##                1                1               10                1 
+## 18.7342465753425 18.7534246575342 18.7972602739726 18.8356164383562 
+##                3                8                1                3 
+## 18.8602739726027 18.8986301369863 18.9178082191781 18.9424657534247 
+##                1                2                4                1 
+## 18.9808219178082               19 19.1780821917808  19.241095890411 
+##                1               20                6                1 
+## 19.2602739726027 19.3424657534247 19.4246575342466 19.4493150684931 
+##                7                5                5                1 
+## 19.5068493150685 19.5315068493151 19.5698630136986 19.5890410958904 
+##               12                2                2                6 
+##  19.613698630137 19.6520547945205 19.6712328767123 19.7150684931507 
+##                3                1                7                2 
+## 19.7342465753425 19.7534246575342 19.7780821917808 19.7972602739726 
+##                1                5                3                1 
+## 19.8164383561644 19.8356164383562 19.8986301369863 19.9178082191781 
+##                3                7                1                6 
+## 19.9616438356164 19.9808219178082               20 20.0383561643836 
+##                1                5               37                1 
+## 20.0767123287671 20.0958904109589 20.1397260273973 20.1780821917808 
+##                1                4                2                1 
+## 20.2602739726027 20.3424657534247  20.386301369863 20.4246575342466 
+##                6                3                2                4 
+## 20.5068493150685 20.5315068493151 20.5890410958904  20.613698630137 
+##                8                2                2                3 
+## 20.6712328767123 20.6958904109589 20.7150684931507 20.7534246575342 
+##                7                1                1                5 
+## 20.7780821917808 20.7972602739726 20.8164383561644 20.8356164383562 
+##                1                2                2                5 
+## 20.8602739726027 20.8986301369863 20.9178082191781 20.9616438356164 
+##                2                3                5                1 
+## 20.9808219178082               21 21.0383561643836 21.0958904109589 
+##                4               24                1                4 
+## 21.1780821917808 21.2219178082192 21.2602739726027 21.2849315068493 
+##                2                1                1                1 
+## 21.3041095890411 21.3232876712329 21.3424657534247 21.3671232876712 
+##                1                1                7                1 
+## 21.4246575342466 21.4493150684931 21.4684931506849 21.5068493150685 
+##                4                1                3               14 
+## 21.5315068493151 21.5506849315069 21.5698630136986 21.5890410958904 
+##                1                2                3                8 
+## 21.6328767123288 21.6712328767123 21.6958904109589 21.7150684931507 
+##                7                1                2                2 
+## 21.7534246575342 21.7780821917808 21.8356164383562 21.8602739726027 
+##                5                1                4                2 
+## 21.8794520547945 21.9178082191781 21.9424657534247 21.9616438356164 
+##                3                3                3                1 
+## 21.9808219178082               22 22.0958904109589 22.1397260273973 
+##                1               20                1                2 
+## 22.1780821917808 22.2219178082192  22.241095890411 22.2602739726027 
+##                4                1                1                1 
+## 22.3041095890411 22.3424657534247 22.4054794520548 22.4246575342466 
+##                1                7                1                2 
+## 22.4493150684931 22.4684931506849 22.4876712328767 22.5068493150685 
+##                2                1                1               12 
+## 22.5315068493151 22.5890410958904 22.6520547945205 22.6712328767123 
+##                1                3                2                6 
+## 22.7150684931507 22.7534246575342 22.7780821917808 22.7972602739726 
+##                1                4                1                1 
+## 22.8164383561644 22.8356164383562 22.8602739726027 22.8794520547945 
+##                1                3                2                2 
+## 22.8986301369863 22.9178082191781 22.9424657534247 22.9616438356164 
+##                1                2                2                2 
+## 22.9808219178082               23 23.0958904109589 23.1205479452055 
+##                3               19                3                3 
+## 23.1780821917808 23.2027397260274 23.2602739726027 23.3232876712329 
+##                4                2                2                1 
+## 23.3424657534247 23.4054794520548 23.4246575342466 23.4493150684931 
+##                2                1                3                1 
+## 23.4684931506849 23.4876712328767 23.5068493150685 23.5315068493151 
+##                1                1               14                1 
+## 23.5506849315069 23.5890410958904 23.6712328767123 23.6958904109589 
+##                2                2                1                1 
+## 23.7150684931507 23.7534246575342 23.7972602739726 23.8164383561644 
+##                1                7                1                2 
+## 23.8356164383562 23.8602739726027 23.8794520547945 23.8986301369863 
+##                7                1                1                1 
+## 23.9178082191781 23.9424657534247 23.9808219178082               24 
+##                6                1                1               26 
+## 24.0958904109589 24.1780821917808  24.241095890411 24.2602739726027 
+##                2                4                1                4 
+## 24.3041095890411 24.3232876712329 24.3424657534247 24.3671232876712 
+##                1                1                3                2 
+## 24.4246575342466 24.5068493150685 24.5506849315069 24.5890410958904 
+##                1                7                2                1 
+##  24.613698630137 24.6712328767123 24.6958904109589 24.7150684931507 
+##                1                6                1                1 
+## 24.7534246575342 24.7780821917808 24.7972602739726 24.8356164383562 
+##                5                2                1                5 
+## 24.8794520547945 24.8986301369863 24.9178082191781 24.9424657534247 
+##                1                2                8                2 
+## 24.9616438356164               25 25.1780821917808 25.2602739726027 
+##                4               28                2                4 
+## 25.2849315068493 25.3232876712329 25.3424657534247 25.4054794520548 
+##                1                1                3                1 
+## 25.4246575342466 25.4493150684931 25.4684931506849 25.4876712328767 
+##                2                2                1                1 
+## 25.5068493150685 25.5315068493151 25.5506849315069 25.5890410958904 
+##                4                1                1                7 
+## 25.6712328767123 25.6958904109589 25.7342465753425 25.7534246575342 
+##                5                1                1                7 
+## 25.7972602739726 25.8356164383562 25.8602739726027 25.8794520547945 
+##                1                3                1                1 
+## 25.9178082191781 25.9616438356164 25.9808219178082               26 
+##                7                3                2               10 
+## 26.0958904109589 26.1205479452055 26.1780821917808 26.2602739726027 
+##                2                1                2                3 
+## 26.3232876712329 26.3424657534247 26.4246575342466 26.4876712328767 
+##                1                1                2                1 
+## 26.5068493150685 26.5890410958904 26.6328767123288 26.6712328767123 
+##                6                1                1                3 
+## 26.6958904109589 26.7150684931507 26.7780821917808 26.8356164383562 
+##                1                1                2                2 
+## 26.8794520547945 26.9178082191781 26.9616438356164               27 
+##                2                3                1               10 
+## 27.0383561643836 27.0958904109589 27.1780821917808 27.2602739726027 
+##                1                1                1                2 
+## 27.3424657534247 27.5068493150685 27.5506849315069 27.5890410958904 
+##                3                4                1                3 
+## 27.6712328767123 27.7150684931507 27.7342465753425 27.7534246575342 
+##                3                2                1                2 
+## 27.7972602739726 27.8356164383562 27.8602739726027 27.8794520547945 
+##                1                1                1                1 
+## 27.9178082191781 27.9424657534247 27.9808219178082               28 
+##                2                1                1                9 
+## 28.0958904109589 28.1780821917808 28.2602739726027 28.3041095890411 
+##                2                2                1                1 
+## 28.3424657534247 28.4246575342466 28.5068493150685 28.5890410958904 
+##                5                2                6                2 
+## 28.6328767123288 28.6712328767123 28.7534246575342 28.8356164383562 
+##                2                1                3                1 
+## 28.8602739726027               29 29.1780821917808 29.4246575342466 
+##                1               10                1                3 
+## 29.4876712328767 29.5068493150685 29.5315068493151 29.5506849315069 
+##                1                2                1                1 
+## 29.5890410958904 29.6712328767123 29.7534246575342 29.7972602739726 
+##                2                1                1                1 
+## 29.8164383561644 29.8356164383562 29.8602739726027 29.9178082191781 
+##                1                4                1                2 
+## 29.9808219178082               30 30.3424657534247 30.5068493150685 
+##                1                7                4                5 
+## 30.5315068493151 30.5890410958904 30.6520547945205 30.6712328767123 
+##                2                2                1                2 
+## 30.7150684931507 30.7534246575342 30.7972602739726 30.8356164383562 
+##                1                1                1                2 
+## 30.9178082191781               31 31.1397260273973 31.2602739726027 
+##                2               13                1                1 
+## 31.3424657534247 31.4246575342466 31.4684931506849 31.5068493150685 
+##                1                2                1                1 
+## 31.6712328767123 31.7534246575342 31.7972602739726 31.8602739726027 
+##                1                1                1                1 
+## 31.9178082191781               32  32.158904109589 32.1780821917808 
+##                1                8                1                1 
+## 32.2219178082192 32.2602739726027 32.4246575342466 32.5068493150685 
+##                1                1                2                3 
+## 32.5698630136986 32.5890410958904 32.7342465753425 32.7534246575342 
+##                1                1                1                1 
+## 32.8164383561644 32.9178082191781               33 33.3424657534247 
+##                1                2                9                3 
+##  33.386301369863 33.5068493150685 33.5315068493151 33.5890410958904 
+##                1                5                2                1 
+## 33.6958904109589 33.8356164383562 33.9561643835616               34 
+##                1                1                1                8 
+## 34.0958904109589 34.3424657534247 34.4246575342466 34.5068493150685 
+##                1                1                1                4 
+## 34.5890410958904 34.6520547945205 34.6958904109589 34.7534246575342 
+##                1                1                1                1 
+## 34.7972602739726 34.8356164383562 34.9178082191781 34.9616438356164 
+##                1                2                1                1 
+## 34.9808219178082               35 35.0958904109589 35.1397260273973 
+##                1                7                1                1 
+## 35.2602739726027 35.5068493150685 35.8164383561644 35.8356164383562 
+##                1                3                2                1 
+##               36 36.1780821917808 36.2602739726027 36.3232876712329 
+##                8                2                1                1 
+## 36.4246575342466 36.5068493150685 36.5890410958904 36.6712328767123 
+##                2                1                1                1 
+## 36.7342465753425 36.8356164383562 36.9178082191781 36.9616438356164 
+##                1                2                1                1 
+##               37 37.2602739726027 37.3424657534247 37.4876712328767 
+##                8                1                1                2 
+## 37.5068493150685 37.6712328767123 37.7534246575342 37.7972602739726 
+##                1                1                1                1 
+##               38 38.2027397260274 38.5068493150685 38.6520547945205 
+##                6                1                4                1 
+## 38.7342465753425               39 39.3232876712329 39.5506849315069 
+##                1                4                2                1 
+## 39.7534246575342 39.8602739726027 39.8794520547945 39.8986301369863 
+##                1                1                1                1 
+## 39.9178082191781               40 40.5068493150685 40.7534246575342 
+##                2                3                2                2 
+## 40.8356164383562               41 41.2602739726027 41.4246575342466 
+##                1                5                1                1 
+## 41.5068493150685 41.6712328767123 41.8356164383562 41.8794520547945 
+##                2                1                1                1 
+## 41.8986301369863 41.9616438356164 41.9753424657534               42 
+##                1                2                1                7 
+##  42.013698630137 42.1780821917808 42.5068493150685 42.6712328767123 
+##                1                1                1                1 
+## 42.7534246575342 42.8356164383562               43 43.0958904109589 
+##                1                1                6                1 
+## 43.2602739726027 43.4876712328767 43.5698630136986 43.8986301369863 
+##                1                1                1                1 
+##               44 44.3424657534247 44.4246575342466 44.4684931506849 
+##                4                1                1                1 
+## 44.5890410958904 44.7342465753425 44.8986301369863               45 
+##                1                1                1                6 
+##  45.613698630137 45.6712328767123 45.7534246575342 45.9424657534247 
+##                1                1                1                1 
+##               46 46.4246575342466  46.613698630137 46.6712328767123 
+##                3                1                1                1 
+## 46.7972602739726 46.8794520547945               47 47.2602739726027 
+##                1                1                4                1 
+## 47.3232876712329 47.5068493150685 47.7150684931507 47.8986301369863 
+##                1                1                1                1 
+## 47.9808219178082               48 48.1780821917808 48.5068493150685 
+##                1                3                1                1 
+## 48.7534246575342               49 49.1780821917808 49.2602739726027 
+##                2                6                2                1 
+## 49.3424657534247 49.4246575342466  49.613698630137 49.6958904109589 
+##                1                1                1                1 
+## 49.8164383561644 49.9178082191781               50 50.1780821917808 
+##                2                1                5                1 
+## 50.2602739726027 50.7534246575342 50.7972602739726               51 
+##                1                2                1                5 
+## 51.4684931506849 51.5068493150685 51.9178082191781               52 
+##                1                1                2                5 
+## 52.4246575342466               53               54 54.3424657534247 
+##                1                1                1                1 
+## 54.8602739726027               55 55.7534246575342               56 
+##                1                1                1                2 
+## 56.2602739726027 56.3424657534247 56.5068493150685 56.5890410958904 
+##                1                1                1                1 
+## 56.6712328767123               57 57.7534246575342               58 
+##                1                1                1                7 
+## 58.1780821917808               59               60               61 
+##                1                1                1                2 
+## 61.4684931506849 61.5068493150685 61.9178082191781               62 
+##                1                1                1                2 
+## 62.3424657534247 62.5068493150685               63 65.1780821917808 
+##                1                1                2                1 
+## 65.7534246575343 65.9808219178082               66 69.7534246575343 
+##                1                1                2                1 
+##               70 74.9178082191781 75.7780821917808               76 
+##                2                1                1                1 
+##               78               82 
+##                1                1</code></pre>
 <pre class="r"><code>pw2015_items &lt;- pw2015_items %&gt;% select(-previous_relationship_ended_days,  -end_relationship_years,
                                         -end_relationship_months, -end_relationship_weeks)</code></pre>
 </div>
@@ -981,9 +1291,7 @@ pw2015_t2_frauen$pastrelationship4_end_f =
 pw2015_t2_frauen$pastrelationship5_end_f = 
   as.Date(pw2015_t2_frauen$pastrelationship5_end_f, origin = &quot;1970-01-01&quot;)</code></pre>
 <p>Join t2 data</p>
-<pre class="r"><code># pw2015_t2_relationship &lt;- bind_rows(pw2015_t2, pw2015_t2_frauen) @Sarah: check if we can change to this version
-
-pw2015_t2_relationship &lt;- left_join(pw2015_t2, pw2015_t2_frauen, by=c(&quot;session&quot;, &quot;short_session&quot;), suffix = c(&quot;.m&quot;, &quot;.f&quot;))</code></pre>
+<pre class="r"><code>pw2015_t2_relationship &lt;- left_join(pw2015_t2, pw2015_t2_frauen, by=c(&quot;session&quot;, &quot;short_session&quot;), suffix = c(&quot;.m&quot;, &quot;.f&quot;))</code></pre>
 </div>
 <div id="relationship-status-at-t2" class="section level3">
 <h3>Relationship status at t2</h3>
@@ -1250,13 +1558,10 @@ pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% mutate(
 <pre class="r"><code>pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% mutate(
   &quot;relationship1.end&quot; = as.Date(NA), &quot;relationship2.end&quot; = as.Date(NA), &quot;relationship3.end&quot; = as.Date(NA),
   &quot;relationship4.end&quot; = as.Date(NA), &quot;relationship5.end&quot; = as.Date(NA), &quot;relationship6.end&quot; = as.Date(NA))</code></pre>
-<div id="section" class="section level35">
-<p></p>
 </div>
 </div>
-</div>
-<div id="add-t2_created-variable-for-right-censored-data" class="section level1">
-<h1>Add t2_created variable for right censored data</h1>
+<div id="add-t2_created-variable-for-right-censored-data" class="section level2">
+<h2>Add t2_created variable for right censored data</h2>
 <pre class="r"><code>pw2015_t2_relationship$created.m = as.Date(pw2015_t2_relationship$created.m, origin = &quot;1970-01-01&quot;)
 pw2015_t2_relationship$created.f = as.Date(pw2015_t2_relationship$created.f, origin = &quot;1970-01-01&quot;)
 
@@ -1358,8 +1663,9 @@ pw2015_t2_relationship &lt;- reshape(pw2015_t2_relationship, direction='long',
 <h3>Change format before joining with t3 data</h3>
 <p>1 relationship per row, or if single whole time one row with only NAs</p>
 <pre class="r"><code>#Dataframe with only participants who had at least one relationship between t1 and t2
-pw2015_t2_relationship_1 &lt;- pw2015_t2_relationship %&gt;%  filter(t2_relationship != 0 | t2_pastrelationship != 0) %&gt;%
-            filter(!is.na(age_new)| !is.na(duration_new) | !is.na(end) | !is.na(height_new) | !is.na(kind) | 
+pw2015_t2_relationship_1 &lt;- pw2015_t2_relationship %&gt;%
+  filter(t2_relationship != 0 | t2_pastrelationship != 0) %&gt;%
+            filter(!is.na(age_new) | !is.na(duration_new) | !is.na(end) | !is.na(height_new) | !is.na(kind) | 
             !is.na(name) | !is.na(name_new) | !is.na(relationship_new) | !is.na(start)) 
 
 #Dataframe with only participants who had NONE relationship between t1 and t2
@@ -1432,8 +1738,8 @@ pw2015_t2_relationship$sex_partner &lt;- as.integer(pw2015_t2_relationship$sex_p
 <pre><code>## Warning: NAs durch Umwandlung erzeugt</code></pre>
 </div>
 </div>
-<div id="liars-in-t2" class="section level1">
-<h1>Liars in t2</h1>
+<div id="liars" class="section level1">
+<h1>Liars</h1>
 <pre class="r"><code># Get starting date of t1
 starting_date = pw2015_demographie %&gt;% select(session, created_t1 = created)
 
@@ -1442,7 +1748,9 @@ starting_date = pw2015_demographie %&gt;% select(session, created_t1 = created)
 non_singles_t2 = left_join(pw2015_t2_relationship, starting_date, by = &quot;session&quot;) %&gt;%
   mutate(check_liars_start = ifelse(as.Date(created_t1) &gt; as.Date(start), 1, 0),
          check_liars_end = ifelse(as.Date(t2_created) &lt; as.Date(start), 1, 0),
-         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %&gt;%
+         check_liars_idiots = ifelse(as.Date(start) &gt; as.Date(end), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1 |
+                                check_liars_idiots == 1, 1, 0)) %&gt;%
   filter(check_liars == 1)
 
 
@@ -1455,11 +1763,11 @@ count(non_singles_t2_session)</code></pre>
 <pre><code>## # A tibble: 1 x 1
 ##       n
 ##   &lt;int&gt;
-## 1   216</code></pre>
+## 1   221</code></pre>
 <pre class="r"><code>table(non_singles_t2_session$kind)  </code></pre>
 <pre><code>## 
-##  1  2  3 
-## 38 81 97</code></pre>
+##   1   2   3 
+##  39  80 102</code></pre>
 <pre class="r"><code>non_singles_vector_t2 = as.data.frame(non_singles_t2_session$session)
 
 
@@ -1467,18 +1775,15 @@ count(non_singles_t2_session)</code></pre>
 non_singles_t3 = left_join(pw2015_t3_partners, starting_date, by = &quot;session&quot;) %&gt;%
   mutate(check_liars_start = ifelse(as.Date(created_t1) &gt; as.Date(F_t3_start), 1, 0),
          check_liars_end = ifelse(as.Date(created) &lt; as.Date(F_t3_start), 1, 0),
-         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1, 1, 0)) %&gt;%
+         check_liars_idiots = ifelse(as.Date(F_t3_start) &gt; as.Date(F_t3_end), 1, 0),
+         check_liars = ifelse(check_liars_start == 1 | check_liars_end == 1 |
+                                check_liars_idiots == 1, 1, 0)) %&gt;%
   filter(check_liars == 1)
 
 non_singles_t3_session = non_singles_t3 %&gt;% filter(!duplicated(session))
 
-
 non_singles_vector = c(non_singles_t2$session, non_singles_t3$session) 
-
-table(non_singles_vector == &quot;--N__ZtqyajgoxEV6gE3mkStbJ-msvAOiCn2N_UkgOLj1T3JgBVkz1S1jroCaGzE&quot;)</code></pre>
-<pre><code>## 
-## FALSE  TRUE 
-##   462     1</code></pre>
+non_singles_vector = unique(non_singles_vector)</code></pre>
 </div>
 <div id="data-t3" class="section level1">
 <h1>Data t3</h1>
@@ -1501,7 +1806,7 @@ pw2015_t3_partners = pw2015_t3_partners %&gt;%
 
 pw2015_t3_partners = pw2015_t3_partners %&gt;%
   mutate(F_t3_start = if_else(is.na(F_t3_start), created_singles_t3, F_t3_start)) %&gt;%
-  filter(!is.na(F_t3_start)) # exclude weird cases - check this if you have time</code></pre>
+  filter(!is.na(F_t3_start)) # exclude people who didnt finish the survey</code></pre>
 </div>
 <div id="relationships-at-t2-and-t3" class="section level1">
 <h1>Relationships at t2 and t3</h1>
@@ -1551,33 +1856,114 @@ pw2015_t2_relationship = pw2015_t2_relationship %&gt;%
          session_partnername = ifelse(lasting == 1, paste0(session, &quot;_&quot;, name), NA)) %&gt;%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
-############################ Maybe rename data -&gt; t2_test / t3_test
-t2_test &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;% select(session, short_session, start, end, t2_created,
-                                                           kind, lasting, name, sex_partner)
+pw2015_t2_relationship &lt;- pw2015_t2_relationship %&gt;% ungroup() %&gt;%
+  select(session, short_session, start, end, t2_created, kind, lasting, name, sex_partner)
 
-t2_test$start = as.Date(t2_test$start)
+pw2015_t2_relationship$start = as.Date(pw2015_t2_relationship$start)
 
 pw2015_t3_partners = pw2015_t3_partners %&gt;%
   mutate(kind = ifelse(is.na(F_t3_kind), as.factor(F_t3_past_kind), as.factor(F_t3_kind)))
 
-t3_test &lt;- pw2015_t3_partners %&gt;% ungroup() %&gt;% select(session, short_session, created, F_t3_start,
-                                                       F_t3_sex,F_t3_end, kind, F_t3_lasting,
-                                                       F_t3_name)
+pw2015_t3_partners &lt;- pw2015_t3_partners %&gt;% ungroup() %&gt;%
+  select(session, short_session, created, F_t3_start, F_t3_sex,F_t3_end, kind, F_t3_lasting,
+         F_t3_name)
 
-t3_test &lt;- t3_test %&gt;% rename(
+pw2015_t3_partners &lt;- pw2015_t3_partners %&gt;% rename(
                       start = F_t3_start, 
                       end = F_t3_end, 
                       lasting = F_t3_lasting,
                       name = F_t3_name,
                       sex_partner = F_t3_sex, 
                       t3_created = created) %&gt;%
-  mutate(end = as.Date(end))
-################### Problem:  In this version of the code I need to change certain classes before joining,
-        #                     which we did not need to in the longer version of the code. 
+  mutate(end = as.Date(end),
+         t3_created = as.Date(t3_created))
 
-t2_t3_relationship &lt;- bind_rows(t2_test, t3_test)
-
-# Remove weird cases before analysis
+lapply(pw2015_t2_relationship,class)</code></pre>
+<pre><code>## $session
+## [1] &quot;character&quot;
+## 
+## $short_session
+## [1] &quot;character&quot;
+## 
+## $start
+## [1] &quot;Date&quot;
+## 
+## $end
+## [1] &quot;Date&quot;
+## 
+## $t2_created
+## [1] &quot;Date&quot;
+## 
+## $kind
+## [1] &quot;integer&quot;
+## 
+## $lasting
+## [1] &quot;integer&quot;
+## 
+## $name
+## [1] &quot;character&quot;
+## 
+## $sex_partner
+## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>lapply(pw2015_t3_partners,class)</code></pre>
+<pre><code>## $session
+## [1] &quot;character&quot;
+## 
+## $short_session
+## [1] &quot;character&quot;
+## 
+## $t3_created
+## [1] &quot;Date&quot;
+## 
+## $start
+## [1] &quot;Date&quot;
+## 
+## $sex_partner
+## [1] &quot;numeric&quot;
+## 
+## $end
+## [1] &quot;Date&quot;
+## 
+## $kind
+## [1] &quot;integer&quot;
+## 
+## $lasting
+## [1] &quot;numeric&quot;
+## 
+## $name
+## [1] &quot;character&quot;</code></pre>
+<pre class="r"><code>t2_t3_relationship &lt;- bind_rows(pw2015_t2_relationship, pw2015_t3_partners)
+lapply(t2_t3_relationship,class)</code></pre>
+<pre><code>## $session
+## [1] &quot;character&quot;
+## 
+## $short_session
+## [1] &quot;character&quot;
+## 
+## $start
+## [1] &quot;Date&quot;
+## 
+## $end
+## [1] &quot;Date&quot;
+## 
+## $t2_created
+## [1] &quot;Date&quot;
+## 
+## $kind
+## [1] &quot;integer&quot;
+## 
+## $lasting
+## [1] &quot;numeric&quot;
+## 
+## $name
+## [1] &quot;character&quot;
+## 
+## $sex_partner
+## [1] &quot;numeric&quot;
+## 
+## $t3_created
+## [1] &quot;Date&quot;</code></pre>
+<pre class="r"><code># Remove weird cases before analysis, information is missing about kind of relationship (probably a computer error?)
 t2_t3_relationship = t2_t3_relationship %&gt;% filter(!(lasting != 0 &amp; is.na(kind)))
 
 t2_t3_relationship_exclusive = t2_t3_relationship %&gt;% 
@@ -1622,7 +2008,7 @@ pw2015_items_select = pw2015_items %&gt;%
 #right censoring: if single, then &quot;created_single_t2&quot; as &quot;start&quot;
 t2_t3_relationship &lt;- t2_t3_relationship %&gt;% mutate(
   start = if_else(is.na(start), t2_created, start),
-  start = if_else(is.na(start), as.Date(t3_created), start))
+  start = if_else(is.na(start), t3_created, start))
 
 #right censoring: if single, then &quot;created_single_t2&quot; as &quot;start&quot;
 t2_t3_relationship_exclusive &lt;- t2_t3_relationship_exclusive %&gt;% mutate(
@@ -1638,8 +2024,8 @@ data = left_join(data, pw2015_items_select, by = c(&quot;session&quot;, &quot;sh
 data_exclusive = left_join(t2_t3_relationship_exclusive, pw2015_demographie_select,
                  by = c(&quot;session&quot;, &quot;short_session&quot;))
 data_exclusive = left_join(data_exclusive, pw2015_items_select, by = c(&quot;session&quot;, &quot;short_session&quot;))</code></pre>
-<div id="create-additional-variables-for-survival-analysis-start-of-relationships" class="section level2">
-<h2>Create additional variables for survival analysis (start of relationships)</h2>
+<div id="create-additional-variables-for-survival-analysis-start-of-single" class="section level2">
+<h2>Create additional variables for survival analysis (start of single)</h2>
 <pre class="r"><code>data = data %&gt;%
   ungroup() %&gt;%
   arrange(session, start) %&gt;%
@@ -1685,8 +2071,9 @@ data_singles_after_relationship_till_end = data %&gt;%
   filter(end &lt; last_entry) %&gt;%
   mutate(event_start = 0) %&gt;%
   mutate(single_start = end,
-         single_end = last_entry) %&gt;%
-  select(-start, -end, -kind, -lasting, -name, -sex_partner, -relationship_number, -relationship_order,
+         single_end = last_entry,
+         lasting = 0) %&gt;%
+  select(-start, -end, -kind, -name, -sex_partner, -relationship_number, -relationship_order,
          -single_start_prob) %&gt;%
   mutate(single_start_prob = ifelse(single_end &lt; single_start, 1, 0))
 
@@ -1739,8 +2126,9 @@ data_exclusive_singles_after_relationship_till_end = data_exclusive %&gt;%
   filter(end &lt; last_entry) %&gt;%
   mutate(event_start = 0) %&gt;%
   mutate(single_start = end,
-         single_end = last_entry) %&gt;%
-  select(-start, -end, -kind, -lasting, -name, -sex_partner, -relationship_number, -relationship_order,
+         single_end = last_entry,
+         lasting = 0) %&gt;%
+  select(-start, -end, -kind, -name, -sex_partner, -relationship_number, -relationship_order,
          -single_start_prob) %&gt;%
   mutate(single_start_prob = ifelse(single_end &lt; single_start, 1, 0))
 
@@ -1751,10 +2139,7 @@ data_exclusive = bind_rows(data_exclusive, data_exclusive_singles_after_relation
 table(data_exclusive$single_start_prob)</code></pre>
 <pre><code>## 
 ##    0    1 
-## 1636  146</code></pre>
-<pre class="r"><code>data_x = data_exclusive %&gt;% select(short_session, start, end, previous_relationship_ended, created_t1,  t2_created, t3_created, single_end, single_start, single_start_prob)
-
-problem_people = data_exclusive %&gt;% filter(single_start_prob == 1)</code></pre>
+## 1634  128</code></pre>
 </div>
 <div id="create-additional-variables-for-survival-analysis-end-of-relationships" class="section level2">
 <h2>Create additional variables for survival analysis (end of relationships)</h2>
@@ -1771,8 +2156,19 @@ data_exclusive &lt;- data_exclusive %&gt;%
          event_start = ifelse(!is.na(event_start), event_start,
                               ifelse(lasting == 0, 0, 1)))
 
-
-################################
+crosstabs(~lasting + event_start, data = data)</code></pre>
+<pre><code>##        event_start
+## lasting    0    1
+##       0  730    0
+##       1    0  774
+##       2    0 1174</code></pre>
+<pre class="r"><code>crosstabs(~lasting + event_end, data = data)</code></pre>
+<pre><code>##        event_end
+## lasting    0    1 &lt;NA&gt;
+##       0    0    0  730
+##       1  774    0    0
+##       2    0 1174    0</code></pre>
+<pre class="r"><code>################################
 #create end variable: either the date of the relationship end or (if right-censored data) the created-date of t2/t3
 
 
@@ -1791,16 +2187,20 @@ data_exclusive &lt;- data_exclusive %&gt;%
 <h2>Clean data set</h2>
 <pre class="r"><code># clean data set without liars and exclude one person who mixed up start and end variable &quot;AUe1MJGOoE&quot;&quot;
 data_clean = data %&gt;% filter(!(session %in% non_singles_vector)) %&gt;%
+  filter(single_start_prob != 1) %&gt;%
   filter(short_session != &quot;AUe1MJGOoE&quot;) %&gt;%
-  filter(short_session != &quot;BGA9-p9C_K&quot;) 
+  filter(short_session != &quot;BGA9-p9C_K&quot;) %&gt;%
+  filter(sex != 3) # exclude non-binary people
 
 # additionally cleaning: people who never had a relationship (number_relationships are the number of previos relationships)
 data_clean = data_clean %&gt;%
   filter(number_relationships != 0 | is.na(number_relationships))
 
 data_exclusive_clean = data_exclusive %&gt;% filter(!(session %in% non_singles_vector)) %&gt;%
+  filter(single_start_prob != 1) %&gt;%
   filter(short_session != &quot;AUe1MJGOoE&quot;) %&gt;%
-  filter(short_session != &quot;BGA9-p9C_K&quot;)
+  filter(short_session != &quot;BGA9-p9C_K&quot;) %&gt;%
+  filter(sex != 3) # exclude non-binary people
 
 # additionally cleaning: people who never had a relationship (number_relationships are the number of previos relationships)
 data_exclusive_clean = data_exclusive_clean %&gt;%
@@ -1809,8 +2209,7 @@ data_exclusive_clean = data_exclusive_clean %&gt;%
 # Exclude people who had more than one relationship at a time in data_exclusive_clean
 data_exclusive_clean = data_exclusive_clean %&gt;% filter(short_session != &quot;dbFHNbYgCS&quot;,
                                                        short_session !=  &quot;gg-RdHOFeq&quot;,
-                                                       short_session != &quot;vg4uK203LH&quot;)
-# For Analysis we only want to use data from data_exclusive_clean (no liars, only commited relationships, one relationship at a time)</code></pre>
+                                                       short_session != &quot;vg4uK203LH&quot;)</code></pre>
 </div>
 <div id="save-data" class="section level2">
 <h2>Save Data</h2>
@@ -1819,11 +2218,6 @@ write.csv(data_clean, file = &quot;ImportedData/data_clean.csv&quot;)
 
 write.csv(data_exclusive, file = &quot;ImportedData/data_exclusive.csv&quot;)
 write.csv(data_exclusive_clean, file = &quot;ImportedData/data_exclusive_clean.csv&quot;)</code></pre>
-</div>
-<div id="compare-with-data-created-by-alt.-script" class="section level2">
-<h2>Compare with data created by alt. script</h2>
-<pre class="r"><code># alt_data_clean$kind &lt;- as.integer(alt_data_clean$kind) #Different classes in dataframes
-# all.equal(data_clean, alt_data_clean)</code></pre>
 </div>
 </div>
 

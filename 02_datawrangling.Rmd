@@ -5,21 +5,6 @@ date: "20 April 2018"
 output: html_document
 ---
 
-Current Open questions and tasks (last updated 11/13/18)
-
-## Open questions:
-- rename "start"/"end"-variable
-
-@laura:
-- Check new data_wrangling + marked by Sarah
-
-
-@sarah:
-- how to interpret survival summery? How to deal with continous predictors?
-    (+ write e-mail to cox-guy)
-- identical data with both datawrangling scripts?? I used "all.equal". Maybe check results together.
-
-
 
 ## Library
 ```{r}
@@ -1094,7 +1079,7 @@ pw2015_t2_relationship$sex_partner <- as.integer(pw2015_t2_relationship$sex_part
 
 ```
 
-# Liars in t2
+# Liars
 ```{r}
 # Get starting date of t1
 starting_date = pw2015_demographie %>% select(session, created_t1 = created)
@@ -1209,33 +1194,36 @@ pw2015_t2_relationship = pw2015_t2_relationship %>%
          session_partnername = ifelse(lasting == 1, paste0(session, "_", name), NA)) %>%
   filter(!(session_partnername %in% double_relationships_t2$session_partnername))
 
-############################ Maybe rename data -> t2_test / t3_test
-t2_test <- pw2015_t2_relationship %>% ungroup() %>% select(session, short_session, start, end, t2_created,
-                                                           kind, lasting, name, sex_partner)
+pw2015_t2_relationship <- pw2015_t2_relationship %>% ungroup() %>%
+  select(session, short_session, start, end, t2_created, kind, lasting, name, sex_partner)
 
-t2_test$start = as.Date(t2_test$start)
+pw2015_t2_relationship$start = as.Date(pw2015_t2_relationship$start)
 
 pw2015_t3_partners = pw2015_t3_partners %>%
   mutate(kind = ifelse(is.na(F_t3_kind), as.factor(F_t3_past_kind), as.factor(F_t3_kind)))
 
-t3_test <- pw2015_t3_partners %>% ungroup() %>% select(session, short_session, created, F_t3_start,
-                                                       F_t3_sex,F_t3_end, kind, F_t3_lasting,
-                                                       F_t3_name)
+pw2015_t3_partners <- pw2015_t3_partners %>% ungroup() %>%
+  select(session, short_session, created, F_t3_start, F_t3_sex,F_t3_end, kind, F_t3_lasting,
+         F_t3_name)
 
-t3_test <- t3_test %>% rename(
+pw2015_t3_partners <- pw2015_t3_partners %>% rename(
                       start = F_t3_start, 
                       end = F_t3_end, 
                       lasting = F_t3_lasting,
                       name = F_t3_name,
                       sex_partner = F_t3_sex, 
                       t3_created = created) %>%
-  mutate(end = as.Date(end))
-################### Problem:  In this version of the code I need to change certain classes before joining,
-        #                     which we did not need to in the longer version of the code. 
+  mutate(end = as.Date(end),
+         t3_created = as.Date(t3_created))
 
-t2_t3_relationship <- bind_rows(t2_test, t3_test)
+lapply(pw2015_t2_relationship,class)
+lapply(pw2015_t3_partners,class)
 
-# Remove weird cases before analysis
+t2_t3_relationship <- bind_rows(pw2015_t2_relationship, pw2015_t3_partners)
+lapply(t2_t3_relationship,class)
+
+
+# Remove weird cases before analysis, information is missing about kind of relationship (probably a computer error?)
 t2_t3_relationship = t2_t3_relationship %>% filter(!(lasting != 0 & is.na(kind)))
 
 t2_t3_relationship_exclusive = t2_t3_relationship %>% 
@@ -1259,7 +1247,6 @@ t2_t3_relationship = t2_t3_relationship %>%
          # lasting = ifelse(is.na(start), 0, lasting), done earliere (hopefully)
          relationship_order = ifelse(is.na(start), 0, relationship_order),
          relationship_number = ifelse(is.na(start), 0, relationship_number)) 
-
 ```
 
 # Merge Data
@@ -1283,7 +1270,7 @@ pw2015_items_select = pw2015_items %>%
 #right censoring: if single, then "created_single_t2" as "start"
 t2_t3_relationship <- t2_t3_relationship %>% mutate(
   start = if_else(is.na(start), t2_created, start),
-  start = if_else(is.na(start), as.Date(t3_created), start))
+  start = if_else(is.na(start), t3_created, start))
 
 #right censoring: if single, then "created_single_t2" as "start"
 t2_t3_relationship_exclusive <- t2_t3_relationship_exclusive %>% mutate(
@@ -1301,7 +1288,7 @@ data_exclusive = left_join(t2_t3_relationship_exclusive, pw2015_demographie_sele
 data_exclusive = left_join(data_exclusive, pw2015_items_select, by = c("session", "short_session"))
 ```
 
-## Create additional variables for survival analysis (start of relationships)
+## Create additional variables for survival analysis (start of single)
 ```{r}
 data = data %>%
   ungroup() %>%
@@ -1348,8 +1335,9 @@ data_singles_after_relationship_till_end = data %>%
   filter(end < last_entry) %>%
   mutate(event_start = 0) %>%
   mutate(single_start = end,
-         single_end = last_entry) %>%
-  select(-start, -end, -kind, -lasting, -name, -sex_partner, -relationship_number, -relationship_order,
+         single_end = last_entry,
+         lasting = 0) %>%
+  select(-start, -end, -kind, -name, -sex_partner, -relationship_number, -relationship_order,
          -single_start_prob) %>%
   mutate(single_start_prob = ifelse(single_end < single_start, 1, 0))
 
@@ -1402,8 +1390,9 @@ data_exclusive_singles_after_relationship_till_end = data_exclusive %>%
   filter(end < last_entry) %>%
   mutate(event_start = 0) %>%
   mutate(single_start = end,
-         single_end = last_entry) %>%
-  select(-start, -end, -kind, -lasting, -name, -sex_partner, -relationship_number, -relationship_order,
+         single_end = last_entry,
+         lasting = 0) %>%
+  select(-start, -end, -kind, -name, -sex_partner, -relationship_number, -relationship_order,
          -single_start_prob) %>%
   mutate(single_start_prob = ifelse(single_end < single_start, 1, 0))
 
@@ -1412,11 +1401,6 @@ data_exclusive = bind_rows(data_exclusive, data_exclusive_singles_after_relation
 
 
 table(data_exclusive$single_start_prob)
-
-
-data_x = data_exclusive %>% select(short_session, start, end, previous_relationship_ended, created_t1,  t2_created, t3_created, single_end, single_start, single_start_prob)
-
-problem_people = data_exclusive %>% filter(single_start_prob == 1)
 ```
 
 ##Create additional variables for survival analysis (end of relationships)
@@ -1434,6 +1418,8 @@ data_exclusive <- data_exclusive %>%
          event_start = ifelse(!is.na(event_start), event_start,
                               ifelse(lasting == 0, 0, 1)))
 
+crosstabs(~lasting + event_start, data = data)
+crosstabs(~lasting + event_end, data = data)
 
 ################################
 #create end variable: either the date of the relationship end or (if right-censored data) the created-date of t2/t3
@@ -1460,7 +1446,8 @@ data_exclusive <- data_exclusive %>%
 data_clean = data %>% filter(!(session %in% non_singles_vector)) %>%
   filter(single_start_prob != 1) %>%
   filter(short_session != "AUe1MJGOoE") %>%
-  filter(short_session != "BGA9-p9C_K") 
+  filter(short_session != "BGA9-p9C_K") %>%
+  filter(sex != 3) # exclude non-binary people
 
 # additionally cleaning: people who never had a relationship (number_relationships are the number of previos relationships)
 data_clean = data_clean %>%
@@ -1469,7 +1456,8 @@ data_clean = data_clean %>%
 data_exclusive_clean = data_exclusive %>% filter(!(session %in% non_singles_vector)) %>%
   filter(single_start_prob != 1) %>%
   filter(short_session != "AUe1MJGOoE") %>%
-  filter(short_session != "BGA9-p9C_K")
+  filter(short_session != "BGA9-p9C_K") %>%
+  filter(sex != 3) # exclude non-binary people
 
 # additionally cleaning: people who never had a relationship (number_relationships are the number of previos relationships)
 data_exclusive_clean = data_exclusive_clean %>%
@@ -1479,7 +1467,6 @@ data_exclusive_clean = data_exclusive_clean %>%
 data_exclusive_clean = data_exclusive_clean %>% filter(short_session != "dbFHNbYgCS",
                                                        short_session !=  "gg-RdHOFeq",
                                                        short_session != "vg4uK203LH")
-# For Analysis we only want to use data from data_exclusive_clean (no liars, only commited relationships, one relationship at a time)
 ```
 
 
@@ -1493,11 +1480,5 @@ write.csv(data_exclusive_clean, file = "ImportedData/data_exclusive_clean.csv")
 
 ```
 
-## Compare with data created by alt. script
-```{r}
-# alt_data_clean$kind <- as.integer(alt_data_clean$kind) #Different classes in dataframes
-# all.equal(data_clean, alt_data_clean)
-
-```
 
 

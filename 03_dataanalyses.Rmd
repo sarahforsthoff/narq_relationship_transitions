@@ -50,14 +50,6 @@ surv_data = read.csv("ImportedData/data_exclusive_clean.csv")
 
 ```
 
-## Clean Data
-```{r}
-
-surv_data = surv_data %>%
-  filter(sex != 3) #Exlude sex == 3
-  
-```
-
 
 ### Preperations before analyses
 Time of relationship/being single has to be in days
