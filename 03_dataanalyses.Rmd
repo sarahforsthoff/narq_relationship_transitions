@@ -11,7 +11,7 @@ ToDo 06.02.2019
 - Datenwrangling fertig durchgehen (x)
 - Analyse in ein Skript packen (x)
 - Grafikidee: HR für admiration und rivalry? --> Autor geschrieben
-- survival Grafiken nur für Admiration / Rivalry
+- survival Grafiken nur für Admiration / Rivalry (x)
 - schönen Output generieren
 
 
@@ -19,6 +19,7 @@ Fragen an Tanja:
 - Analysen jetzt mit z-standardisiertem NARQ, weil schöner fürs Plotten und leichter zu interpretieren --> Bist du einverstanden?
 - Beim Median-Split und bei den Quartilen wissen wir nicht genau, was wir mit den Personen machen sollen, die genau auf der Kippe zwischen zwei Gruppen stehen?
 - Extremgruppenanalyse: Wir haben jetzt die beiden Gruppen unteres Quartile und oberes Quartil genommen, da die Gruppengrößen sonst viel zu klein sind. Sind aber mit dem approach nicht so zufrieden...
+- Survival Analysen Plots nicht so aussagekräftig --> evtl. bräuchte man dafür doch die Latent Class Analysis, um etwas aussagen zu können...
 
 Furthur to do:
 - analyses including future prospects
@@ -27,6 +28,7 @@ Furthur to do:
 ### Relationship Entry
 - Model 1: rel_entry ~ NARQ_z + cluster(session)
 - Model 2: rel_entry ~ NARQ_ADM_z + NARQ_RIV_z + cluster(session)
+--> Plot Relative Hazards for ADM und RIV
 - Model 3: rel_entry ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
 --> Plot Relative Hazards for ADM und RIV
 - Model 4: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
@@ -39,6 +41,7 @@ Furthur to do:
 ### Relationship End
 - Model 1: rel_end ~ NARQ_z + cluster(session)
 - Model 2: rel_end ~ NARQ_ADM_z + NARQ_RIV_z + cluster(session)
+--> Plot Relative Hazards for ADM und RIV
 - Model 3: rel_end ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
 --> Plot Relative Hazards for ADM und RIV
 - Model 4: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
@@ -180,8 +183,8 @@ qplot(surv_data$NARQ_ADM) + geom_vline(xintercept = ADM_qu_25, color = "red", si
 
 # Rivalry
 surv_data = surv_data %>%
-  mutate(NARQ_RIV_extreme = ifelse(NARQ_ADM <= RIV_qu_25, "low",
-                                     ifelse(NARQ_ADM >= RIV_qu_75, "high", NA)))
+  mutate(NARQ_RIV_extreme = ifelse(NARQ_RIV <= RIV_qu_25, "low",
+                                     ifelse(NARQ_RIV >= RIV_qu_75, "high", NA)))
 
 table(surv_data$NARQ_RIV_extreme)
 qplot(surv_data$NARQ_RIV) + geom_vline(xintercept = RIV_qu_25, color = "red", size = 2) + geom_vline(xintercept = RIV_qu_75, color = "red", size = 2)
@@ -220,13 +223,34 @@ testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
 rh_start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
 
-Sim_rh_start_narq_con.2 <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_ADM_z",
+Sim_rh_start_narq_con.adm <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_ADM_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_start_narq_con.2, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
 
-Sim_rh_start_narq_con.2 <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_RIV_z",
+Sim_rh_start_narq_con.adm = simGG(Sim_rh_start_narq_con.adm, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.adm.data = Sim_rh_start_narq_con.adm$data %>%
+  mutate(group = "Admiration")
+
+Sim_rh_start_narq_con.riv <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_RIV_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_start_narq_con.2, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+Sim_rh_start_narq_con.riv = simGG(Sim_rh_start_narq_con.riv, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.riv.data = Sim_rh_start_narq_con.riv$data %>%
+  mutate(group = "Rivalry")
+
+data_plot = bind_rows(Sim_rh_start_narq_con.adm.data, Sim_rh_start_narq_con.riv.data)
+
+ggplot(data_plot, aes(Xj, Median, fill = group)) +
+  geom_ribbon(aes(ymin = Min, ymax = Max), alpha = 0.2) +
+  geom_ribbon(aes(ymin = Lower50, ymax = Upper50), alpha = 0.2) +
+  geom_line(size = 1, aes(color = group)) +
+  labs(x = "Units of Admiration / Rivalry from Mean",
+       y = "Relative Hazards Comparing to Mean",
+       fill = "", color = "") +
+  scale_color_manual(values=c("#1369E5", "#F42509")) + 
+  scale_fill_manual(values=c("#1369E5", "#F42509")) + 
+  theme_bw()
+
 ```
 
 
@@ -247,13 +271,33 @@ testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
 rh_start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_ADM_z + NARQ_RIV_z + sex + age + cluster(session), data = surv_data)
 
-Sim_rh_start_narq_con.2 <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_ADM_z",
+Sim_rh_start_narq_con.adm <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_ADM_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_start_narq_con.2, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
 
-Sim_rh_start_narq_con.2 <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_RIV_z",
+Sim_rh_start_narq_con.adm = simGG(Sim_rh_start_narq_con.adm, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.adm.data = Sim_rh_start_narq_con.adm$data %>%
+  mutate(group = "Admiration")
+
+Sim_rh_start_narq_con.riv <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_RIV_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_start_narq_con.2, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+Sim_rh_start_narq_con.riv = simGG(Sim_rh_start_narq_con.riv, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.riv.data = Sim_rh_start_narq_con.riv$data %>%
+  mutate(group = "Rivalry")
+
+data_plot = bind_rows(Sim_rh_start_narq_con.adm.data, Sim_rh_start_narq_con.riv.data)
+
+ggplot(data_plot, aes(Xj, Median, fill = group)) +
+  geom_ribbon(aes(ymin = Min, ymax = Max), alpha = 0.2) +
+  geom_ribbon(aes(ymin = Lower50, ymax = Upper50), alpha = 0.2) +
+  geom_line(size = 1, aes(color = group)) +
+  labs(x = "Units of Admiration / Rivalry from Mean",
+       y = "Relative Hazards Comparing to Mean",
+       fill = "", color = "") +
+  scale_color_manual(values=c("#1369E5", "#F42509")) + 
+  scale_fill_manual(values=c("#1369E5", "#F42509")) + 
+  theme_bw()
 ```
 
 ### Model 4 {.tabset}
@@ -269,6 +313,20 @@ testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
 ```
 
 ### Plot survival analysis for groups
+```{r}
+plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_group + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model1, conf.int = T)
+
+plot_model2 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_RIV_group + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model2, conf.int = T)
+```
+
 ### Model 5 {.tabset}
 rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
 ```{r}
@@ -283,6 +341,20 @@ testPH_start_narq_quartil <- ggcoxzph(cox.zph(start_narq_quartil))
 ```
 
 ### Plot survival analysis for quartils
+```{r}
+plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_quartil + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model1, conf.int = T)
+
+plot_model2 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_RIV_quartil + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model2, conf.int = T)
+```
+
 ### Model 6 {.tabset}
 rel_entry ~ NARQ_ADM_extreme + NARQ_RIV_extreme + gender/sex + age + cluster(session)
 ```{r}
@@ -297,6 +369,19 @@ testPH_start_narq_extreme <- ggcoxzph(cox.zph(start_narq_extreme))
 
 
 ### Plot survival analysis for extremes
+```{r}
+plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_ADM_extreme + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model1, conf.int = T)
+
+plot_model2 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
+                            NARQ_RIV_extreme + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model2, conf.int = T)
+```
 
 
 ## Relationship End {.tabset}
@@ -328,17 +413,39 @@ testPH_end_narq_con.2 <- ggcoxzph(cox.zph(end_narq_con.2))
 
 ### Plot Relative Hazards for ADM und RIV
 ```{r}
-rh_end_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+rh_start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
                             NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
 
-Sim_rh_end_narq_con.2 <- coxsimLinear(rh_end_narq_con.2, b = "NARQ_ADM_z",
+Sim_rh_start_narq_con.adm <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_ADM_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_end_narq_con.2, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
 
-Sim_rh_end_narq_con.2 <- coxsimLinear(rh_end_narq_con.2, b = "NARQ_RIV_z",
+Sim_rh_start_narq_con.adm = simGG(Sim_rh_start_narq_con.adm, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.adm.data = Sim_rh_start_narq_con.adm$data %>%
+  mutate(group = "Admiration")
+
+Sim_rh_start_narq_con.riv <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_RIV_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_end_narq_con.2, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+Sim_rh_start_narq_con.riv = simGG(Sim_rh_start_narq_con.riv, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.riv.data = Sim_rh_start_narq_con.riv$data %>%
+  mutate(group = "Rivalry")
+
+data_plot = bind_rows(Sim_rh_start_narq_con.adm.data, Sim_rh_start_narq_con.riv.data)
+
+ggplot(data_plot, aes(Xj, Median, fill = group)) +
+  geom_ribbon(aes(ymin = Min, ymax = Max), alpha = 0.2) +
+  geom_ribbon(aes(ymin = Lower50, ymax = Upper50), alpha = 0.2) +
+  geom_line(size = 1, aes(color = group)) +
+  labs(x = "Units of Admiration / Rivalry from Mean",
+       y = "Relative Hazards Comparing to Mean",
+       fill = "", color = "") +
+  scale_color_manual(values=c("#1369E5", "#F42509")) + 
+  scale_fill_manual(values=c("#1369E5", "#F42509")) + 
+  theme_bw()
+
 ```
+
 
 ### Model 3 {.tabset}
 rel_end ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
@@ -353,17 +460,41 @@ testPH_end_narq_con.3 <- ggcoxzph(cox.zph(end_narq_con.3))
 
 ### Plot Relative Hazards for ADM und RIV
 ```{r}
-rh_end_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
+rh_start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
                             NARQ_ADM_z + NARQ_RIV_z + sex + age + cluster(session), data = surv_data)
 
-Sim_rh_end_narq_con.2 <- coxsimLinear(rh_end_narq_con.2, b = "NARQ_ADM_z",
+Sim_rh_start_narq_con.adm <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_ADM_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_end_narq_con.2, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
 
-Sim_rh_end_narq_con.2 <- coxsimLinear(rh_end_narq_con.2, b = "NARQ_RIV_z",
+Sim_rh_start_narq_con.adm = simGG(Sim_rh_start_narq_con.adm, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.adm.data = Sim_rh_start_narq_con.adm$data %>%
+  mutate(group = "Admiration")
+
+Sim_rh_start_narq_con.riv <- coxsimLinear(rh_start_narq_con.2, b = "NARQ_RIV_z",
                                         Xj = seq(-3, 3, by = 0.5), nsim = 100)
-simGG(Sim_rh_end_narq_con.2, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+Sim_rh_start_narq_con.riv = simGG(Sim_rh_start_narq_con.riv, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
+
+Sim_rh_start_narq_con.riv.data = Sim_rh_start_narq_con.riv$data %>%
+  mutate(group = "Rivalry")
+
+data_plot = bind_rows(Sim_rh_start_narq_con.adm.data, Sim_rh_start_narq_con.riv.data)
+
+ggplot(data_plot, aes(Xj, Median, fill = group)) +
+  geom_ribbon(aes(ymin = Min, ymax = Max), alpha = 0.2) +
+  geom_ribbon(aes(ymin = Lower50, ymax = Upper50), alpha = 0.2) +
+  geom_line(size = 1, aes(color = group)) +
+  labs(x = "Units of Admiration / Rivalry from Mean",
+       y = "Relative Hazards Comparing to Mean",
+       fill = "", color = "") +
+  scale_color_manual(values=c("#1369E5", "#F42509")) + 
+  scale_fill_manual(values=c("#1369E5", "#F42509")) + 
+  theme_bw()
+
 ```
+
+
+
 ### Model 4 {.tabset}
 rel_end ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
 ```{r}
@@ -377,13 +508,18 @@ testPH_end_narq_group <- ggcoxzph(cox.zph(end_narq_group))
 ```
 
 ### Plot survival analysis for groups
-Not ready yet!
 ```{r}
 plot_model1 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                            NARQ_ADM_group + cluster(session),
                           data = surv_data)
-fits <- list(NARQ_ADM_group = plot_model1)
-ggsurvplot(fits, data = surv_data, conf.int = T)
+
+ggsurvplot(plot_model1, conf.int = T)
+
+plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_RIV_group + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model2, conf.int = T)
 ```
 
 ### Model 5 {.tabset}
@@ -399,6 +535,21 @@ testPH_end_narq_quartil <- ggcoxzph(cox.zph(end_narq_quartil))
 ```
 
 ### Plot survival analysis for quartils
+```{r}
+plot_model1 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_quartil + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model1, conf.int = T)
+
+plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_RIV_quartil + cluster(session),
+                          data = surv_data)
+
+ggsurvplot(plot_model2, conf.int = T)
+```
+
+
 ### Model 6 {.tabset}
 rel_end ~ NARQ_ADM_extreme + NARQ_RIV_extreme + gender/sex + age + cluster(session)
 ```{r}
@@ -410,512 +561,22 @@ summary(end_narq_extreme)
 cox.zph(end_narq_extreme)
 testPH_end_narq_extreme <- ggcoxzph(cox.zph(end_narq_extreme))
 ```
+
 ### Plot survival analysis for extremes
-
-
-
-
-
-# Continous NARQ
-##Relationship start
-- Model 1: rel_entry ~ NARQ + cluster(session)
-- Model 2: rel_entry ~ NARQ_ADM + NARQ_RIV + cluster(session)
-- Model 3: rel_entry ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
-
-###Raw NARQ Data
 ```{r}
-start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_scale + cluster(session), data = surv_data)
-
-
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-
-
-start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM + NARQ_RIV + cluster(session), data = surv_data)
-summary(start_narq_con.2)
-plot(survfit(start_narq_con.2))
-## Should not be significant
-cox.zph(start_narq_con.2)
-testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
-
-
-
-
-start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM + NARQ_RIV + sex + age + cluster(session),
+plot_model1 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
+                            NARQ_ADM_extreme + cluster(session),
                           data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
 
-
-
-############# Plotting Method by cox guy
-
-#tfit <- coxph(Surv(time, status) ~ pspline(pat.karno) + sex + age, lung)
-#termplot(tfit, term=1, se=T)
-
-test <-  coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            pspline(NARQ_ADM) + NARQ_RIV + sex + age + cluster(session),
-                          data = surv_data)
-summary(test)
-termplot(test, term = 1, se = T)
-
-test2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM + pspline(NARQ_RIV) + sex + age + cluster(session),
-                          data = surv_data)
-summary(test2)
-termplot(test2, term = 2, se = T)
-
-```
-
-
-
-
-###Standardized NARQ Data
-```{r}
-start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_scale_z + cluster(session), data = surv_data)
-
-
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-
-
-start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
-summary(start_narq_con.2)
-plot(survfit(start_narq_con.2))
-## Should not be significant
-cox.zph(start_narq_con.2)
-testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
-
-
-
-
-start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_z + NARQ_RIV_z + sex + age + cluster(session),
-                          data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
-```
-
-
-##Relationship end
-- Model 1: rel_end ~ NARQ + cluster(session)
-- Model 2: rel_end ~ NARQ_ADM + NARQ_RIV + cluster(session)
-- Model 3: rel_end ~ NARQ_ADM + NARQ_RIV + gender/sex + age + cluster(session)
-
-###Raw NARQ Data
-```{r}
-start_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_scale + cluster(session), data = surv_data)
-
-
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-
-
-start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM + NARQ_RIV + cluster(session), data = surv_data)
-summary(start_narq_con.2)
-plot(survfit(start_narq_con.2))
-## Should not be significant
-cox.zph(start_narq_con.2)
-testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
-
-
-
-
-start_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM + NARQ_RIV + sex + age + cluster(session),
-                          data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
-
-
-```
-
-
-###Standardized NARQ Data
-```{r}
-start_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_scale_z + cluster(session), data = surv_data)
-
-
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-
-
-start_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
-summary(start_narq_con.2)
-plot(survfit(start_narq_con.2))
-## Should not be significant
-cox.zph(start_narq_con.2)
-testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
-
-
-
-
-start_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_z + NARQ_RIV_z + sex + age + cluster(session),
-                          data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
-```
-
-
-
-
-
-
-
-##Relationship start
-- Model 1: rel_entry ~ NARQ_group + cluster(session)
-- Model 2: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + cluster(session)
-- Model 3: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
-
-###Raw NARQ Data
-```{r}
-start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_group + cluster(session), data = surv_data)
-
-
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-
-
-start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + cluster(session), data = surv_data)
-summary(start_narq_con.2)
-plot(survfit(start_narq_con.2))
-## Should not be significant
-cox.zph(start_narq_con.2)
-testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
-
-
-
-
-start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
-                          data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
-
-
-```
-
-
-
-##Relationship end
-- Model 1: rel_end ~ NARQ_group + cluster(session)
-- Model 2: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + cluster(session)
-- Model 3: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
-
-###Raw NARQ Data
-```{r}
-start_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_group + cluster(session), data = surv_data)
-
-
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-
-
-
-
-
-
-start_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
-                          data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
-```
-
-
-
-#Quartil NARQ
-```{r}
-
-```
-
-
-###Relationship start
-- Model 1: rel_entry ~ NARQ_quartil + cluster(session)
-- Model 2: rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session)
-- Model 3: rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
-
-####Raw NARQ Data
-```{r}
-start_narq_con.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_quartil + cluster(session), data = surv_data)
-
-summary(start_narq_con.1)
-plot(survfit(start_narq_con.1))
-
-## Should not be significant
-cox.zph(start_narq_con.1)
-testPH_start_narq_con.1 <- ggcoxzph(cox.zph(start_narq_con.1))
-
-
-
-start_narq_con.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session), data = surv_data)
-summary(start_narq_con.2)
-plot(survfit(start_narq_con.2))
-## Should not be significant
-cox.zph(start_narq_con.2)
-testPH_start_narq_con.2 <- ggcoxzph(cox.zph(start_narq_con.2))
-
-
-
-
-start_narq_con.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_quartil + NARQ_RIV_quartil + sex + age + cluster(session),
-                          data = surv_data)
-summary(start_narq_con.3)
-plot(survfit(start_narq_con.3))
-## Should not be significant
-cox.zph(start_narq_con.3)
-testPH_start_narq_con.3 <- ggcoxzph(cox.zph(start_narq_con.3))
-
-
-```
-
-
-
-###Relationship end
-- Model 1: rel_end ~ NARQ_quartil + cluster(session)
-- Model 2: rel_end ~ NARQ_ADM_quartil + NARQ_RIV_quartil + cluster(session)
-- Model 3: rel_end ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
-
-####Raw NARQ Data
-```{r}
-end_narq_con.1 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_quartil + cluster(session), data = surv_data)
-
-
-
-summary(end_narq_con.1)
-plot(survfit(end_narq_con.1))
-
-## Should not be significant
-cox.zph(end_narq_con.1)
-testPH_end_narq_con.1 <- ggcoxzph(cox.zph(end_narq_con.1))
-
-
-
-
-
-end_narq_con.2 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_RIV_quartil + NARQ_ADM_quartil + cluster(session), 
-                        data = surv_data)
-summary(end_narq_con.2)
-plot(survfit(end_narq_con.2))
-## Should not be significant
-cox.zph(end_narq_con.2)
-testPH_end_narq_con.2 <- ggcoxzph(cox.zph(end_narq_con.2))
-
-
-
-
-end_narq_con.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_quartil + NARQ_RIV_quartil + sex + age + cluster(session),
-                          data = surv_data)
-summary(end_narq_con.3)
-plot(survfit(end_narq_con.3))
-## Should not be significant
-cox.zph(end_narq_con.3)
-testPH_end_narq_con.3 <- ggcoxzph(cox.zph(end_narq_con.3))
-```
-
-
-## Plots
-```{r}
-##Dichotom
-plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_group + cluster(session),
-                          data = surv_data)
-ggsurvplot(plot_model1, data = surv_data, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T)
 
 plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session),
+                            NARQ_RIV_extreme + cluster(session),
                           data = surv_data)
-ggsurvplot(plot_model2, data = surv_data, conf.int = T)
 
-
-##Quartil
-plot_model3 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
-                          data = surv_data)
-fits <- list(NARQ_ADM_quartil = plot_model3)
-
-
-ggsurvplot_list(plot_model3, data = surv_data, conf.int = T)
-#ggsurvplot(plot_model3, data = surv_data, conf.int = T)
-
-
-plot_model4 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_RIV_quartil + cluster(session),
-                          data = surv_data)
-ggsurvplot(plot_model4, data = surv_data, conf.int = T)
-
+ggsurvplot(plot_model2, conf.int = T)
 ```
 
-
-##Plot Relative Hazards
-
-Sim1 <- coxsimLinear(M1, b = "AgeMed", Xj = seq(-15, 19, by = 1),
-+                      nsim = 100)
-```{r}
-#install.packages("simPH")
-
-#Raw
-#Erst Surv-Modell berechnen
-mod.1 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_scale + cluster(session), data = surv_data)
-
-#Funktion benutzt: Modell, interessante Variable mit "b", Xj = fitted values
-Sim1 <- coxsimLinear(mod.1, b = "NARQ_scale", Xj = seq(0, 5, by = 0.5), nsim = 100)
-simGG(Sim1)
-
-#z-stand.
-mod.2 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_scale_z + cluster(session), data = surv_data)
-Sim2 <- coxsimLinear(mod.2, b = "NARQ_scale_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-simGG(Sim2, xlab = "Units of narcissism from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-##ADM
-mod.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_ADM_z + NARQ_RIV_z + cluster(session), data = surv_data)
-Sim3 <- coxsimLinear(mod.3, b = "NARQ_ADM_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-simGG(Sim3, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-Sim3 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-simGG(Sim3, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-
-##ADM
-mod.3 <- coxph(Surv(single_start_d, single_end_d, event_start) ~ 
-                            NARQ_RIV_z + cluster(session), data = surv_data)
-Sim3 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-simGG(Sim3, xlab = "Units of admiration from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-##ADM
-mod.3 <- coxph(Surv(rel_start_d, rel_end_d, event_end) ~ 
-                            NARQ_ADM_z * NARQ_RIV_z + cluster(session), data = surv_data)
-sim3 = coxsimInteract(mod.3, b1 = "NARQ_ADM_z", b2 = "NARQ_RIV_z", X2 = seq(-4, 4, by = 1), spin = TRUE)
-simGG(sim3, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-Sim3 <- coxsimLinear(mod.3, b = "NARQ_ADM_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-Sim4 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-
-
-
-+ simGG(Sim4, xlab = "Units of admiration and rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-Sim3 <- coxsimLinear(mod.3, b = "NARQ_RIV_z", Xj = seq(-4, 4, by = 0.5), nsim = 100)
-simGG(Sim3, xlab = "Units of rivalry from mean in SD", ylab = "Relative Hazards Comparing to Mean")
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-start_narq_gr.1 <- coxph(Surv(single_start_d, relationship_start_d, event) ~ 
-                            NARQ_group + cluster(session), data= surv_data)
-summary(start_narq_gr.1)
-plot(survfit(start_narq_gr.1))
-
-start_narq_gr.2 <-  coxph(Surv(single_start_d, single_end_d, event) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + cluster(session), data= surv_data)
-summary(start_narq_gr.2)
-plot(survfit(start_narq_gr.2))
-
-start_narq_gr.3 <-  coxph(Surv(single_start_d, relationship_start_d, event) ~ 
-                            NARQ_ADM_group + NARQ_RIV_group + sex + age + cluster(session), data= surv_data)
-summary(start_narq_gr.3)
-plot(survfit(start_narq_gr.3))
-```
 
 
 
