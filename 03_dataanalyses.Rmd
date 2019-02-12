@@ -8,48 +8,51 @@ editor_options:
 # Everything{.tabset}
 ## TODO before
 ToDo 06.02.2019
-- Datenwrangling fertig durchgehen (x)
-- Analyse in ein Skript packen (x)
-- Grafikidee: HR für admiration und rivalry? --> Autor geschrieben
-- survival Grafiken nur für Admiration / Rivalry (x)
-- schönen Output generieren
+
+* Datenwrangling fertig durchgehen (x)
+* Analyse in ein Skript packen (x)
+* Grafikidee: HR für admiration und rivalry? --> Autor geschrieben
+* survival Grafiken nur für Admiration / Rivalry (x)
+* schönen Output generieren
 
 
 Fragen an Tanja:
-- Analysen jetzt mit z-standardisiertem NARQ, weil schöner fürs Plotten und leichter zu interpretieren --> Bist du einverstanden?
-- Beim Median-Split und bei den Quartilen wissen wir nicht genau, was wir mit den Personen machen sollen, die genau auf der Kippe zwischen zwei Gruppen stehen?
-- Extremgruppenanalyse: Wir haben jetzt die beiden Gruppen unteres Quartile und oberes Quartil genommen, da die Gruppengrößen sonst viel zu klein sind. Sind aber mit dem approach nicht so zufrieden...
-- Survival Analysen Plots nicht so aussagekräftig --> evtl. bräuchte man dafür doch die Latent Class Analysis, um etwas aussagen zu können...
+
+* Analysen jetzt mit z-standardisiertem NARQ, weil schöner fürs Plotten und leichter zu interpretieren --> Bist du einverstanden?
+* Beim Median-Split und bei den Quartilen wissen wir nicht genau, was wir mit den Personen machen sollen, die genau auf der Kippe zwischen zwei Gruppen stehen?
+* Extremgruppenanalyse: Wir haben jetzt die beiden Gruppen unteres Quartile und oberes Quartil genommen, da die Gruppengrößen sonst viel zu klein sind. Sind aber mit dem approach nicht so zufrieden...
+* Survival Analysen Plots nicht so aussagekräftig --> evtl. bräuchte man dafür doch die Latent Class Analysis, um etwas aussagen zu können...
+* Wenn survival Plots ja, sollen wir die x-Achse anpassen?
 
 Furthur to do:
-- analyses including future prospects
+* analyses including future prospects
 
 ## Planned Analysis {.tabset}
 ### Relationship Entry
-- Model 1: rel_entry ~ NARQ_z + cluster(session)
-- Model 2: rel_entry ~ NARQ_ADM_z + NARQ_RIV_z + cluster(session)
---> Plot Relative Hazards for ADM und RIV
-- Model 3: rel_entry ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
---> Plot Relative Hazards for ADM und RIV
-- Model 4: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
---> Plot survival analysis for groups
-- Model 5: rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
---> Plot survival analysis for quartils
-- Model 6: rel_entry ~ NARQ_ADM_extreme + NARQ_RIV_extreme + gender/sex + age + cluster(session)
---> Plot survival analysis for extremes
+* Model 1: rel_entry ~ NARQ_z + cluster(session)
+* Model 2: rel_entry ~ NARQ_ADM_z + NARQ_RIV_z + cluster(session)
+* -> Plot Relative Hazards for ADM und RIV
+* Model 3: rel_entry ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
+* -> Plot Relative Hazards for ADM und RIV
+* Model 4: rel_entry ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
+* -> Plot survival analysis for groups
+* Model 5: rel_entry ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
+* -> Plot survival analysis for quartils
+* Model 6: rel_entry ~ NARQ_ADM_extreme + NARQ_RIV_extreme + gender/sex + age + cluster(session)
+* -> Plot survival analysis for extremes
 
 ### Relationship End
-- Model 1: rel_end ~ NARQ_z + cluster(session)
-- Model 2: rel_end ~ NARQ_ADM_z + NARQ_RIV_z + cluster(session)
---> Plot Relative Hazards for ADM und RIV
-- Model 3: rel_end ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
---> Plot Relative Hazards for ADM und RIV
-- Model 4: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
---> Plot survival analysis for groups
-- Model 5: rel_end ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
---> Plot survival analysis for quartils
-- Model 6: rel_end ~ NARQ_ADM_extreme + NARQ_RIV_extreme + gender/sex + age + cluster(session)
---> Plot survival analysis for extremes
+* Model 1: rel_end ~ NARQ_z + cluster(session)
+* Model 2: rel_end ~ NARQ_ADM_z + NARQ_RIV_z + cluster(session)
+* -> Plot Relative Hazards for ADM und RIV
+* Model 3: rel_end ~ NARQ_ADM_z + NARQ_RIV_z + gender/sex + age + cluster(session)
+* -> Plot Relative Hazards for ADM und RIV
+* Model 4: rel_end ~ NARQ_ADM_group + NARQ_RIV_group + gender/sex + age + cluster(session)
+* -> Plot survival analysis for groups
+* Model 5: rel_end ~ NARQ_ADM_quartil + NARQ_RIV_quartil + gender/sex + age + cluster(session)
+* -> Plot survival analysis for quartils
+* Model 6: rel_end ~ NARQ_ADM_extreme + NARQ_RIV_extreme + gender/sex + age + cluster(session)
+* -> Plot survival analysis for extremes
 
 ## Packages
 ```{r}
@@ -84,7 +87,7 @@ surv_data = surv_data %>%
          rel_start_d = 0,
          rel_end_d = end - start,
  single_end_d = ifelse(single_end_d == 0, 1, single_end_d), # two people started a new relationship at the same day they ended their old one, survival analyses can not believe that --> so we set it at 1 day)
-  rel_end_d = ifelse(rel_end_d == 0, 1, rel_end_d)) # 27 people had started and filled out survey the same day (so right censored data) --> that's why we had to add 1 (day) to "rel_end_d"
+  rel_end_d = ifelse(rel_end_d == 0, 1, rel_end_d)) # 27 people had ended a relationship and filled out survey the same day (so right censored data) --> that's why we had to add 1 (day) to "rel_end_d"
 
 ```
 
@@ -318,13 +321,13 @@ plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~
                             NARQ_ADM_group + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model1, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T, palette = c("#85C1E9", "#1B4F72"))
 
 plot_model2 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_RIV_group + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model2, conf.int = T)
+ggsurvplot(plot_model2, conf.int = T, palette = c("#F1948A", "#78281F"))
 ```
 
 ### Model 5 {.tabset}
@@ -346,13 +349,15 @@ plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~
                             NARQ_ADM_quartil + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model1, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T, palette = c("#85C1E9", "#3498DB", "#2874A6", "#1B4F72"))
 
 plot_model2 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_RIV_quartil + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model2, conf.int = T)
+ggsurvplot(plot_model2, conf.int = T, palette = c("#F1948A", "#E74C3C", "#B03A2E", "#78281F"))
+
+
 ```
 
 ### Model 6 {.tabset}
@@ -374,13 +379,13 @@ plot_model1 = survfit(Surv(single_start_d, single_end_d, event_start) ~
                             NARQ_ADM_extreme + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model1, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T, palette = c("#85C1E9", "#1B4F72"))
 
 plot_model2 = survfit(Surv(single_start_d, single_end_d, event_start) ~ 
                             NARQ_RIV_extreme + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model2, conf.int = T)
+ggsurvplot(plot_model2, conf.int = T, palette = c("#F1948A", "#78281F"))
 ```
 
 
@@ -513,13 +518,13 @@ plot_model1 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~
                             NARQ_ADM_group + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model1, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T, palette = c("#85C1E9", "#1B4F72"))
 
 plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
                             NARQ_RIV_group + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model2, conf.int = T)
+ggsurvplot(plot_model2, conf.int = T, palette = c("#F1948A", "#78281F"))
 ```
 
 ### Model 5 {.tabset}
@@ -540,13 +545,13 @@ plot_model1 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~
                             NARQ_ADM_quartil + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model1, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T, palette = c("#85C1E9", "#3498DB", "#2874A6", "#1B4F72"))
 
 plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
                             NARQ_RIV_quartil + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model2, conf.int = T)
+ggsurvplot(plot_model2, conf.int = T, palette = c("#F1948A", "#E74C3C", "#B03A2E", "#78281F"))
 ```
 
 
@@ -568,13 +573,13 @@ plot_model1 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~
                             NARQ_ADM_extreme + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model1, conf.int = T)
+ggsurvplot(plot_model1, conf.int = T, palette = c("#85C1E9", "#1B4F72"))
 
 plot_model2 = survfit(Surv(rel_start_d, rel_end_d, event_end) ~ 
                             NARQ_RIV_extreme + cluster(session),
                           data = surv_data)
 
-ggsurvplot(plot_model2, conf.int = T)
+ggsurvplot(plot_model2, conf.int = T, palette = c("#F1948A", "#78281F"))
 ```
 
 
